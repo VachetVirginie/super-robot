@@ -74,7 +74,14 @@ export function useAuth() {
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    // On force la session locale à null pour que l'UI se mette a jour
+    session.value = null
+
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error during signOut', error)
+    }
   }
 
   async function loadInitialSession() {

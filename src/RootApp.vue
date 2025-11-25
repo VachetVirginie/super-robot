@@ -481,6 +481,11 @@ async function onEnableNotifications() {
   }
 }
 
+async function signOutAndRedirect() {
+  await signOut()
+  router.push({ name: 'today' })
+}
+
 function startWellbeingExercise() {
   if (!todaysExercise.value) {
     return
@@ -695,7 +700,7 @@ onBeforeUnmount(() => {
         :on-update-display-name="(value: string) => { displayName = value }"
         :on-save-display-name="onSaveDisplayNameFromProfile"
         :on-enable-notifications="onEnableNotifications"
-        :on-sign-out="signOut"
+        :on-sign-out="signOutAndRedirect"
         :on-close="() => router.push({ name: 'today' })"
       />
       <component
@@ -1167,7 +1172,7 @@ onBeforeUnmount(() => {
   transform: translateY(1px);
 }
 .nav-item.is-active {
-  background: #f9fafb;
+  background: #05d970;
   color: #0b0f19;
 }
 .nav-icon {

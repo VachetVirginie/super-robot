@@ -126,7 +126,7 @@ function onRowClick(key: string) {
   height: 34px;
   border-radius: 999px;
   background:
-    conic-gradient(#f9fafb var(--p), rgba(55, 65, 81, 0.6) 0);
+    conic-gradient(#05d970 var(--p), rgba(55, 65, 81, 0.6) 0);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -119,9 +119,15 @@ const weekStrip = computed(() => {
     label: string
     isToday: boolean
     hasSession: boolean
+    plannedCount: number
+    doneCount: number
   }[] = []
 
-  const sessionSet = new Set(weekSessionDates.value)
+  const sessionCountsByDate = new Map<string, number>()
+  for (const iso of weekSessionDates.value) {
+    const prev = sessionCountsByDate.get(iso) ?? 0
+    sessionCountsByDate.set(iso, prev + 1)
+  }
   const todayYear = today.getFullYear()
   const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
   const todayDay = String(today.getDate()).padStart(2, '0')
@@ -139,12 +145,30 @@ const weekStrip = computed(() => {
       .toLocaleDateString('fr-FR', { weekday: 'short' })
       .replace('.', '')
 
+    const actualCount = sessionCountsByDate.get(isoDate) ?? 0
+    const plannedForDay = weeklySlots.value.filter((slot) => slot.dayIndex === i).length
+
+    let plannedCount = plannedForDay
+    let doneCount = 0
+
+    if (plannedForDay > 0) {
+      doneCount = Math.min(plannedForDay, actualCount)
+    } else if (actualCount > 0) {
+      // Pas de planning formel pour ce jour, mais des seances :
+      plannedCount = 1
+      doneCount = 1
+    }
+
+    const hasSession = actualCount > 0 && isoDate <= todayIso
+
     days.push({
       key: isoDate,
       date: d.getDate(),
       label,
       isToday,
-      hasSession: sessionSet.has(isoDate) && isoDate <= todayIso,
+      hasSession,
+      plannedCount,
+      doneCount,
     })
   }
 
@@ -811,7 +835,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 0.85rem;
   font-weight: 600;
-  background: radial-gradient(circle at top left, #16a34a, #22c55e);
+  background: radial-gradient(circle at top left, #22c55e, #05d970);
   color: #020617;
   box-shadow: 0 10px 24px rgba(22, 163, 74, 0.65);
 }

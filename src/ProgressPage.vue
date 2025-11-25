@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots'
 
 const props = defineProps<{
   isAuthenticated: boolean
@@ -7,6 +8,9 @@ const props = defineProps<{
   perWeekGoal: number | null
   weeklyProgressPercent: number
   weeklyStatusLabel: string
+  weeklySlots: WeeklySlot[]
+  isWeeklySlotsLoading: boolean
+  weeklySlotsError: string | null
 }>()
 
 const safePercent = computed(() => {
@@ -25,6 +29,19 @@ const goalLabel = computed(() => {
   if (props.perWeekGoal == null) return "Aucun objectif hebdomadaire defini pour l'instant."
   return `Objectif actuel : ${props.perWeekGoal} seance(s) par semaine.`
 })
+
+const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const timeSlots: { key: TimeOfDay; label: string }[] = [
+  { key: 'morning', label: 'Matin' },
+  { key: 'afternoon', label: 'Ap.midi' },
+  { key: 'evening', label: 'Soir' },
+]
+
+function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
+  return props.weeklySlots.some(
+    (slot) => slot.dayIndex === dayIndex && slot.timeOfDay === timeOfDay,
+  )
+}
 </script>
 
 <template>
@@ -63,6 +80,47 @@ const goalLabel = computed(() => {
       <span class="tag tag--blue">Semaine en cours</span>
       <span class="tag tag--coral" v-if="safePercent >= 100">Objectif atteint</span>
     </div>
+
+    <section class="planstrip">
+      <h3 class="planstrip-title">Planning de la semaine</h3>
+
+      <p v-if="isWeeklySlotsLoading" class="planstrip-text">
+        Chargement de ton planning...
+      </p>
+      <p v-else-if="weeklySlotsError" class="planstrip-text planstrip-text--error">
+        {{ weeklySlotsError }}
+      </p>
+      <p
+        v-else-if="!weeklySlots.length"
+        class="planstrip-text planstrip-text--muted"
+      >
+        Tu n'as pas encore planifie ta semaine. Utilise "Planifier ma semaine" sur la
+        page Aujourd'hui.
+      </p>
+
+      <div v-else class="planstrip-grid">
+        <div
+          v-for="(day, dayIndex) in days"
+          :key="day"
+          class="planstrip-day"
+        >
+          <div class="planstrip-day-label">
+            {{ day }}
+          </div>
+          <div class="planstrip-day-slots">
+            <span
+              v-for="slot in timeSlots"
+              :key="slot.key"
+              class="planstrip-dot"
+              :class="[
+                'planstrip-dot--' + slot.key,
+                { 'is-active': hasSlot(dayIndex, slot.key) },
+              ]"
+            ></span>
+          </div>
+        </div>
+      </div>
+    </section>
   </section>
 </template>
 
@@ -166,5 +224,79 @@ const goalLabel = computed(() => {
   background: rgba(248, 113, 113, 0.08);
   border-color: rgba(248, 113, 113, 0.8);
   color: #fecaca;
+}
+
+.planstrip {
+  margin-top: 1.25rem;
+}
+
+.planstrip-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.planstrip-text {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.planstrip-text--muted {
+  opacity: 0.75;
+}
+
+.planstrip-text--error {
+  color: #fecaca;
+}
+
+.planstrip-grid {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.planstrip-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.planstrip-day-label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.planstrip-day-slots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+}
+
+.planstrip-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  opacity: 0.25;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.planstrip-dot--morning.is-active {
+  opacity: 1;
+  background: #22c55e;
+}
+
+.planstrip-dot--afternoon.is-active {
+  opacity: 1;
+  background: #38bdf8;
+}
+
+.planstrip-dot--evening.is-active {
+  opacity: 1;
+  background: #a855f7;
 }
 </style>

@@ -122,3 +122,80 @@ Ordre recommandé pour continuer le développement :
   - ce qui est déjà fait,
   - ce qui est en cours,
   - ce qui est prévu ensuite.
+
+---
+
+## 7. Parcours cible – Objectifs & planning hebdo
+
+Ce parcours est la **vision cible** pour la création d’objectifs dans Motivly. Il n’est pas encore implémenté mais sert de boussole produit.
+
+### 7.1 Principe
+
+- L’utilisateur ne configure pas des objectifs abstraits, mais **planifie des moments concrets dans sa semaine**.
+- Chaque "objectif" est la somme de ces moments ("créneaux") : par exemple, **3 créneaux matin** ou **2 soirs + 1 samedi matin**.
+- Les objectifs par type / moment sont dérivés de ce planning, pas saisis à la main.
+
+### 7.2 Parcours utilisateur
+
+1. **Entrée – "Planifier ma semaine"**
+   - Bouton central sur Today / Progression.
+   - Ouvre un écran plein écran de planification.
+
+2. **Étape 1 – Nombre de moments réalistes**
+   - Question : "Combien de fois par semaine peux-tu te bloquer un moment pour toi ?".
+   - Choix rapides : `1x / 2x / 3x / 4x / 5x+`.
+   - Sert à définir un **budget de créneaux** pour la semaine.
+
+3. **Étape 2 – Placement des créneaux dans la semaine**
+   - Vue en forme de **grille semaine x moments de la journée** :
+     - Lignes = jours (Lun → Dim).
+     - Colonnes = moments : Matin / Après-midi / Soir.
+   - L’utilisateur clique pour remplir ses créneaux jusqu’à atteindre le budget défini à l’étape 1.
+   - Exemple : Lun matin, Mer soir, Sam matin.
+
+4. **Étape 3 – Type de séance par créneau (optionnel)**
+   - Pour chaque créneau sélectionné :
+     - "Peu importe (bouger)"
+     - "Cardio / course"
+     - "Renfo"
+     - "Mobilité / yoga"
+     - "Routine bien-être"
+   - Par défaut : "Peu importe" pour réduire la friction.
+
+5. **Étape 4 – Récap visuel**
+   - Récap sous forme de mini planning coloré.
+   - Phrase en langage naturel, ex. :
+     - "Cette semaine, tu te bloques **3 moments** : Lun matin (bouger), Mer soir (renfo), Sam matin (course)."
+   - Bouton d’engagement : "Je m’engage pour cette semaine".
+
+### 7.3 Modèle de données envisagé
+
+- **`sessions`**
+  - `user_id`
+  - `performed_at`
+  - `sport_id` (nullable)
+  - `time_of_day` (`'morning' | 'afternoon' | 'evening' | null`)
+
+- **`goals`** (objectifs stockés, dérivés du planning)
+  - `user_id`
+  - `per_week_sessions` (nombre de créneaux visés)
+  - `sport_id` (nullable, pour les objectifs par type)
+  - `time_of_day` (nullable, pour les objectifs matin / soir)
+  - `is_active`
+
+- **(Option) `user_weekly_slots`**
+  - Représentation directe des créneaux choisis par l’utilisateur pour une semaine donnée (slot = jour + moment + type).
+
+### 7.4 Logique de progression
+
+Pour chaque objectif actif (`goals`) :
+
+- Filtrer les `sessions` de la semaine courante en fonction :
+  - du `sport_id` (si non null),
+  - du `time_of_day` (si non null).
+- Calculer :
+  - `doneThisWeek` = nombre de séances correspondantes,
+  - `progressPercent` = `doneThisWeek / per_week_sessions * 100` (0–100%),
+  - un `statusLabel` en texte naturel ("Plus que 1 séance matin pour atteindre ton objectif.").
+
+Ces données alimentent les écrans Today (résumé court) et Progression (vue plus détaillée des objectifs).

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { enablePushNotifications, isPushSupported } from './pushNotifications'
 import { useAuth } from './composables/useAuth'
 import { useTodayStats } from './composables/useTodayStats'
+import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
@@ -11,6 +12,7 @@ import MonthCalendarDialog from './components/MonthCalendarDialog.vue'
 import WellbeingDialog from './components/WellbeingDialog.vue'
 import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
 import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
+import PlanWeekDialog from './components/PlanWeekDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -49,6 +51,13 @@ const {
   weekSessionDates,
   getMonthSessionDates,
 } = useTodayStats(session)
+
+const {
+  slots: weeklySlots,
+  isWeeklySlotsLoading,
+  weeklySlotsError,
+  saveWeeklySlots,
+} = useWeeklySlots(session)
 
 const {
   displayName,
@@ -191,15 +200,15 @@ const todaySections = computed(() => {
     progress: weeklyPercent,
   })
 
-  sections.push({
-    key: 'weekly-goal',
-    title: 'Objectif de la semaine',
-    subtitle:
-      perWeekGoal.value !== null
-        ? `${perWeekGoal.value} seance(s) prevue(s)`
-        : "Aucun objectif defini pour l'instant",
-    progress: 0,
-  })
+  // sections.push({
+  //   key: 'weekly-goal',
+  //   title: 'Objectif de la semaine',
+  //   subtitle:
+  //     perWeekGoal.value !== null
+  //       ? `${perWeekGoal.value} seance(s) prevue(s)`
+  //       : "Aucun objectif defini pour l'instant",
+  //   progress: 0,
+  // })
 
   sections.push({
     key: 'notifications',
@@ -240,6 +249,27 @@ const calendarTouchStartX = ref<number | null>(null)
 const snackbarMessage = ref<string | null>(null)
 const snackbarType = ref<'success' | 'error' | null>(null)
 let snackbarTimeout: number | null = null
+
+const isPlanWeekDialogOpen = ref(false)
+
+function openPlanWeekDialog() {
+  if (!isAuthenticated) return
+  isPlanWeekDialogOpen.value = true
+}
+
+async function savePlanWeekDialog(slots: { dayIndex: number; timeOfDay: 'morning' | 'afternoon' | 'evening' }[]) {
+  await saveWeeklySlots(slots)
+
+  const target = slots.length
+  const current = perWeekGoal.value ?? 0
+  const delta = target - current
+
+  if (delta !== 0) {
+    await changeGoal(delta)
+  }
+
+  isPlanWeekDialogOpen.value = false
+}
 
 const activeExercise = computed(() => {
   if (!activeExerciseKey.value) {
@@ -594,6 +624,18 @@ onBeforeUnmount(() => {
         :on-close="() => router.push({ name: 'today' })"
       />
       <component
+        v-else-if="route.name === 'progress'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+        :weekly-sessions="weeklySessions"
+        :per-week-goal="perWeekGoal"
+        :weekly-progress-percent="weeklyProgressPercent"
+        :weekly-status-label="weeklyStatusLabel"
+        :weekly-slots="weeklySlots"
+        :is-weekly-slots-loading="isWeeklySlotsLoading"
+        :weekly-slots-error="weeklySlotsError"
+      />
+      <component
         v-else
         :is="Component"
         :is-authenticated="isAuthenticated"
@@ -612,6 +654,9 @@ onBeforeUnmount(() => {
         :weekly-sessions="weeklySessions"
         :weekly-progress-percent="weeklyProgressPercent"
         :weekly-status-label="weeklyStatusLabel"
+        :weekly-slots="weeklySlots"
+        :is-weekly-slots-loading="isWeeklySlotsLoading"
+        :weekly-slots-error="weeklySlotsError"
         :is-push-supported="isPushSupported"
         :is-loading-notifications="isLoadingNotifications"
         :notifications-status="status"
@@ -624,6 +669,7 @@ onBeforeUnmount(() => {
         :on-today-row-click="onTodayRowClick"
         :on-enable-notifications="onEnableNotifications"
         :start-wellbeing-exercise="startWellbeingExercise"
+        :on-open-week-plan="openPlanWeekDialog"
       />
     </RouterView>
 
@@ -634,6 +680,13 @@ onBeforeUnmount(() => {
       @close="isAddSessionDialogOpen = false"
       @confirm-add="confirmAddSessionFromDialog"
       @confirm-remove="confirmRemoveSessionFromDialog"
+    />
+
+    <PlanWeekDialog
+      v-if="isPlanWeekDialogOpen"
+      :initial-slots="weeklySlots"
+      @close="isPlanWeekDialogOpen = false"
+      @save="savePlanWeekDialog"
     />
 
     <MonthCalendarDialog

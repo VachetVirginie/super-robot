@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import TodayPage from './TodayPage.vue'
+import ProfilePageRoute from './ProfilePageRoute.vue'
 import RootApp from './RootApp.vue'
 
 const routes = [
@@ -9,12 +11,12 @@ const routes = [
   {
     path: '/today',
     name: 'today',
-    component: RootApp,
+    component: TodayPage,
   },
   {
     path: '/profile',
     name: 'profile',
-    component: RootApp,
+    component: ProfilePageRoute,
   },
   {
     path: '/progress',

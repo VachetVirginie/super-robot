@@ -1,10 +1,5 @@
 <script setup lang="ts">
-interface TodaySection {
-  key: string
-  title: string
-  subtitle: string
-  progress: number
-}
+import type { TodaySection } from '../types'
 
 defineProps<{
   sections: TodaySection[]

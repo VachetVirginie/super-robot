@@ -1,10 +1,5 @@
 <script setup lang="ts">
-interface WellbeingExercise {
-  key: string
-  title: string
-  description: string
-  durationMinutes: number
-}
+import type { WellbeingExercise } from '../types'
 
 const props = defineProps<{
   exercises: WellbeingExercise[]

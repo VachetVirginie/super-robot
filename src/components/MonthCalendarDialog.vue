@@ -1,10 +1,5 @@
 <script setup lang="ts">
-interface CalendarCell {
-  key: string
-  date: number | null
-  isToday: boolean
-  hasSession: boolean
-}
+import type { CalendarCell } from '../types'
 
 const props = defineProps<{
   monthLabel: string

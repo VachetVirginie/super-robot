@@ -5,6 +5,8 @@ interface WeekDay {
   label: string
   isToday: boolean
   hasSession: boolean
+  plannedCount: number
+  doneCount: number
 }
 
 const props = defineProps<{
@@ -19,6 +21,17 @@ const emit = defineEmits<{
 
 function onOpenMonthCalendar() {
   emit('open-month-calendar')
+}
+
+function progressOpacity(day: WeekDay) {
+  // 0 seance realisee ou aucun moment prevu => pas de check
+  if (day.plannedCount <= 0 || day.doneCount <= 0) {
+    return 0
+  }
+
+  const ratio = Math.max(0, Math.min(1, day.doneCount / day.plannedCount))
+  // Opacite entre 0.3 (tres leger) et 1 (objectif du jour complet)
+  return 0.3 + 0.7 * ratio
 }
 </script>
 
@@ -58,7 +71,11 @@ function onOpenMonthCalendar() {
         <span class="week-day-date">
           {{ day.date }}
         </span>
-        <span v-if="day.hasSession" class="week-day-check">
+        <span
+          v-if="day.doneCount > 0"
+          class="week-day-check"
+          :style="{ opacity: progressOpacity(day) }"
+        >
           ✓
         </span>
       </button>
@@ -169,5 +186,6 @@ function onOpenMonthCalendar() {
 .week-day-check {
   margin-top: 0.15rem;
   font-size: 0.65rem;
+  color: #22c55e;
 }
 </style>

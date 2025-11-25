@@ -211,6 +211,48 @@ const todaySections = computed(() => {
     progress: number
   }[] = []
 
+  const today = new Date()
+  const todayYear = today.getFullYear()
+  const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
+  const todayDay = String(today.getDate()).padStart(2, '0')
+  const todayIso = `${todayYear}-${todayMonth}-${todayDay}`
+
+  const sessionsTodayCount = weekSessionDates.value.filter((iso) => iso === todayIso).length
+
+  const dayOfWeek = today.getDay()
+  const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+  const plannedToday = weeklySlots.value.filter((slot) => slot.dayIndex === todayIndex).length
+
+  let todayProgress = 0
+  if (plannedToday > 0) {
+    const ratio = Math.max(0, Math.min(1, sessionsTodayCount / plannedToday))
+    todayProgress = Math.round(ratio * 100)
+  } else if (sessionsTodayCount > 0) {
+    todayProgress = 100
+  }
+
+  let todaySubtitle: string
+  if (plannedToday > 0) {
+    if (sessionsTodayCount === 0) {
+      todaySubtitle = `0/${plannedToday} seance(s) realisee(s) aujourd'hui`
+    } else {
+      const done = Math.min(sessionsTodayCount, plannedToday)
+      todaySubtitle = `${done}/${plannedToday} seance(s) realisee(s) aujourd'hui`
+    }
+  } else {
+    todaySubtitle =
+      sessionsTodayCount > 0
+        ? `${sessionsTodayCount} seance(s) realisee(s) aujourd'hui`
+        : "Pas encore de seance aujourd'hui"
+  }
+
+  sections.push({
+    key: 'today-sessions',
+    title: "Seances aujourd'hui",
+    subtitle: todaySubtitle,
+    progress: todayProgress,
+  })
+
   const weeklyPercent = weeklyProgressPercent.value
   sections.push({
     key: 'weekly-sessions',
@@ -444,7 +486,7 @@ function startWellbeingExercise() {
 }
 
 function onTodayRowClick(key: string) {
-  if (key === 'weekly-sessions') {
+  if (key === 'today-sessions') {
     isAddSessionDialogOpen.value = true
     return
   }

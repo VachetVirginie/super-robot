@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { enablePushNotifications, isPushSupported } from './pushNotifications'
 import { useAuth } from './composables/useAuth'
 import { useTodayStats } from './composables/useTodayStats'
@@ -17,6 +18,9 @@ import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
+
+const route = useRoute()
+const router = useRouter()
 
 const isLoadingNotifications = computed(() => status.value === 'requesting')
 
@@ -228,7 +232,7 @@ const isWellbeingDialogOpen = ref(false)
 const isWellbeingPlayerOpen = ref(false)
 const activeExerciseKey = ref<string | null>(null)
 
-const isProfileOpen = ref(false)
+const isProfileOpen = computed(() => route.name === 'profile')
 
 const isMonthCalendarOpen = ref(false)
 const calendarYear = ref(new Date().getFullYear())
@@ -530,7 +534,9 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingDialogOpen.value = false
       isWellbeingPlayerOpen.value = false
       isMonthCalendarOpen.value = false
-      isProfileOpen.value = false
+      if (isProfileOpen.value) {
+        router.push({ name: 'today' })
+      }
     }
   }
 }
@@ -553,7 +559,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="avatar-button"
-          @click="isProfileOpen = true"
+          @click="router.push({ name: 'profile' })"
         >
           <span class="avatar-circle">
             {{ profileInitial }}
@@ -654,7 +660,7 @@ onBeforeUnmount(() => {
       :notifications-status="status"
       :notifications-error="errorMessage"
       :profile-error="profileError"
-      @close="isProfileOpen = false"
+      @close="router.push({ name: 'today' })"
       @save-display-name="onSaveDisplayNameFromProfile"
       @enable-notifications="onEnableNotifications"
       @sign-out="signOut"
@@ -695,7 +701,11 @@ onBeforeUnmount(() => {
     />
 
     <nav v-if="isAuthenticated" class="bottom-nav">
-      <button type="button" class="nav-item is-active">
+      <button
+        type="button"
+        :class="['nav-item', { 'is-active': route.name === 'today' }]"
+        @click="router.push({ name: 'today' })"
+      >
         <i class="pi pi-home nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Accueil</span>
       </button>
@@ -713,8 +723,8 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        class="nav-item"
-        @click="isProfileOpen = true"
+        :class="['nav-item', { 'is-active': route.name === 'profile' }]"
+        @click="router.push({ name: 'profile' })"
       >
         <i class="pi pi-user nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Profil</span>

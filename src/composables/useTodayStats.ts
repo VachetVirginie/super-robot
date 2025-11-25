@@ -122,9 +122,13 @@ export function useTodayStats(session: Ref<Session | null>) {
     weeklySessions.value = allSessions.length
     latestSessions.value = allSessions.slice(0, 3)
 
-    weekSessionDates.value = allSessions.map(
-      (sessionItem) => sessionItem.performed_at.slice(0, 10),
-    )
+    weekSessionDates.value = allSessions.map((sessionItem) => {
+      const d = new Date(sessionItem.performed_at)
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const dayNum = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${dayNum}`
+    })
 
     const { data: goalsData, error: goalError } = await supabase
       .from('goals')

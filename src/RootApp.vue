@@ -8,6 +8,7 @@ import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
+import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
 import MonthCalendarDialog from './components/MonthCalendarDialog.vue'
 import WellbeingDialog from './components/WellbeingDialog.vue'
 import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
@@ -297,6 +298,7 @@ const todaySections = computed(() => {
 })
 
 const isAddSessionDialogOpen = ref(false)
+const isWeeklySessionsDialogOpen = ref(false)
 const isAdjustGoalDialogOpen = ref(false)
 const goalDraft = ref<number | null>(null)
 
@@ -491,6 +493,11 @@ function onTodayRowClick(key: string) {
     return
   }
 
+  if (key === 'weekly-sessions') {
+    isWeeklySessionsDialogOpen.value = true
+    return
+  }
+
   if (key === 'weekly-goal') {
     const base =
       perWeekGoal.value && perWeekGoal.value > 0 ? perWeekGoal.value : 3
@@ -616,6 +623,7 @@ function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     if (
       isAddSessionDialogOpen.value ||
+      isWeeklySessionsDialogOpen.value ||
       isAdjustGoalDialogOpen.value ||
       isWellbeingDialogOpen.value ||
       isWellbeingPlayerOpen.value ||
@@ -623,6 +631,7 @@ function handleKeydown(event: KeyboardEvent) {
       isProfileOpen.value
     ) {
       isAddSessionDialogOpen.value = false
+      isWeeklySessionsDialogOpen.value = false
       isAdjustGoalDialogOpen.value = false
       isWellbeingDialogOpen.value = false
       isWellbeingPlayerOpen.value = false
@@ -744,6 +753,15 @@ onBeforeUnmount(() => {
       :is-saving-session="isSavingSession"
       :weekly-sessions="weeklySessions"
       @close="isAddSessionDialogOpen = false"
+      @confirm-add="confirmAddSessionFromDialog"
+      @confirm-remove="confirmRemoveSessionFromDialog"
+    />
+
+    <WeeklySessionsDialog
+      v-if="isWeeklySessionsDialogOpen"
+      :is-saving-session="isSavingSession"
+      :weekly-sessions="weeklySessions"
+      @close="isWeeklySessionsDialogOpen = false"
       @confirm-add="confirmAddSessionFromDialog"
       @confirm-remove="confirmRemoveSessionFromDialog"
     />

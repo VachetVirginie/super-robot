@@ -29,6 +29,15 @@ const emit = defineEmits<{
         en cours.
       </p>
       <div class="dialog-actions">
+                <button
+          type="button"
+          class="primary dialog-primary"
+          :disabled="props.isSavingSession"
+          @click="emit('confirm-add')"
+        >
+          <span v-if="props.isSavingSession">Enregistrement...</span>
+          <span v-else>Ajouter la seance</span>
+        </button>
         <button
           type="button"
           class="secondary dialog-primary"
@@ -36,15 +45,6 @@ const emit = defineEmits<{
           @click="emit('confirm-remove')"
         >
           Retirer la derniere seance
-        </button>
-        <button
-          type="button"
-          class="primary dialog-primary"
-          :disabled="props.isSavingSession"
-          @click="emit('confirm-add')"
-        >
-          <span v-if="props.isSavingSession">Enregistrement...</span>
-          <span v-else>Confirmer la seance</span>
         </button>
       </div>
     </div>

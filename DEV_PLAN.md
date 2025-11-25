@@ -22,14 +22,14 @@ Objectif : permettre à un utilisateur de créer un compte, définir un objectif
 
 - [x] PWA de base (Vue 3 + TS, service worker, manifest, push front)
 - [x] Enregistrement des abonnements push dans Supabase (`push_subscriptions`)
-- [ ] Auth Supabase (magic link) côté frontend
-- [ ] Tables de base :
-  - [ ] `profiles` (info utilisateur, fuseau horaire)
+- [x] Auth Supabase (magic link) côté frontend
+- [ ] Tables de base (partiellement implémentées) :
+  - [x] `profiles` (info utilisateur, fuseau horaire)
   - [ ] `sports` / `user_sports` (multi-sport)
-  - [ ] `sessions` (séances réalisées)
-  - [ ] `goals` (objectif de séances / semaine)
-  - [ ] `notification_settings` (créneaux, fréquence max)
-- [ ] Écran "Aujourd'hui" (objectif + bouton "J'ai fait une séance")
+  - [x] `sessions` (séances réalisées)
+  - [x] `goals` (objectif de séances / semaine)
+  - [x] `notification_settings` (créneaux, fréquence max)
+- [x] Écran "Aujourd'hui" (v1 : objectif + bouton "J'ai fait une séance")
 - [ ] Écran "Progression" simple (sessions / semaine, état de l'objectif)
 - [ ] Edge Function Supabase pour envoyer des notifications de rappel
 - [ ] Cron/planification Supabase pour les rappels quotidiens/hebdo
@@ -74,8 +74,8 @@ Objectif : ajouter une couche sociale légère pour se motiver en groupe.
   - [x] `supabaseClient.ts` utilisant `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY`.
   - [x] `pushNotifications.ts` (abonnement push + sauvegarde dans `push_subscriptions`).
 - [x] Table `push_subscriptions` dans Supabase + policies RLS pour `anon`.
-- [ ] Auth Supabase (à ajouter)
-- [ ] Tables métier (profils, objectifs, séances, routines, social).
+- [x] Auth Supabase (email + mot de passe pour l'instant).
+- [ ] Tables métier restantes (routines, social) – `profiles`, `sessions`, `goals`, `notification_settings` déjà en place.
 
 ---
 
@@ -84,12 +84,13 @@ Objectif : ajouter une couche sociale légère pour se motiver en groupe.
 Ordre recommandé pour continuer le développement :
 
 1. **Phase 1 – Base utilisateur et suivi simple**
-   - [ ] Ajouter l'auth Supabase (magic link) dans le frontend.
-   - [ ] Créer les tables `profiles`, `sports`, `user_sports`, `sessions`, `goals`, `notification_settings`.
+   - [ ] Faire évoluer l'auth existante (email + mot de passe) vers le **magic link** si souhaité.
+   - [ ] Compléter les tables `sports`, `user_sports`, `notification_settings` avancées et vérifier le schéma de `profiles`, `sessions`, `goals`.
    - [ ] Lier `push_subscriptions` à `user_id` (quand connecté).
-   - [ ] Construire l'écran "Aujourd'hui" connecté à Supabase.
+   - [ ] Raffiner l'écran "Aujourd'hui" (UX + clean code) et le connecter complètement à Supabase.
    - [ ] Construire un premier écran "Progression".
    - [ ] Implémenter une Edge Function d'envoi de notifications de rappel.
+   - [ ] Refactorer l'UI en composants Vue (`TodayDashboard`, `ProfilePage`, `NotificationsCard`, dialogs, etc.) pour respecter les principes de clean code.
 
 2. **Phase 2 – Routines + bien-être**
    - [ ] Définir quelques routines types (débutant, matin, fin de journée).

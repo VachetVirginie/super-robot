@@ -54,17 +54,38 @@ export function useTodayStats(session: Ref<Session | null>) {
   )
 
   async function ensureUserData(userId: string) {
+    const user = session.value?.user
+
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, username')
       .eq('id', userId)
       .maybeSingle()
+
+    if (!user) {
+      return
+    }
+
+    const emailLocalPart =
+      typeof user.email === 'string' ? user.email.split('@')[0] ?? '' : ''
+    const cleanedLocalPart = emailLocalPart.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+    const idSuffix = user.id.replace(/-/g, '').slice(0, 4)
+    const base = cleanedLocalPart || 'athlete'
+    const generatedUsername = `${base}-${idSuffix || '0000'}`
+
+    const hasUsername = (profile as { username?: string | null } | null)?.username
 
     if (!profile) {
       await supabase.from('profiles').insert({
         id: userId,
-        display_name: session.value?.user?.email ?? null,
+        display_name: user.email ?? null,
+        username: generatedUsername,
       })
+    } else if (!hasUsername) {
+      await supabase
+        .from('profiles')
+        .update({ username: generatedUsername })
+        .eq('id', userId)
     }
 
     const { data: settings } = await supabase

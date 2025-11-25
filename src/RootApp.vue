@@ -3,6 +3,17 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { enablePushNotifications, isPushSupported } from './pushNotifications'
 import { useAuth } from './composables/useAuth'
 import { useTodayStats } from './composables/useTodayStats'
+import { useProfile } from './composables/useProfile'
+import WeekStrip from './components/WeekStrip.vue'
+import ProfilePage from './components/ProfilePage.vue'
+import TodayDashboard from './components/TodayDashboard.vue'
+import NotificationsCard from './components/NotificationsCard.vue'
+import WellbeingCard from './components/WellbeingCard.vue'
+import AddSessionDialog from './components/AddSessionDialog.vue'
+import MonthCalendarDialog from './components/MonthCalendarDialog.vue'
+import WellbeingDialog from './components/WellbeingDialog.vue'
+import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
+import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -37,6 +48,15 @@ const {
   weekSessionDates,
   getMonthSessionDates,
 } = useTodayStats(session)
+
+const {
+  displayName,
+  isProfileLoading,
+  isProfileSaving,
+  profileError,
+  saveDisplayName,
+  profileInitial,
+} = useProfile(session)
 
 const wellbeingExercises = [
   {
@@ -128,6 +148,26 @@ const weekStrip = computed(() => {
 
   return { days, rangeLabel }
 })
+const userGreeting = computed(() => {
+  const name = displayName.value?.trim()
+  if (name) {
+    return `HELLO, ${name.toUpperCase()}!`
+  }
+
+  const user = session.value?.user
+  const emailLocalPart =
+    typeof user?.email === 'string' ? user.email.split('@')[0] ?? '' : ''
+  if (emailLocalPart) {
+    return `HELLO, ${emailLocalPart.toUpperCase()}!`
+  }
+
+  return 'HELLO!'
+})
+
+const profileEmail = computed(() => {
+  const email = session.value?.user?.email
+  return typeof email === 'string' ? email : ''
+})
 
 const todaySections = computed(() => {
   const sections: {
@@ -188,11 +228,17 @@ const isWellbeingDialogOpen = ref(false)
 const isWellbeingPlayerOpen = ref(false)
 const activeExerciseKey = ref<string | null>(null)
 
+const isProfileOpen = ref(false)
+
 const isMonthCalendarOpen = ref(false)
 const calendarYear = ref(new Date().getFullYear())
 const calendarMonth = ref(new Date().getMonth())
 const calendarSessionDates = ref<string[]>([])
 const calendarTouchStartX = ref<number | null>(null)
+
+const snackbarMessage = ref<string | null>(null)
+const snackbarType = ref<'success' | 'error' | null>(null)
+let snackbarTimeout: number | null = null
 
 const activeExercise = computed(() => {
   if (!activeExerciseKey.value) {
@@ -202,6 +248,22 @@ const activeExercise = computed(() => {
     wellbeingExercises.find((exercise) => exercise.key === activeExerciseKey.value) ?? null
   )
 })
+
+function showSnackbar(message: string, type: 'success' | 'error' = 'success') {
+  snackbarMessage.value = message
+  snackbarType.value = type
+
+  if (snackbarTimeout !== null) {
+    window.clearTimeout(snackbarTimeout)
+  }
+
+  snackbarTimeout = window.setTimeout(() => {
+    if (snackbarMessage.value === message) {
+      snackbarMessage.value = null
+      snackbarType.value = null
+    }
+  }, 3000)
+}
 
 const calendarMonthLabel = computed(() => {
   const base = new Date(calendarYear.value, calendarMonth.value, 1)
@@ -439,6 +501,20 @@ function onCalendarTouchEnd(event: TouchEvent) {
   calendarTouchStartX.value = null
 }
 
+async function onSaveDisplayNameFromProfile() {
+  const previousError = profileError.value
+  await saveDisplayName()
+
+  if (!profileError.value) {
+    showSnackbar('Pseudo mis a jour', 'success')
+  } else if (profileError.value !== previousError || profileError.value) {
+    showSnackbar(
+      profileError.value ?? "Erreur lors de la mise a jour du pseudo.",
+      'error',
+    )
+  }
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     if (
@@ -446,13 +522,15 @@ function handleKeydown(event: KeyboardEvent) {
       isAdjustGoalDialogOpen.value ||
       isWellbeingDialogOpen.value ||
       isWellbeingPlayerOpen.value ||
-      isMonthCalendarOpen.value
+      isMonthCalendarOpen.value ||
+      isProfileOpen.value
     ) {
       isAddSessionDialogOpen.value = false
       isAdjustGoalDialogOpen.value = false
       isWellbeingDialogOpen.value = false
       isWellbeingPlayerOpen.value = false
       isMonthCalendarOpen.value = false
+      isProfileOpen.value = false
     }
   }
 }
@@ -471,50 +549,26 @@ onBeforeUnmount(() => {
   <main class="app">
     <header class="topbar">
       <h1 class="brand">SportMotiv</h1>
-      <button
-        v-if="isAuthenticated"
-        type="button"
-        class="link link-small"
-        @click="signOut"
-      >
-        Se deconnecter
-      </button>
-    </header>
-
-    <section v-if="isAuthenticated" class="card week-strip">
-      <div class="week-strip-header">
-        <h2 class="week-strip-greeting">HELLO, ATHLETE!</h2>
-        <div class="week-strip-icons">
-          <button type="button" class="icon-button">
-            <i class="pi pi-bookmark" aria-hidden="true"></i>
-          </button>
-          <button type="button" class="icon-button">
-            <i class="pi pi-bell" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="icon-button"
-            @click="openMonthCalendar"
-          >
-            <i class="pi pi-calendar" aria-hidden="true"></i>
-          </button>
-        </div>
-      </div>
-      <p class="week-strip-range">{{ weekStrip.rangeLabel }}</p>
-      <div class="week-strip-days">
+      <div v-if="isAuthenticated" class="topbar-right">
         <button
-          v-for="day in weekStrip.days"
-          :key="day.key"
           type="button"
-          class="week-day"
-          :class="{ 'is-today': day.isToday }"
+          class="avatar-button"
+          @click="isProfileOpen = true"
         >
-          <span class="week-day-date">{{ day.date }}</span>
-          <span class="week-day-label">{{ day.label }}</span>
-          <span v-if="day.hasSession" class="week-day-check">✓</span>
+          <span class="avatar-circle">
+            {{ profileInitial }}
+          </span>
         </button>
       </div>
-    </section>
+    </header>
+
+    <WeekStrip
+      v-if="isAuthenticated"
+      :greeting="userGreeting"
+      :range-label="weekStrip.rangeLabel"
+      :days="weekStrip.days"
+      @open-month-calendar="openMonthCalendar"
+    />
 
     <section v-if="isAuthenticated && todaysMotivation" class="card hero">
       <h2>{{ todaysMotivation.title }}</h2>
@@ -558,296 +612,87 @@ onBeforeUnmount(() => {
       </p>
     </section>
 
-    <section v-else class="card today">
-      <h2>Aujourd'hui</h2>
-      <p class="subtitle">Ton tableau de bord pour la semaine.</p>
-      <div class="today-list">
-        <button
-          v-for="section in todaySections"
-          :key="section.key"
-          type="button"
-          class="today-row"
-          @click="onTodayRowClick(section.key)"
-        >
-          <div class="today-row-main">
-            <span class="today-row-title">{{ section.title }}</span>
-            <span class="today-row-sub">{{ section.subtitle }}</span>
-          </div>
-          <div class="today-row-progress" :style="{ '--p': section.progress + '%' }">
-            <div class="today-row-circle">
-              <div class="today-row-circle-inner">
-                <span class="today-row-percent">
-                  <template v-if="section.key === 'weekly-goal'">
-                    {{ perWeekGoal ?? '—' }}
-                  </template>
-                  <template v-else>
-                    {{ section.progress }}%
-                  </template>
-                </span>
-              </div>
-            </div>
-          </div>
-        </button>
-      </div>
-    </section>
+    <TodayDashboard
+      v-else
+      :sections="todaySections"
+      :per-week-goal="perWeekGoal"
+      @row-click="onTodayRowClick"
+    />
 
-    <section v-if="isAuthenticated" class="card">
-      <h2>Notifications de motivation</h2>
-      <p>Active les notifications push pour recevoir des rappels reguliers.</p>
-      <button
-        type="button"
-        :disabled="!isPushSupported || isLoadingNotifications || status === 'enabled'"
-        @click="onEnableNotifications"
-      >
-        <span v-if="status === 'enabled'">Notifications activees</span>
-        <span v-else-if="isLoadingNotifications">Activation en cours...</span>
-        <span v-else>Activer les notifications</span>
-      </button>
-      <p v-if="!isPushSupported" class="info">
-        Les notifications push ne sont pas supportees sur ce navigateur.
-      </p>
-      <p v-if="errorMessage" class="error">
-        {{ errorMessage }}
-      </p>
-    </section>
-    <section v-if="isAuthenticated && todaysExercise" class="card wellbeing">
-      <h2>Bien-etre du jour</h2>
-      <h3 class="wellbeing-title">{{ todaysExercise.title }}</h3>
-      <p class="wellbeing-text">
-        {{ todaysExercise.description }}
-      </p>
-      <p class="wellbeing-meta">Environ {{ todaysExercise.durationMinutes }} minute(s).</p>
-      <button type="button" class="primary" @click="startWellbeingExercise">
-        Commencer
-      </button>
-    </section>
+    <NotificationsCard
+      v-if="isAuthenticated"
+      :is-push-supported="isPushSupported"
+      :is-loading="isLoadingNotifications"
+      :status="status"
+      :error-message="errorMessage"
+      @enable-notifications="onEnableNotifications"
+    />
+    <WellbeingCard
+      v-if="isAuthenticated && todaysExercise"
+      :exercise="todaysExercise"
+      @start="startWellbeingExercise"
+    />
 
-    <div
+    <AddSessionDialog
       v-if="isAddSessionDialogOpen"
-      class="dialog-backdrop"
-      @click.self="isAddSessionDialogOpen = false"
-    >
-      <div class="dialog-card">
-        <div class="dialog-header">
-          <h3 class="dialog-title">Ajouter une seance</h3>
-          <button
-            type="button"
-            class="dialog-close"
-            @click="isAddSessionDialogOpen = false"
-          >
-            <i class="pi pi-times" aria-hidden="true"></i>
-          </button>
-        </div>
-        <p class="dialog-text">
-          Confirme que tu as realise une seance. Elle sera ajoutee a ta semaine
-          en cours.
-        </p>
-        <div class="dialog-actions">
-          <button
-            type="button"
-            class="secondary dialog-primary"
-            :disabled="isSavingSession || !weeklySessions || weeklySessions === 0"
-            @click="confirmRemoveSessionFromDialog"
-          >
-            Retirer la derniere seance
-          </button>
-          <button
-            type="button"
-            class="primary dialog-primary"
-            :disabled="isSavingSession"
-            @click="confirmAddSessionFromDialog"
-          >
-            <span v-if="isSavingSession">Enregistrement...</span>
-            <span v-else>Confirmer la seance</span>
-          </button>
-        </div>
-      </div>
-    </div>
+      :is-saving-session="isSavingSession"
+      :weekly-sessions="weeklySessions"
+      @close="isAddSessionDialogOpen = false"
+      @confirm-add="confirmAddSessionFromDialog"
+      @confirm-remove="confirmRemoveSessionFromDialog"
+    />
 
-    <div
+    <ProfilePage
+      v-if="isProfileOpen && isAuthenticated"
+      v-model:displayName="displayName"
+      :profile-email="profileEmail"
+      :profile-initial="profileInitial"
+      :is-profile-loading="isProfileLoading"
+      :is-profile-saving="isProfileSaving"
+      :is-push-supported="isPushSupported"
+      :is-loading-notifications="isLoadingNotifications"
+      :notifications-status="status"
+      :notifications-error="errorMessage"
+      :profile-error="profileError"
+      @close="isProfileOpen = false"
+      @save-display-name="onSaveDisplayNameFromProfile"
+      @enable-notifications="onEnableNotifications"
+      @sign-out="signOut"
+    />
+
+    <MonthCalendarDialog
       v-if="isMonthCalendarOpen"
-      class="dialog-backdrop"
-      @click.self="isMonthCalendarOpen = false"
-    >
-      <div
-        class="dialog-card calendar-card"
-        @touchstart.passive="onCalendarTouchStart"
-        @touchend.passive="onCalendarTouchEnd"
-      >
-        <div class="dialog-header">
-          <h3 class="dialog-title">{{ calendarMonthLabel }}</h3>
-          <button
-            type="button"
-            class="dialog-close"
-            @click="isMonthCalendarOpen = false"
-          >
-            <i class="pi pi-times" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="calendar-nav">
-          <button
-            type="button"
-            class="calendar-nav-btn"
-            @click="changeCalendarMonth(-1)"
-          >
-            <i class="pi pi-chevron-left" aria-hidden="true"></i>
-          </button>
-          <span class="calendar-nav-hint">Glisse pour changer de mois</span>
-          <button
-            type="button"
-            class="calendar-nav-btn"
-            @click="changeCalendarMonth(1)"
-          >
-            <i class="pi pi-chevron-right" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="calendar-grid">
-          <div class="calendar-weekday" v-for="w in ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']" :key="w">
-            {{ w }}
-          </div>
-          <button
-            v-for="cell in calendarCells"
-            :key="cell.key"
-            type="button"
-            class="calendar-cell"
-            :class="{
-              'is-blank': cell.date === null,
-              'is-today': cell.isToday,
-              'has-session': cell.hasSession,
-            }"
-            :disabled="cell.date === null"
-          >
-            <span v-if="cell.date !== null" class="calendar-date">
-              {{ cell.date }}
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
+      :month-label="calendarMonthLabel"
+      :cells="calendarCells"
+      @close="isMonthCalendarOpen = false"
+      @prev-month="changeCalendarMonth(-1)"
+      @next-month="changeCalendarMonth(1)"
+      @touch-start="onCalendarTouchStart"
+      @touch-end="onCalendarTouchEnd"
+    />
 
-    <div
+    <WellbeingDialog
       v-if="isWellbeingDialogOpen"
-      class="dialog-backdrop"
-      @click.self="isWellbeingDialogOpen = false"
-    >
-      <div class="dialog-card">
-        <div class="dialog-header">
-          <h3 class="dialog-title">Choisir une pause</h3>
-          <button
-            type="button"
-            class="dialog-close"
-            @click="isWellbeingDialogOpen = false"
-          >
-            <i class="pi pi-times" aria-hidden="true"></i>
-          </button>
-        </div>
-        <p class="dialog-text">
-          Selectionne un exercice de bien-etre pour ta pause.
-        </p>
-        <div class="wellbeing-dialog-grid">
-          <button
-            v-for="exercise in wellbeingExercises"
-            :key="exercise.key"
-            type="button"
-            class="wellbeing-option-card"
-            @click="openExercisePlayer(exercise.key)"
-          >
-            <h4 class="wellbeing-option-title">{{ exercise.title }}</h4>
-            <p class="wellbeing-option-desc">
-              {{ exercise.description }}
-            </p>
-            <p class="wellbeing-option-meta">
-              Environ {{ exercise.durationMinutes }} min
-            </p>
-          </button>
-        </div>
-      </div>
-    </div>
+      :exercises="wellbeingExercises"
+      @close="isWellbeingDialogOpen = false"
+      @select="openExercisePlayer"
+    />
 
-    <div
-      v-if="isWellbeingPlayerOpen && activeExercise"
-      class="dialog-backdrop"
-      @click.self="isWellbeingPlayerOpen = false"
-    >
-      <div class="dialog-card">
-        <div class="dialog-header">
-          <h3 class="dialog-title">{{ activeExercise.title }}</h3>
-          <button
-            type="button"
-            class="dialog-close"
-            @click="isWellbeingPlayerOpen = false"
-          >
-            <i class="pi pi-times" aria-hidden="true"></i>
-          </button>
-        </div>
-        <p class="dialog-text">
-          Installe-toi confortablement et lance la seance audio.
-        </p>
-        <div class="audio-dialog-body">
-          <audio
-            v-if="activeExercise.audioUrl"
-            class="audio-player"
-            :src="activeExercise.audioUrl"
-            controls
-            autoplay
-          ></audio>
-          <p v-else class="info">
-            L'audio pour cette seance n'est pas encore configure.
-          </p>
-        </div>
-      </div>
-    </div>
+    <WellbeingPlayerDialog
+      v-if="isWellbeingPlayerOpen"
+      :exercise="activeExercise"
+      @close="isWellbeingPlayerOpen = false"
+    />
 
-    <div
+    <AdjustGoalDialog
       v-if="isAdjustGoalDialogOpen"
-      class="dialog-backdrop"
-      @click.self="isAdjustGoalDialogOpen = false"
-    >
-      <div class="dialog-card">
-        <div class="dialog-header">
-          <h3 class="dialog-title">Ajuster ton objectif</h3>
-          <button
-            type="button"
-            class="dialog-close"
-            @click="isAdjustGoalDialogOpen = false"
-          >
-            <i class="pi pi-times" aria-hidden="true"></i>
-          </button>
-        </div>
-        <p class="dialog-text">
-          Combien de seances veux-tu viser cette semaine ?
-        </p>
-        <div class="goal-dialog-row">
-          <button
-            type="button"
-            class="goal-btn"
-            @click="changeGoalDraft(-1)"
-          >
-            -
-          </button>
-          <div class="goal-dialog-value">
-            {{ goalDraft ?? perWeekGoal ?? 1 }} seance(s) / semaine
-          </div>
-          <button
-            type="button"
-            class="goal-btn"
-            @click="changeGoalDraft(1)"
-          >
-            +
-          </button>
-        </div>
-        <div class="dialog-actions">
-          <button
-            type="button"
-            class="primary dialog-primary"
-            :disabled="isSavingSession"
-            @click="confirmAdjustGoalFromDialog"
-          >
-            Mettre a jour l'objectif
-          </button>
-        </div>
-      </div>
-    </div>
+      :goal-draft="goalDraft"
+      :per-week-goal="perWeekGoal"
+      :is-saving="isSavingSession"
+      @close="isAdjustGoalDialogOpen = false"
+      @change-draft="changeGoalDraft"
+      @confirm="confirmAdjustGoalFromDialog"
+    />
 
     <nav v-if="isAuthenticated" class="bottom-nav">
       <button type="button" class="nav-item is-active">
@@ -866,11 +711,21 @@ onBeforeUnmount(() => {
         <i class="pi pi-dumbbell nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Seances</span>
       </button>
-      <button type="button" class="nav-item">
+      <button
+        type="button"
+        class="nav-item"
+        @click="isProfileOpen = true"
+      >
         <i class="pi pi-user nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Profil</span>
       </button>
     </nav>
+    <div
+      v-if="snackbarMessage"
+      :class="['snackbar', snackbarType === 'error' ? 'snackbar-error' : 'snackbar-success']"
+    >
+      {{ snackbarMessage }}
+    </div>
   </main>
 </template>
 
@@ -889,12 +744,39 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem 0;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 .brand {
-  font-size: 1.4rem;
   margin: 0;
+  font-size: 1.35rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.avatar-button {
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+.avatar-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: radial-gradient(circle at top left, #16a34a, #22c55e);
+  color: #020617;
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.65);
 }
 .link {
   background: transparent;
@@ -914,12 +796,17 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   background: #111111;
   border: 1px solid #27272a;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
 }
 .week-strip {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.9rem;
+  padding: 1.2rem 1.1rem;
+  border-radius: 1.75rem;
+  background: radial-gradient(circle at top left, #16a34a1a, transparent 55%), #050816;
+  border: none;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.9);
 }
 .week-strip-header {
   display: flex;
@@ -929,8 +816,9 @@ onBeforeUnmount(() => {
 }
 .week-strip-greeting {
   margin: 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.12em;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .week-strip-icons {
@@ -951,46 +839,64 @@ onBeforeUnmount(() => {
 }
 .week-strip-range {
   margin: 0;
-  font-size: 0.8rem;
-  opacity: 0.8;
+  font-size: 0.78rem;
+  opacity: 0.75;
 }
 .week-strip-days {
-  margin-top: 0.3rem;
-  padding: 0.45rem 0.5rem;
-  border-radius: 0.85rem;
-  background: #050505;
+  margin-top: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 999px;
+  background: #111827;
   display: flex;
   justify-content: space-between;
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 .week-day {
   flex: 1;
   min-width: 0;
   border-radius: 999px;
-  border: 1px solid #27272a;
-  background: transparent;
-  padding: 0.35rem 0.35rem;
+  border: none;
+  background: #1f2937;
+  padding: 0.25rem 0.25rem 0.3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #f9fafb;
+  color: #e5e7eb;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
 }
 .week-day-date {
-  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid #4b5563;
+  background: #020617;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 .week-day-label {
   font-size: 0.65rem;
-  opacity: 0.8;
+  margin-bottom: 0.1rem;
+  color: #d1d5db;
 }
 .week-day.is-today {
+  background: #30e097;
+  color: #022c22 !important;
+}
+.week-day.is-today .week-day-date {
   background: #f9fafb;
-  color: #050505;
+  border-color: #f9fafb;
+  color: #27272a;
+}
+.week-day.is-today .week-day-label {
+  color: #022c22 !important;
 }
 .week-day-check {
-  margin-top: 0.05rem;
-  font-size: 0.7rem;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
 }
 .calendar-card {
   max-width: 380px;
@@ -1035,8 +941,10 @@ onBeforeUnmount(() => {
   border: 1px solid #27272a;
   background: transparent;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.05rem;
   color: #e5e7eb;
 }
 .calendar-cell.is-blank {
@@ -1048,105 +956,14 @@ onBeforeUnmount(() => {
   color: #050505;
 }
 .calendar-cell.is-today {
-  background: #f9fafb;
+  background: #30e097;
   color: #050505;
-  border-color: #f9fafb;
 }
 .calendar-date {
   font-size: 0.85rem;
 }
-.today {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-.subtitle {
-  margin: 0;
-  font-size: 0.95rem;
-  opacity: 0.9;
-}
-.card > h2 {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.progress {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.progress-header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.9rem;
-}
-.progress-header .current {
-  opacity: 0.85;
-}
-.progress-bar {
-  position: relative;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: #f9fafb;
-  transition: width 0.3s ease;
-}
-.progress-status {
-  margin: 0;
-  font-size: 0.9rem;
-}
-.goal-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-.goal-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.goal-btn {
-  min-width: 2rem;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.9rem;
-}
-.recent {
-  margin-top: 0.75rem;
-}
-.recent-title {
-  margin: 0 0 0.25rem;
-  font-size: 0.9rem;
-}
-.recent-list {
-  margin: 0;
-  padding-left: 1rem;
-  font-size: 0.9rem;
-}
-.wellbeing {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.wellbeing-title {
-  margin: 0;
-  font-size: 1.1rem;
-}
-.wellbeing-text {
-  margin: 0;
-  font-size: 0.95rem;
-}
-.wellbeing-meta {
-  margin: 0;
-  font-size: 0.85rem;
-  opacity: 0.8;
+.calendar-check {
+  font-size: 0.6rem;
 }
 .hero {
   display: flex;
@@ -1189,197 +1006,20 @@ onBeforeUnmount(() => {
   font-size: 0.9rem;
   color: #ff6b6b;
 }
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 40;
-}
-.dialog-card {
-  width: 100%;
-  max-width: 360px;
-  border-radius: 1rem;
-  padding: 1.5rem 1.5rem 1.25rem;
-  background: #111111;
-  border: 1px solid #27272a;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
-}
-.dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
-}
-.dialog-title {
-  margin: 0;
-  font-size: 1rem;
-}
-.dialog-close {
-  border-radius: 999px;
-  border: 1px solid #27272a;
-  background: transparent;
-  padding: 0.2rem 0.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #e5e7eb;
-}
-.dialog-text {
-  margin: 0 0 1rem;
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-.dialog-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-}
-.secondary {
-  min-width: 0;
-  padding-inline: 1.1rem;
-  border-radius: 999px;
-  border: 1px solid #27272a;
-  background: transparent;
-}
-.dialog-primary {
-  width: 100%;
-}
-.wellbeing-dialog-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-.wellbeing-option-card {
-  width: 100%;
-  text-align: left;
-  padding: 0.75rem 0.9rem;
-  border-radius: 0.85rem;
-  border: 1px solid #27272a;
-  background: #0b0b0b;
-}
-.wellbeing-option-title {
-  margin: 0 0 0.25rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-.wellbeing-option-desc {
-  margin: 0 0 0.25rem;
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-.wellbeing-option-meta {
-  margin: 0;
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-.audio-dialog-body {
-  margin-top: 0.75rem;
-}
-.audio-player {
-  width: 100%;
-}
-.goal-dialog-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-.goal-dialog-value {
-  flex: 1;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-.today-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.today-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  border-radius: 0.85rem;
-  border: 1px solid #27272a;
-  background: #0b0b0b;
-}
-.today-row-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  text-align: left;
-}
-.today-row-title {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-.today-row-sub {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-.today-row-progress {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.today-row-circle {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  background:
-    conic-gradient(#f9fafb var(--p), rgba(55, 65, 81, 0.6) 0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.today-row-circle-inner {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: #111111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.today-row-percent {
-  font-size: 0.7rem;
-}
-.today-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  margin-top: 0.75rem;
-}
-.goal-actions-inline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-}
-.goal-label {
-  opacity: 0.85;
-}
 .bottom-nav {
   max-width: 420px;
   margin: 0.25rem auto 0;
   padding: 0.45rem 0.75rem 0.5rem;
   border-radius: 999px;
-  background: #111111;
+  background: rgba(17, 17, 17, 0.96);
   border: 1px solid #262626;
   display: flex;
   justify-content: space-between;
   gap: 0.4rem;
   position: sticky;
   bottom: 0.75rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(16px);
 }
 .nav-item {
   flex: 1;
@@ -1390,10 +1030,20 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   border: none;
   background: transparent;
- padding: 0.14rem 0.70rem;
+  padding: 0.14rem 0.7rem;
   color: rgba(209, 213, 219, 0.9);
   font-size: 0.75rem;
   box-shadow: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.08s ease;
+}
+.nav-item:hover {
+  background: rgba(31, 41, 55, 0.9);
+}
+.nav-item:active {
+  transform: translateY(1px);
 }
 .nav-item.is-active {
   background: #f9fafb;
@@ -1408,6 +1058,28 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   line-height: 1;
   text-align: center;
+}
+
+.snackbar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: #111827;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: #e5e7eb;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9);
+  z-index: 50;
+}
+.snackbar-success {
+  border-color: #22c55e;
+}
+.snackbar-error {
+  border-color: #f97373;
+  color: #fee2e2;
 }
 
 @media (max-width: 640px) {

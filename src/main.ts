@@ -2,7 +2,8 @@ import { createApp } from 'vue'
 import PrimeVue from 'primevue/config'
 import 'primeicons/primeicons.css'
 import './style.css'
-import RootApp from './RootApp.vue'
+import App from './App.vue'
+import { router } from './router'
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -10,8 +11,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   })
 }
 
-const app = createApp(RootApp)
+const app = createApp(App)
 
+app.use(router)
 app.use(PrimeVue, {
   unstyled: true,
 })

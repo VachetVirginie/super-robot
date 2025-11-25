@@ -15,12 +15,6 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
-  )
-})
-
 self.addEventListener('push', (event) => {
   let data = {}
   if (event.data) {

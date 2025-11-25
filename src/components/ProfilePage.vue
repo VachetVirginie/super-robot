@@ -32,13 +32,6 @@ function onInputDisplayName(event: Event) {
   const target = event.target as HTMLInputElement | null
   emit('update:displayName', target?.value ?? '')
 }
-
-function scrollToProfileForm() {
-  const el = document.querySelector('.profile-section--pseudo')
-  if (el instanceof HTMLElement) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-}
 </script>
 
 <template>
@@ -68,18 +61,7 @@ function scrollToProfileForm() {
           <p v-if="profileEmail" class="profile-hero-email">
             {{ profileEmail }}
           </p>
-          <button
-            type="button"
-            class="secondary profile-hero-edit"
-            @click="scrollToProfileForm"
-          >
-            Editer le profil
-          </button>
         </div>
-
-        <p class="dialog-text">
-          Personnalise ton pseudo et tes preferences.
-        </p>
 
         <div class="profile-section profile-section--pseudo">
           <h4 class="profile-section-title">Pseudo</h4>

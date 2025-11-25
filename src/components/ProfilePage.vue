@@ -52,7 +52,6 @@ function scrollToProfileForm() {
         >
           <i class="pi pi-chevron-left" aria-hidden="true"></i>
         </button>
-        <h2 class="profile-header-title">Profil</h2>
         <span class="profile-header-spacer"></span>
       </header>
 
@@ -63,14 +62,12 @@ function scrollToProfileForm() {
               {{ profileInitial }}
             </span>
           </div>
-          <div class="profile-hero-text">
-            <h3 class="profile-hero-name">
-              {{ heroName }}
-            </h3>
-            <p v-if="profileEmail" class="profile-hero-email">
-              {{ profileEmail }}
-            </p>
-          </div>
+          <h3 class="profile-hero-name">
+            {{ heroName }}
+          </h3>
+          <p v-if="profileEmail" class="profile-hero-email">
+            {{ profileEmail }}
+          </p>
           <button
             type="button"
             class="secondary profile-hero-edit"
@@ -173,26 +170,19 @@ function scrollToProfileForm() {
 .profile-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
-}
-.profile-header-title {
-  margin: 0;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.profile-header-spacer {
-  width: 2rem;
 }
 .profile-main-card {
   margin-top: 0.25rem;
 }
 .profile-hero {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 .profile-hero-avatar {
   width: 3.25rem;
@@ -209,12 +199,6 @@ function scrollToProfileForm() {
   font-weight: 700;
   color: #020617;
 }
-.profile-hero-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
 .profile-hero-name {
   margin: 0;
   font-size: 1rem;
@@ -226,7 +210,7 @@ function scrollToProfileForm() {
   opacity: 0.8;
 }
 .profile-hero-edit {
-  margin-left: auto;
+  margin-top: 0.75rem;
 }
 .profile-section {
   margin-top: 1rem;
@@ -243,6 +227,16 @@ function scrollToProfileForm() {
 }
 .profile-input {
   width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #4b5563;
+  background: #020617;
+  font-size: 0.95rem;
+}
+.profile-input:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
+  border-color: transparent;
 }
 .profile-save,
 .profile-notif,

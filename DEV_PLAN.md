@@ -1,8 +1,8 @@
-# SportMotiv – Plan de développement
+# Motivly – Plan de développement
 
 ## 1. Vision du projet
 
-SportMotiv est une PWA mobile-first qui aide les personnes à :
+Motivly est une PWA mobile-first qui aide les personnes à :
 
 - Démarrer ou reprendre le sport en douceur.
 - Créer et suivre des **routines sport + bien-être** (respiration, ancrage, mini-méditations).

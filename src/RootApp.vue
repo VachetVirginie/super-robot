@@ -6,10 +6,6 @@ import { useAuth } from './composables/useAuth'
 import { useTodayStats } from './composables/useTodayStats'
 import { useProfile } from './composables/useProfile'
 import WeekStrip from './components/WeekStrip.vue'
-import ProfilePage from './components/ProfilePage.vue'
-import TodayDashboard from './components/TodayDashboard.vue'
-import NotificationsCard from './components/NotificationsCard.vue'
-import WellbeingCard from './components/WellbeingCard.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
 import MonthCalendarDialog from './components/MonthCalendarDialog.vue'
 import WellbeingDialog from './components/WellbeingDialog.vue'
@@ -46,6 +42,7 @@ const {
   perWeekGoal,
   isSavingSession,
   weeklyProgressPercent,
+  weeklyStatusLabel,
   recordSession,
   changeGoal,
   removeLastSession,
@@ -554,7 +551,7 @@ onBeforeUnmount(() => {
 <template>
   <main class="app">
     <header class="topbar">
-      <h1 class="brand">SportMotiv</h1>
+      <h1 class="brand">Motivly</h1>
       <div v-if="isAuthenticated" class="topbar-right">
         <button
           type="button"
@@ -576,68 +573,59 @@ onBeforeUnmount(() => {
       @open-month-calendar="openMonthCalendar"
     />
 
-    <section v-if="isAuthenticated && todaysMotivation" class="card hero">
-      <h2>{{ todaysMotivation.title }}</h2>
-      <p class="hero-text">
-        {{ todaysMotivation.body }}
-      </p>
-      <div class="hero-image"></div>
-    </section>
-
-    <section v-if="!isAuthenticated" class="card">
-      <h2>{{ isLoginMode ? 'Connexion' : 'Creer un compte' }}</h2>
-      <p>Connecte-toi pour sauvegarder tes objectifs, tes seances et tes routines.</p>
-      <form class="auth-form" @submit.prevent="submitAuth">
-        <input
-          v-model="email"
-          type="email"
-          required
-          class="input"
-          placeholder="ton.email@example.com"
-        />
-        <input
-          v-model="password"
-          type="password"
-          required
-          class="input"
-          placeholder="Mot de passe"
-        />
-        <button type="submit" :disabled="isAuthLoading" class="primary">
-          <span v-if="isAuthLoading">{{ submitLoadingLabel }}</span>
-          <span v-else>{{ submitLabel }}</span>
-        </button>
-      </form>
-      <button type="button" class="link" @click="toggleAuthMode">
-        {{ switchLabel }}
-      </button>
-      <p v-if="authMessage" class="info">
-        {{ authMessage }}
-      </p>
-      <p v-if="authError" class="error">
-        {{ authError }}
-      </p>
-    </section>
-
-    <TodayDashboard
-      v-else
-      :sections="todaySections"
-      :per-week-goal="perWeekGoal"
-      @row-click="onTodayRowClick"
-    />
-
-    <NotificationsCard
-      v-if="isAuthenticated"
-      :is-push-supported="isPushSupported"
-      :is-loading="isLoadingNotifications"
-      :status="status"
-      :error-message="errorMessage"
-      @enable-notifications="onEnableNotifications"
-    />
-    <WellbeingCard
-      v-if="isAuthenticated && todaysExercise"
-      :exercise="todaysExercise"
-      @start="startWellbeingExercise"
-    />
+    <RouterView v-slot="{ Component, route }">
+      <component
+        v-if="route.name === 'profile'"
+        :is="Component"
+        :display-name="displayName"
+        :profile-email="profileEmail"
+        :profile-initial="profileInitial"
+        :is-profile-loading="isProfileLoading"
+        :is-profile-saving="isProfileSaving"
+        :profile-error="profileError"
+        :is-push-supported="isPushSupported"
+        :is-loading-notifications="isLoadingNotifications"
+        :notifications-status="status"
+        :notifications-error="errorMessage"
+        :on-update-display-name="(value: string) => { displayName = value }"
+        :on-save-display-name="onSaveDisplayNameFromProfile"
+        :on-enable-notifications="onEnableNotifications"
+        :on-sign-out="signOut"
+        :on-close="() => router.push({ name: 'today' })"
+      />
+      <component
+        v-else
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+        :is-login-mode="isLoginMode"
+        :email="email"
+        :password="password"
+        :auth-message="authMessage"
+        :auth-error="authError"
+        :is-auth-loading="isAuthLoading"
+        :submit-label="submitLabel"
+        :submit-loading-label="submitLoadingLabel"
+        :switch-label="switchLabel"
+        :todays-motivation="todaysMotivation"
+        :today-sections="todaySections"
+        :per-week-goal="perWeekGoal"
+        :weekly-sessions="weeklySessions"
+        :weekly-progress-percent="weeklyProgressPercent"
+        :weekly-status-label="weeklyStatusLabel"
+        :is-push-supported="isPushSupported"
+        :is-loading-notifications="isLoadingNotifications"
+        :notifications-status="status"
+        :notifications-error="errorMessage"
+        :todays-exercise="todaysExercise"
+        :on-update-email="(value: string) => { email = value }"
+        :on-update-password="(value: string) => { password = value }"
+        :submit-auth="submitAuth"
+        :toggle-auth-mode="toggleAuthMode"
+        :on-today-row-click="onTodayRowClick"
+        :on-enable-notifications="onEnableNotifications"
+        :start-wellbeing-exercise="startWellbeingExercise"
+      />
+    </RouterView>
 
     <AddSessionDialog
       v-if="isAddSessionDialogOpen"
@@ -646,24 +634,6 @@ onBeforeUnmount(() => {
       @close="isAddSessionDialogOpen = false"
       @confirm-add="confirmAddSessionFromDialog"
       @confirm-remove="confirmRemoveSessionFromDialog"
-    />
-
-    <ProfilePage
-      v-if="isProfileOpen && isAuthenticated"
-      v-model:displayName="displayName"
-      :profile-email="profileEmail"
-      :profile-initial="profileInitial"
-      :is-profile-loading="isProfileLoading"
-      :is-profile-saving="isProfileSaving"
-      :is-push-supported="isPushSupported"
-      :is-loading-notifications="isLoadingNotifications"
-      :notifications-status="status"
-      :notifications-error="errorMessage"
-      :profile-error="profileError"
-      @close="router.push({ name: 'today' })"
-      @save-display-name="onSaveDisplayNameFromProfile"
-      @enable-notifications="onEnableNotifications"
-      @sign-out="signOut"
     />
 
     <MonthCalendarDialog
@@ -709,7 +679,11 @@ onBeforeUnmount(() => {
         <i class="pi pi-home nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Accueil</span>
       </button>
-      <button type="button" class="nav-item">
+      <button
+        type="button"
+        :class="['nav-item', { 'is-active': route.name === 'progress' }]"
+        @click="router.push({ name: 'progress' })"
+      >
         <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Progression</span>
       </button>

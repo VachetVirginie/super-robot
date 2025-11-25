@@ -318,7 +318,7 @@ export function useTodayStats(session: Ref<Session | null>) {
     () => {
       void syncForCurrentUser()
     },
-    { immediate: true }
+    { immediate: true },
   )
 
   return {
@@ -326,13 +326,14 @@ export function useTodayStats(session: Ref<Session | null>) {
     perWeekGoal,
     currentGoalId,
     isSavingSession,
-    latestSessionsDisplay,
+    latestSessions,
+    weekSessionDates,
     weeklyProgressPercent,
     weeklyStatusLabel,
-    weekSessionDates,
-    getMonthSessionDates,
+    latestSessionsDisplay,
     recordSession,
-    changeGoal,
     removeLastSession,
+    changeGoal,
+    getMonthSessionDates,
   }
 }

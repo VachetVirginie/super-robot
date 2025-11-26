@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineProps, ref, watch } from 'vue'
 
 const isPlaying = ref(false)
 const progress = ref(0)
@@ -10,6 +10,23 @@ const audioRef = ref<HTMLAudioElement | null>(null)
 const totalPlayed = ref(0)
 const lastTick = ref<number | null>(null)
 const MAX_DURATION = 180
+
+const showReflection = ref(false)
+const reflectionText = ref('')
+const reflectionSaved = ref(false)
+
+const props = defineProps<{
+  isAuthenticated: boolean
+  isSavingStressReason: boolean
+  saveStressReason: (reason: string) => void | Promise<void>
+}>()
+
+const canSaveReflection = computed(() => {
+  if (!props.isAuthenticated || props.isSavingStressReason) {
+    return false
+  }
+  return reflectionText.value.trim().length > 0
+})
 
 const tracks = [
   {
@@ -94,10 +111,16 @@ function togglePlay() {
     lastTick.value = performance.now()
     void audio.play()
     isPlaying.value = true
+    showReflection.value = false
+    reflectionSaved.value = false
+    reflectionText.value = ''
   } else {
     audio.pause()
     isPlaying.value = false
     lastTick.value = null
+    if (totalPlayed.value > 0) {
+      showReflection.value = true
+    }
   }
 }
 
@@ -126,6 +149,7 @@ function onTimeUpdate() {
     currentTime.value = 0
     totalPlayed.value = 0
     lastTick.value = null
+    showReflection.value = true
     return
   }
 
@@ -165,7 +189,23 @@ watch(selectedTrackId, () => {
   currentTime.value = 0
   totalPlayed.value = 0
   lastTick.value = null
+  showReflection.value = false
+  reflectionSaved.value = false
+  reflectionText.value = ''
 })
+
+async function onSaveReflection() {
+  const text = reflectionText.value.trim()
+  if (!text || !canSaveReflection.value) {
+    return
+  }
+
+  reflectionSaved.value = false
+  await props.saveStressReason(text)
+  if (!props.isSavingStressReason) {
+    reflectionSaved.value = true
+  }
+}
 </script>
 
 <template>
@@ -234,6 +274,32 @@ watch(selectedTrackId, () => {
       </div>
     </div>
 
+    <section v-if="showReflection" class="reflection-card">
+      <h3 class="reflection-title">Prendre un petit recul</h3>
+      <p class="reflection-subtitle">
+        Qu'est-ce qui a declenche cette montee de stress ? Note quelques mots pour t'aider a
+        reperer ce qui revient souvent.
+      </p>
+      <textarea
+        v-model="reflectionText"
+        class="reflection-textarea"
+        rows="3"
+        placeholder="Exemples : conflit au travail, surcharge de messages, retard, impression de ne pas y arriver..."
+      ></textarea>
+      <button
+        type="button"
+        class="primary reflection-button"
+        :disabled="!canSaveReflection"
+        @click="onSaveReflection"
+      >
+        <span v-if="props.isSavingStressReason">Enregistrement...</span>
+        <span v-else>Enregistrer cette raison</span>
+      </button>
+      <p v-if="reflectionSaved" class="reflection-hint">
+        Merci, c'est note. On pourra s'en servir pour mieux comprendre ce qui revient.
+      </p>
+    </section>
+
     <audio
       ref="audioRef"
       :src="currentTrack.src"
@@ -272,6 +338,51 @@ watch(selectedTrackId, () => {
   margin: 0.4rem 0 0;
   font-size: 0.8rem;
   opacity: 0.75;
+}
+
+.reflection-card {
+  margin-top: 1rem;
+  border-radius: 1rem;
+  padding: 1rem 0.9rem 0.9rem;
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.reflection-title {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reflection-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.reflection-textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.reflection-button {
+  margin-top: 0.1rem;
+}
+
+.reflection-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.8;
 }
 
 .player-track-select {

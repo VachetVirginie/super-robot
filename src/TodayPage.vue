@@ -349,7 +349,8 @@ async function onSubmitCheckin() {
 
 .checkin-dot.is-active {
   border-color: #22c55e;
-  background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.4), #020617);
+  background: #22c55e;
+  color: #020617;
 }
 
 .checkin-submit {

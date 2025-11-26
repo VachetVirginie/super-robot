@@ -7,6 +7,7 @@ import { useTodayStats } from './composables/useTodayStats'
 import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
 import { useCheckins } from './composables/useCheckins'
+import { useStressReasons } from './composables/useStressReasons'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
 import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
@@ -80,6 +81,14 @@ const {
   weeklyAverageStress,
   weeklyCheckinsCount,
 } = useCheckins(session)
+
+const {
+  reasons: stressReasons,
+  isLoadingReasons: isLoadingStressReasons,
+  isSavingReason: isSavingStressReason,
+  reasonsError: stressReasonsError,
+  saveStressReason,
+} = useStressReasons(session)
 
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
@@ -786,8 +795,19 @@ onBeforeUnmount(() => {
         :weekly-checkins-count="weeklyCheckinsCount"
       />
       <component
+        v-else-if="route.name === 'stress-reasons'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+        :reasons="stressReasons"
+        :is-loading-reasons="isLoadingStressReasons"
+        :reasons-error="stressReasonsError"
+      />
+      <component
         v-else-if="route.name === 'alert'"
         :is="Component"
+        :is-authenticated="isAuthenticated"
+        :is-saving-stress-reason="isSavingStressReason"
+        :save-stress-reason="saveStressReason"
       />
       <component
         v-else

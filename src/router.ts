@@ -4,6 +4,7 @@ import ProfilePageRoute from './ProfilePageRoute.vue'
 import ProgressPage from './ProgressPage.vue'
 import RootApp from './RootApp.vue'
 import ZenPage from './ZenPage.vue'
+import StressReasonsPage from './StressReasonsPage.vue'
 
 const routes = [
   {
@@ -28,6 +29,11 @@ const routes = [
         path: 'progress',
         name: 'progress',
         component: ProgressPage,
+      },
+      {
+        path: 'stress-reasons',
+        name: 'stress-reasons',
+        component: StressReasonsPage,
       },
       {
         path: 'alert',

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots'
 
 const props = defineProps<{
@@ -14,6 +15,8 @@ const props = defineProps<{
   isWeeklySlotsLoading: boolean
   weeklySlotsError: string | null
 }>()
+
+const router = useRouter()
 
 const safePercent = computed(() => {
   if (!Number.isFinite(props.weeklyProgressPercent)) return 0
@@ -199,6 +202,14 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
           </p>
         </div>
       </div>
+
+      <button
+        type="button"
+        class="stress-link-button"
+        @click="router.push({ name: 'stress-reasons' })"
+      >
+        Voir les raisons que tu as notees
+      </button>
     </section>
   </section>
 </template>
@@ -461,6 +472,17 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
 
 .stress-card-mood {
   margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+}
+
+.stress-link-button {
+  margin-top: 0.75rem;
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
 }
 </style>

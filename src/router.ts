@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import TodayPage from './TodayPage.vue'
 import ProfilePageRoute from './ProfilePageRoute.vue'
 import ProgressPage from './ProgressPage.vue'
-import AlertPage from './AlertPage.vue'
 import RootApp from './RootApp.vue'
+import ZenPage from './ZenPage.vue'
 
 const routes = [
   {
@@ -32,7 +32,7 @@ const routes = [
       {
         path: 'alert',
         name: 'alert',
-        component: AlertPage,
+        component: ZenPage,
       },
     ],
   },

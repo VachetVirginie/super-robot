@@ -131,7 +131,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <section class="stress-reasons-page">
+  <section class="card stress-reasons-page">
     <button
       type="button"
       class="stress-back-button"
@@ -254,10 +254,10 @@ async function confirmDelete() {
 
     <div
       v-if="deleteId"
-      class="stress-delete-backdrop"
+      class="dialog-backdrop"
       @click.self="cancelDelete"
     >
-      <section class="stress-delete-card">
+      <div class="dialog-card stress-delete-card">
         <h3 class="stress-delete-title">Supprimer cette raison ?</h3>
         <p class="stress-delete-text">
           Tu pourras toujours noter de nouvelles raisons plus tard. Est-ce que tu es sur(e) de vouloir la supprimer ?
@@ -279,41 +279,14 @@ async function confirmDelete() {
             Annuler
           </button>
         </div>
-      </section>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.stress-reasons-page {
-  max-width: 100%;
-  width: 100%;
-  padding: 1.5rem 1.5rem 1.25rem;
-  border-radius: 1rem;
-  margin: 0 auto;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
-}
-
-.stress-delete-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 1rem 2.75rem;
-  z-index: 50;
-}
-
 .stress-delete-card {
-  max-width: 360px;
-  width: 100%;
-  border-radius: 1rem;
   padding: 1rem 0.9rem 0.9rem;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.5);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;

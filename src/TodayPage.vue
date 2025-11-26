@@ -117,7 +117,7 @@ async function onSubmitCheckin() {
         </p>
       </div>
       <button type="button" class="secondary planweek-cta" @click="props.onOpenWeekPlan()">
-        Choisir mes moments
+        Mes moments
       </button>
     </div>
   </section>

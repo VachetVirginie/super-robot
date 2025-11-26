@@ -134,14 +134,14 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
 </script>
 
 <template>
-  <section v-if="!isAuthenticated" class="progress-card">
+  <section v-if="!isAuthenticated" class="card progress-card">
     <h2 class="progress-title">Mon equilibre</h2>
     <p class="progress-text">
       Connecte-toi pour suivre ta progression hebdomadaire et tes objectifs.
     </p>
   </section>
 
-  <section v-else class="progress-card">
+  <section v-else class="card progress-card">
     <h2 class="progress-title">Mon equilibre</h2>
 
     <div class="progress-summary">
@@ -276,17 +276,6 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
 </template>
 
 <style scoped>
-.progress-card {
-  max-width: 100%;
-  width: 100%;
-  padding: 1.5rem 1.5rem 1.25rem;
-  border-radius: 1rem;
-  margin: 0 auto;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
-}
-
 .progress-title {
   margin: 0 0 0.9rem;
   font-size: 1rem;

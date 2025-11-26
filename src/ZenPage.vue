@@ -288,10 +288,10 @@ async function onSaveReflection() {
 
     <div
       v-if="showReflection"
-      class="reflection-backdrop"
+      class="dialog-backdrop"
       @click.self="showReflection = false"
     >
-      <section class="reflection-card">
+      <div class="dialog-card reflection-card">
         <h3 class="reflection-title">Prendre un petit recul</h3>
         <p class="reflection-subtitle">
           Qu'est-ce qui a declenche cette montee de stress ? Note quelques mots pour t'aider a
@@ -331,7 +331,7 @@ async function onSaveReflection() {
         <p v-if="reflectionSaved" class="reflection-hint">
           Merci, c'est note. On pourra s'en servir pour mieux comprendre ce qui revient.
         </p>
-      </section>
+      </div>
     </div>
 
     <audio
@@ -374,22 +374,8 @@ async function onSaveReflection() {
   opacity: 0.75;
 }
 
-.reflection-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 1rem 2.75rem;
-  z-index: 50;
-}
-
 .reflection-card {
-  border-radius: 1rem;
   padding: 1rem 0.9rem 0.9rem;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.5);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;

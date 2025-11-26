@@ -213,7 +213,9 @@ async function onSaveReflection() {
   reflectionSaved.value = false
   await props.saveStressReason(text, reflectionCategory.value)
   if (!props.isSavingStressReason) {
-    reflectionSaved.value = true
+    showReflection.value = false
+    reflectionText.value = ''
+    reflectionCategory.value = 'other'
   }
 }
 </script>

@@ -14,6 +14,7 @@ const props = defineProps<{
   weeklySlots: WeeklySlot[]
   isWeeklySlotsLoading: boolean
   weeklySlotsError: string | null
+  stressReasons: { id: string; created_at: string; reason: string | null; category: string | null }[]
 }>()
 
 const router = useRouter()
@@ -21,6 +22,46 @@ const router = useRouter()
 const safePercent = computed(() => {
   if (!Number.isFinite(props.weeklyProgressPercent)) return 0
   return Math.max(0, Math.min(100, Math.round(props.weeklyProgressPercent)))
+})
+
+const stressCategoriesSummary = computed(() => {
+  const counts: Record<string, number> = {
+    work: 0,
+    family: 0,
+    health: 0,
+    other: 0,
+    uncategorized: 0,
+  }
+
+  for (const item of props.stressReasons) {
+    const key =
+      item.category && ['work', 'family', 'health', 'other'].includes(item.category)
+        ? item.category
+        : 'uncategorized'
+    counts[key] += 1
+  }
+
+  const labels: Record<string, string> = {
+    work: 'Travail',
+    family: 'Famille',
+    health: 'Sante',
+    other: 'Autre',
+    uncategorized: 'Autre / non precise',
+  }
+
+  const entries = Object.entries(counts)
+    .filter(([, value]) => value > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+
+  return entries.map(([key, value]) => {
+    const label = labels[key] ?? 'Autre / non precise'
+    return {
+      key,
+      label,
+      count: value,
+    }
+  })
 })
 
 const hasStressData = computed(() => {
@@ -91,14 +132,14 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
 
 <template>
   <section v-if="!isAuthenticated" class="progress-card">
-    <h2 class="progress-title">Ma progression</h2>
+    <h2 class="progress-title">Mon equilibre</h2>
     <p class="progress-text">
       Connecte-toi pour suivre ta progression hebdomadaire et tes objectifs.
     </p>
   </section>
 
   <section v-else class="progress-card">
-    <h2 class="progress-title">Ma progression</h2>
+    <h2 class="progress-title">Mon equilibre</h2>
 
     <div class="progress-summary">
       <p class="progress-text">
@@ -210,6 +251,23 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
       >
         Voir les raisons que tu as notees
       </button>
+    </section>
+
+    <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
+      <h3 class="stress-categories-title">Ce qui revient souvent</h3>
+      <p class="stress-categories-text">
+        Sur tes dernieres raisons de stress, voici ce qui apparait le plus souvent.
+      </p>
+      <div class="stress-categories-chips">
+        <span
+          v-for="item in stressCategoriesSummary"
+          :key="item.key"
+          class="stress-category-chip"
+        >
+          {{ item.label }}
+          <span class="stress-category-count">({{ item.count }})</span>
+        </span>
+      </div>
     </section>
   </section>
 </template>
@@ -484,5 +542,40 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   color: #e5e7eb;
   padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
+}
+
+.stress-categories-section {
+  margin-top: 1.25rem;
+}
+
+.stress-categories-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.stress-categories-text {
+  margin: 0 0 0.45rem;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.stress-categories-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.stress-category-chip {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  font-size: 0.78rem;
+}
+
+.stress-category-count {
+  opacity: 0.85;
 }
 </style>

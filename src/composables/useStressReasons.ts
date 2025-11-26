@@ -145,15 +145,7 @@ export function useStressReasons(session: Ref<Session | null>) {
         return
       }
 
-      reasons.value = reasons.value.map((item) => {
-        if (item.id !== id) return item
-        return {
-          ...item,
-          reason: payload.reason ?? item.reason,
-          category:
-            typeof payload.category !== 'undefined' ? payload.category : item.category,
-        }
-      })
+      await loadRecentReasons()
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Unexpected error in updateStressReason', error)

@@ -59,6 +59,7 @@ const categoryOptions = [
 const editingId = ref<string | null>(null)
 const editText = ref('')
 const editCategory = ref<string | null>(null)
+const deleteId = ref<string | null>(null)
 
 function formatDate(value: string) {
   const date = new Date(value)
@@ -112,10 +113,19 @@ async function saveEdit(id: string) {
 }
 
 async function onDelete(id: string) {
-  const confirmed = window.confirm('Supprimer cette raison ?')
-  if (!confirmed) {
+  deleteId.value = id
+}
+
+function cancelDelete() {
+  deleteId.value = null
+}
+
+async function confirmDelete() {
+  if (!deleteId.value) {
     return
   }
+  const id = deleteId.value
+  deleteId.value = null
   await props.deleteStressReason(id)
 }
 </script>
@@ -241,6 +251,36 @@ async function onDelete(id: string) {
         </section>
       </div>
     </template>
+
+    <div
+      v-if="deleteId"
+      class="stress-delete-backdrop"
+      @click.self="cancelDelete"
+    >
+      <section class="stress-delete-card">
+        <h3 class="stress-delete-title">Supprimer cette raison ?</h3>
+        <p class="stress-delete-text">
+          Tu pourras toujours noter de nouvelles raisons plus tard. Est-ce que tu es sur(e) de vouloir la supprimer ?
+        </p>
+        <div class="stress-delete-actions">
+          <button
+            type="button"
+            class="stress-delete-button stress-delete-button--danger"
+            :disabled="props.isSavingReason"
+            @click="confirmDelete"
+          >
+            Supprimer
+          </button>
+          <button
+            type="button"
+            class="stress-delete-button"
+            @click="cancelDelete"
+          >
+            Annuler
+          </button>
+        </div>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -254,6 +294,62 @@ async function onDelete(id: string) {
   background: #020617;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+}
+
+.stress-delete-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem 2.75rem;
+  z-index: 50;
+}
+
+.stress-delete-card {
+  max-width: 360px;
+  width: 100%;
+  border-radius: 1rem;
+  padding: 1rem 0.9rem 0.9rem;
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.stress-delete-title {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stress-delete-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.stress-delete-actions {
+  margin-top: 0.4rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stress-delete-button {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.stress-delete-button--danger {
+  border-color: rgba(248, 113, 113, 0.8);
+  color: #fecaca;
 }
 
 .stress-back-button {

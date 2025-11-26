@@ -795,6 +795,7 @@ onBeforeUnmount(() => {
         :weekly-slots-error="weeklySlotsError"
         :weekly-average-stress="weeklyAverageStress"
         :weekly-checkins-count="weeklyCheckinsCount"
+        :stress-reasons="stressReasons"
       />
       <component
         v-else-if="route.name === 'stress-reasons'"
@@ -931,7 +932,7 @@ onBeforeUnmount(() => {
         @click="router.push({ name: 'progress' })"
       >
         <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Progression</span>
+        <span class="nav-label">Equilibre</span>
       </button>
       <button
         type="button"

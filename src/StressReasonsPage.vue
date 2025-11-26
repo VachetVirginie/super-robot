@@ -283,6 +283,7 @@ async function confirmDelete() {
         </div>
       </div>
     </div>
+    </section>
   </div>
 </template>
 

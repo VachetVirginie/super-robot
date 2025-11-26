@@ -141,138 +141,140 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
     </p>
   </section>
 
-  <section v-else class="card progress-card">
-    <h2 class="progress-title">Mon equilibre</h2>
+  <template v-else>
+    <section class="card progress-card">
+      <h2 class="progress-title">Bouger cette semaine</h2>
 
-    <div class="progress-summary">
-      <p class="progress-text">
-        {{ sessionsLabel }}
-      </p>
-      <p class="progress-text progress-text--muted">
-        {{ goalLabel }}
-      </p>
-    </div>
-
-    <div class="progress-bar-wrapper">
-      <div class="progress-bar-track">
-        <div class="progress-bar-fill" :style="{ width: safePercent + '%' }"></div>
-      </div>
-      <span class="progress-bar-label">Tu es a {{ safePercent }}% de ton objectif de la semaine.</span>
-    </div>
-
-    <p class="progress-status">
-      {{ weeklyStatusLabel }}
-    </p>
-
-    <div class="progress-tags">
-      <span class="tag tag--mint">Stress & mouvement</span>
-      <span class="tag tag--blue">Semaine en cours</span>
-      <span class="tag tag--coral" v-if="safePercent >= 100">Objectif atteint</span>
-    </div>
-
-    <section class="planstrip">
-      <h3 class="planstrip-title">Tes moments prevus pour bouger</h3>
-
-      <p v-if="isWeeklySlotsLoading" class="planstrip-text">
-        Chargement de ton planning...
-      </p>
-      <p v-else-if="weeklySlotsError" class="planstrip-text planstrip-text--error">
-        {{ weeklySlotsError }}
-      </p>
-      <p
-        v-else-if="!weeklySlots.length"
-        class="planstrip-text planstrip-text--muted"
-      >
-        Tu n'as pas encore prevu de moments pour bouger cette semaine. Tu peux les
-        choisir depuis la page Aujourd'hui.
-      </p>
-
-      <div v-else class="planstrip-grid">
-        <div
-          v-for="(day, dayIndex) in days"
-          :key="day"
-          class="planstrip-day"
-        >
-          <div class="planstrip-day-label">
-            {{ day }}
-          </div>
-          <div class="planstrip-day-slots">
-            <span
-              v-for="slot in timeSlots"
-              :key="slot.key"
-              class="planstrip-dot"
-              :class="[
-                'planstrip-dot--' + slot.key,
-                { 'is-active': hasSlot(dayIndex, slot.key) },
-              ]"
-            ></span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="stress-section">
-      <h3 class="stress-title">Ton stress cette semaine</h3>
-
-      <p v-if="!hasStressData" class="stress-text stress-text--muted">
-        Pas encore assez de check-ins cette semaine pour voir une tendance.
-      </p>
-
-      <div v-else class="stress-grid">
-        <div class="stress-card">
-          <p class="stress-card-label">Note moyenne</p>
-          <p class="stress-card-value">
-            {{ weeklyAverageStress }}/5
-          </p>
-          <div class="stress-bar-track">
-            <div class="stress-bar-fill" :style="{ width: stressLevelPercent + '%' }"></div>
-          </div>
-        </div>
-
-        <div class="stress-card">
-          <p class="stress-card-label">Check-ins</p>
-          <p class="stress-card-value">
-            {{ weeklyCheckinsCount }}
-          </p>
-          <p class="stress-card-hint">
-            {{ stressCountLabel }}
-          </p>
-        </div>
-
-        <div class="stress-card stress-card--mood">
-          <p class="stress-card-label">Tendance</p>
-          <p class="stress-card-mood">
-            {{ stressMoodLabel }}
-          </p>
-        </div>
+      <div class="progress-summary">
+        <p class="progress-text">
+          {{ sessionsLabel }}
+        </p>
+        <p class="progress-text progress-text--muted">
+          {{ goalLabel }}
+        </p>
       </div>
 
-      <button
-        type="button"
-        class="stress-link-button"
-        @click="router.push({ name: 'stress-reasons' })"
-      >
-        Voir les raisons que tu as notees
-      </button>
-    </section>
-
-    <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
-      <h3 class="stress-categories-title">Ce qui revient souvent</h3>
-      <p class="stress-categories-text">
-        Sur tes dernieres raisons de stress, voici ce qui apparait le plus souvent.
-      </p>
-      <div class="stress-categories-chips">
-        <span
-          v-for="item in stressCategoriesSummary"
-          :key="item.key"
-          class="stress-category-chip"
-        >
-          {{ item.label }}
-          <span class="stress-category-count">({{ item.count }})</span>
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" :style="{ width: safePercent + '%' }"></div>
+        </div>
+        <span class="progress-bar-label">
+          Tu es a {{ safePercent }}% de ton objectif de la semaine.
         </span>
       </div>
+
+      <p class="progress-status">
+        {{ weeklyStatusLabel }}
+      </p>
+
+      <section class="planstrip">
+        <h3 class="planstrip-title">Tes moments prevus pour bouger</h3>
+
+        <p v-if="isWeeklySlotsLoading" class="planstrip-text">
+          Chargement de ton planning...
+        </p>
+        <p v-else-if="weeklySlotsError" class="planstrip-text planstrip-text--error">
+          {{ weeklySlotsError }}
+        </p>
+        <p
+          v-else-if="!weeklySlots.length"
+          class="planstrip-text planstrip-text--muted"
+        >
+          Tu n'as pas encore prevu de moments pour bouger cette semaine. Tu peux les
+          choisir depuis la page Aujourd'hui.
+        </p>
+
+        <div v-else class="planstrip-grid">
+          <div
+            v-for="(day, dayIndex) in days"
+            :key="day"
+            class="planstrip-day"
+          >
+            <div class="planstrip-day-label">
+              {{ day }}
+            </div>
+            <div class="planstrip-day-slots">
+              <span
+                v-for="slot in timeSlots"
+                :key="slot.key"
+                class="planstrip-dot"
+                :class="[
+                  'planstrip-dot--' + slot.key,
+                  { 'is-active': hasSlot(dayIndex, slot.key) },
+                ]"
+              ></span>
+            </div>
+          </div>
+        </div>
+      </section>
     </section>
-  </section>
+
+    <section class="card progress-card">
+      <h2 class="progress-title">Stress et declencheurs</h2>
+
+      <section class="stress-section">
+        <h3 class="stress-title">Ton stress cette semaine</h3>
+
+        <p v-if="!hasStressData" class="stress-text stress-text--muted">
+          Pas encore assez de check-ins cette semaine pour voir une tendance.
+        </p>
+
+        <div v-else class="stress-grid">
+          <div class="stress-card">
+            <p class="stress-card-label">Note moyenne</p>
+            <p class="stress-card-value">
+              {{ weeklyAverageStress }}/5
+            </p>
+            <div class="stress-bar-track">
+              <div class="stress-bar-fill" :style="{ width: stressLevelPercent + '%' }"></div>
+            </div>
+          </div>
+
+          <div class="stress-card">
+            <p class="stress-card-label">Check-ins</p>
+            <p class="stress-card-value">
+              {{ weeklyCheckinsCount }}
+            </p>
+            <p class="stress-card-hint">
+              {{ stressCountLabel }}
+            </p>
+          </div>
+
+          <div class="stress-card stress-card--mood">
+            <p class="stress-card-label">Tendance</p>
+            <p class="stress-card-mood">
+              {{ stressMoodLabel }}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="stress-link-button"
+          @click="router.push({ name: 'stress-reasons' })"
+        >
+          Voir les raisons que tu as notees
+        </button>
+      </section>
+
+      <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
+        <h3 class="stress-categories-title">Ce qui revient souvent</h3>
+        <p class="stress-categories-text">
+          Sur tes dernieres raisons de stress, voici ce qui apparait le plus souvent.
+        </p>
+        <div class="stress-categories-chips">
+          <span
+            v-for="item in stressCategoriesSummary"
+            :key="item.key"
+            class="stress-category-chip"
+          >
+            {{ item.label }}
+            <span class="stress-category-count">({{ item.count }})</span>
+          </span>
+        </div>
+      </section>
+    </section>
+  </template>
 </template>
 
 <style scoped>

@@ -131,7 +131,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <section class="card stress-reasons-page">
+  <div class="stress-reasons-root">
     <button
       type="button"
       class="stress-back-button"
@@ -139,118 +139,120 @@ async function confirmDelete() {
     >
       ← Retour
     </button>
-    <h2 class="stress-reasons-title">Ce qui declenche mon stress</h2>
 
-    <p v-if="!isAuthenticated" class="stress-reasons-text">
+    <section class="card stress-reasons-page">
+      <h2 class="stress-reasons-title">Ce qui declenche mon stress</h2>
+
+      <p v-if="!isAuthenticated" class="stress-reasons-text">
       Connecte-toi pour enregistrer et revoir les raisons qui declenchent ton stress.
-    </p>
-
-    <template v-else>
-      <p class="stress-reasons-text">
-        A chaque fois que tu utilises l'espace zen, tu peux noter ce qui a declenche ta
-        montee de stress. Ici, tu retrouves ces raisons pour reperer ce qui revient
-        souvent.
       </p>
 
-      <p v-if="isLoadingReasons" class="stress-reasons-text">
-        Chargement de tes raisons de stress...
-      </p>
+      <template v-else>
+        <p class="stress-reasons-text">
+          A chaque fois que tu utilises l'espace zen, tu peux noter ce qui a declenche ta
+          montee de stress. Ici, tu retrouves ces raisons pour reperer ce qui revient
+          souvent.
+        </p>
 
-      <p v-else-if="reasonsError" class="stress-reasons-text stress-reasons-text--error">
-        {{ reasonsError }}
-      </p>
+        <p v-if="isLoadingReasons" class="stress-reasons-text">
+          Chargement de tes raisons de stress...
+        </p>
 
-      <p
-        v-else-if="!groupedReasons.length"
-        class="stress-reasons-text stress-reasons-text--muted"
-      >
-        Tu n'as pas encore enregistre de raisons de stress depuis l'espace zen. La
-        prochaine fois que tu sens la pression monter, prends 30 secondes pour noter ce
-        qui s'est passe.
-      </p>
+        <p v-else-if="reasonsError" class="stress-reasons-text stress-reasons-text--error">
+          {{ reasonsError }}
+        </p>
 
-      <div v-else class="stress-reasons-groups">
-        <section
-          v-for="group in groupedReasons"
-          :key="group.key"
-          class="stress-reasons-group"
+        <p
+          v-else-if="!groupedReasons.length"
+          class="stress-reasons-text stress-reasons-text--muted"
         >
-          <h3 class="stress-reasons-group-title">
-            {{ group.label }}
-          </h3>
-          <ul class="stress-reasons-list">
-            <li
-              v-for="item in group.items"
-              :key="item.id"
-              class="stress-reasons-item"
-            >
-              <template v-if="editingId === item.id">
-                <textarea
-                  v-model="editText"
-                  class="stress-reasons-edit-textarea"
-                  rows="3"
-                ></textarea>
-                <select
-                  v-model="editCategory"
-                  class="stress-reasons-select"
-                >
-                  <option :value="null">Sans categorie precise</option>
-                  <option
-                    v-for="option in categoryOptions"
-                    :key="option.value"
-                    :value="option.value"
+          Tu n'as pas encore enregistre de raisons de stress depuis l'espace zen. La
+          prochaine fois que tu sens la pression monter, prends 30 secondes pour noter ce
+          qui s'est passe.
+        </p>
+
+        <div v-else class="stress-reasons-groups">
+          <section
+            v-for="group in groupedReasons"
+            :key="group.key"
+            class="stress-reasons-group"
+          >
+            <h3 class="stress-reasons-group-title">
+              {{ group.label }}
+            </h3>
+            <ul class="stress-reasons-list">
+              <li
+                v-for="item in group.items"
+                :key="item.id"
+                class="stress-reasons-item"
+              >
+                <template v-if="editingId === item.id">
+                  <textarea
+                    v-model="editText"
+                    class="stress-reasons-edit-textarea"
+                    rows="3"
+                  ></textarea>
+                  <select
+                    v-model="editCategory"
+                    class="stress-reasons-select"
                   >
-                    {{ option.label }}
-                  </option>
-                </select>
-                <div class="stress-reasons-actions">
-                  <button
-                    type="button"
-                    class="stress-reasons-action"
-                    :disabled="props.isSavingReason"
-                    @click="saveEdit(item.id)"
-                  >
-                    Enregistrer
-                  </button>
-                  <button
-                    type="button"
-                    class="stress-reasons-action"
-                    @click="cancelEdit"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </template>
-              <template v-else>
-                <p class="stress-reasons-reason">
-                  {{ item.reason ?? '(raison vide)' }}
-                </p>
-                <p class="stress-reasons-meta">
-                  Note le {{ formatDate(item.created_at) }} ·
-                  {{ formatCategory(item.category) }}
-                </p>
-                <div class="stress-reasons-actions">
-                  <button
-                    type="button"
-                    class="stress-reasons-action"
-                    @click="startEdit(item)">
-                    Modifier
-                  </button>
-                  <button
-                    type="button"
-                    class="stress-reasons-action stress-reasons-action--danger"
-                    :disabled="props.isSavingReason"
-                    @click="onDelete(item.id)"
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </template>
-            </li>
-          </ul>
-        </section>
-      </div>
-    </template>
+                    <option :value="null">Sans categorie precise</option>
+                    <option
+                      v-for="option in categoryOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                  <div class="stress-reasons-actions">
+                    <button
+                      type="button"
+                      class="stress-reasons-action"
+                      :disabled="props.isSavingReason"
+                      @click="saveEdit(item.id)"
+                    >
+                      Enregistrer
+                    </button>
+                    <button
+                      type="button"
+                      class="stress-reasons-action"
+                      @click="cancelEdit"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <p class="stress-reasons-reason">
+                    {{ item.reason ?? '(raison vide)' }}
+                  </p>
+                  <p class="stress-reasons-meta">
+                    Note le {{ formatDate(item.created_at) }} ·
+                    {{ formatCategory(item.category) }}
+                  </p>
+                  <div class="stress-reasons-actions">
+                    <button
+                      type="button"
+                      class="stress-reasons-action"
+                      @click="startEdit(item)">
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      class="stress-reasons-action stress-reasons-action--danger"
+                      :disabled="props.isSavingReason"
+                      @click="onDelete(item.id)"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </template>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </template>
 
     <div
       v-if="deleteId"
@@ -281,7 +283,7 @@ async function confirmDelete() {
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <style scoped>

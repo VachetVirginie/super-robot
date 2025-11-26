@@ -955,15 +955,15 @@ onBeforeUnmount(() => {
         :class="['nav-item', { 'is-active': route.name === 'today' }]"
         @click="router.push({ name: 'today' })"
       >
-        <i class="pi pi-home nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Accueil</span>
+        <i class="pi pi-calendar nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Aujourdhui</span>
       </button>
       <button
         type="button"
         :class="['nav-item', { 'is-active': route.name === 'progress' }]"
         @click="router.push({ name: 'progress' })"
       >
-        <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
+        <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Equilibre</span>
       </button>
       <button

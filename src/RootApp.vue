@@ -51,6 +51,8 @@ const {
   removeLastSession,
   weekSessionDates,
   getMonthSessionDates,
+  recordSessionForDate,
+  removeSessionForDate,
 } = useTodayStats(session)
 
 const {
@@ -339,6 +341,49 @@ async function savePlanWeekDialog(slots: { dayIndex: number; timeOfDay: 'morning
   isPlanWeekDialogOpen.value = false
 }
 
+const weeklySessionDays = computed(() => {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek
+
+  const startOfWeek = new Date(today)
+  startOfWeek.setDate(today.getDate() + diff)
+  startOfWeek.setHours(0, 0, 0, 0)
+
+  const counts = new Map<string, number>()
+  for (const iso of weekSessionDates.value) {
+    const prev = counts.get(iso) ?? 0
+    counts.set(iso, prev + 1)
+  }
+
+  const days: {
+    iso: string
+    label: string
+    sessionsCount: number
+    isToday: boolean
+  }[] = []
+
+  for (let i = 0; i < 7; i += 1) {
+    const d = new Date(startOfWeek)
+    d.setDate(startOfWeek.getDate() + i)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const iso = `${year}-${month}-${day}`
+
+    const label = d
+      .toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' })
+      .replace('.', '')
+
+    const sessionsCount = counts.get(iso) ?? 0
+    const isToday = d.toDateString() === today.toDateString()
+
+    days.push({ iso, label, sessionsCount, isToday })
+  }
+
+  return days
+})
+
 const activeExercise = computed(() => {
   if (!activeExerciseKey.value) {
     return null
@@ -524,6 +569,14 @@ async function confirmAddSessionFromDialog() {
 async function confirmRemoveSessionFromDialog() {
   await removeLastSession()
   isAddSessionDialogOpen.value = false
+}
+
+async function addSessionForDateFromWeeklyDialog(iso: string) {
+  await recordSessionForDate(iso)
+}
+
+async function removeSessionForDateFromWeeklyDialog(iso: string) {
+  await removeSessionForDate(iso)
 }
 
 function changeGoalDraft(delta: number) {
@@ -765,10 +818,10 @@ onBeforeUnmount(() => {
     <WeeklySessionsDialog
       v-if="isWeeklySessionsDialogOpen"
       :is-saving-session="isSavingSession"
-      :weekly-sessions="weeklySessions"
+      :week-days="weeklySessionDays"
       @close="isWeeklySessionsDialogOpen = false"
-      @confirm-add="confirmAddSessionFromDialog"
-      @confirm-remove="confirmRemoveSessionFromDialog"
+      @add-for-date="addSessionForDateFromWeeklyDialog"
+      @remove-for-date="removeSessionForDateFromWeeklyDialog"
     />
 
     <PlanWeekDialog

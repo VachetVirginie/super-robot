@@ -196,6 +196,118 @@ export function useTodayStats(session: Ref<Session | null>) {
     }
   }
 
+  async function recordSessionForDate(isoDate: string) {
+    const user = session.value?.user
+    if (!user) {
+      return
+    }
+
+    const [yearStr, monthStr, dayStr] = isoDate.split('-')
+    const year = Number(yearStr)
+    const monthIndex = Number(monthStr) - 1
+    const day = Number(dayStr)
+
+    if (Number.isNaN(year) || Number.isNaN(monthIndex) || Number.isNaN(day)) {
+      return
+    }
+
+    // On positionne la séance à midi heure locale pour éviter les effets de fuseau
+    const localDate = new Date(year, monthIndex, day, 12, 0, 0, 0)
+    const performedAt = localDate.toISOString()
+
+    const userId = user.id
+    isSavingSession.value = true
+
+    try {
+      const { error } = await supabase.from('sessions').insert({
+        user_id: userId,
+        performed_at: performedAt,
+      })
+
+      if (!error) {
+        await loadTodayData(userId)
+      } else {
+        const msg = (error as { message?: string }).message ?? ''
+        if (!msg.includes('NetworkError when attempting to fetch resource')) {
+          // eslint-disable-next-line no-console
+          console.error('Error inserting session for specific date', error)
+        }
+      }
+    } finally {
+      isSavingSession.value = false
+    }
+  }
+
+  async function removeSessionForDate(isoDate: string) {
+    const user = session.value?.user
+    if (!user) {
+      return
+    }
+
+    // Si aucune séance n'est connue pour ce jour dans le cache, on ne fait rien
+    if (!weekSessionDates.value.includes(isoDate)) {
+      return
+    }
+
+    const [yearStr, monthStr, dayStr] = isoDate.split('-')
+    const year = Number(yearStr)
+    const monthIndex = Number(monthStr) - 1
+    const day = Number(dayStr)
+
+    if (Number.isNaN(year) || Number.isNaN(monthIndex) || Number.isNaN(day)) {
+      return
+    }
+
+    const start = new Date(year, monthIndex, day, 0, 0, 0, 0)
+    const end = new Date(year, monthIndex, day + 1, 0, 0, 0, 0)
+
+    const userId = user.id
+    isSavingSession.value = true
+
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('id, performed_at')
+        .eq('user_id', userId)
+        .gte('performed_at', start.toISOString())
+        .lt('performed_at', end.toISOString())
+        .order('performed_at', { ascending: false })
+        .limit(1)
+
+      if (error) {
+        const msg = (error as { message?: string }).message ?? ''
+        if (!msg.includes('NetworkError when attempting to fetch resource')) {
+          // eslint-disable-next-line no-console
+          console.error('Error loading sessions for specific date', error)
+        }
+        return
+      }
+
+      const sessionIdToDelete = data?.[0]?.id
+      if (!sessionIdToDelete) {
+        return
+      }
+
+      const { error: deleteError } = await supabase
+        .from('sessions')
+        .delete()
+        .eq('id', sessionIdToDelete)
+
+      if (deleteError) {
+        const msg = (deleteError as { message?: string }).message ?? ''
+        if (!msg.includes('NetworkError when attempting to fetch resource')) {
+          // eslint-disable-next-line no-console
+          console.error('Error deleting session for specific date', deleteError)
+        }
+        return
+      }
+
+      await loadTodayData(userId)
+    } finally {
+      isSavingSession.value = false
+    }
+  }
+
   async function removeLastSession() {
     const user = session.value?.user
     if (!user) {
@@ -337,6 +449,8 @@ export function useTodayStats(session: Ref<Session | null>) {
     latestSessionsDisplay,
     recordSession,
     removeLastSession,
+    recordSessionForDate,
+    removeSessionForDate,
     changeGoal,
     getMonthSessionDates,
   }

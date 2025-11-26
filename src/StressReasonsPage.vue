@@ -1,16 +1,64 @@
 <script setup lang="ts">
-import { computed, defineProps } from 'vue'
+import { computed, defineProps, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   isAuthenticated: boolean
-  reasons: { id: string; created_at: string; reason: string | null }[]
+  reasons: { id: string; created_at: string; reason: string | null; category: string | null }[]
   isLoadingReasons: boolean
   reasonsError: string | null
+  isSavingReason: boolean
+  deleteStressReason: (id: string) => void | Promise<void>
+  updateStressReason: (id: string, updates: { reason?: string; category?: string | null }) => void | Promise<void>
 }>()
 
+const router = useRouter()
+
 const sortedReasons = computed(() => {
-  return [...props.reasons].sort((a, b) => a.created_at < b.created_at ? 1 : -1)
+  return [...props.reasons].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
 })
+
+const groupedReasons = computed(() => {
+  const groups: Record<
+    string,
+    { id: string; created_at: string; reason: string | null; category: string | null }[]
+  > = {}
+
+  for (const item of sortedReasons.value) {
+    const key =
+      item.category && ['work', 'family', 'health', 'other'].includes(item.category)
+        ? item.category
+        : 'uncategorized'
+    if (!groups[key]) {
+      groups[key] = []
+    }
+    groups[key].push(item)
+  }
+
+  const order = ['work', 'family', 'health', 'other', 'uncategorized']
+  const labels: Record<string, string> = {
+    work: 'Travail',
+    family: 'Famille',
+    health: 'Sante',
+    other: 'Autre',
+    uncategorized: 'Sans categorie precise',
+  }
+
+  return order
+    .filter((key) => groups[key] && groups[key].length)
+    .map((key) => ({ key, label: labels[key], items: groups[key] }))
+})
+
+const categoryOptions = [
+  { value: 'work', label: 'Travail' },
+  { value: 'family', label: 'Famille' },
+  { value: 'health', label: 'Sante' },
+  { value: 'other', label: 'Autre' },
+]
+
+const editingId = ref<string | null>(null)
+const editText = ref('')
+const editCategory = ref<string | null>(null)
 
 function formatDate(value: string) {
   const date = new Date(value)
@@ -25,10 +73,62 @@ function formatDate(value: string) {
     minute: '2-digit',
   })
 }
+
+function formatCategory(value: string | null) {
+  if (value === 'work') return 'Travail'
+  if (value === 'family') return 'Famille'
+  if (value === 'health') return 'Sante'
+  if (value === 'other') return 'Autre'
+  return 'Sans categorie precise'
+}
+
+function startEdit(item: {
+  id: string
+  created_at: string
+  reason: string | null
+  category: string | null
+}) {
+  editingId.value = item.id
+  editText.value = item.reason ?? ''
+  editCategory.value = item.category
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editText.value = ''
+  editCategory.value = null
+}
+
+async function saveEdit(id: string) {
+  const text = editText.value.trim()
+  if (!text) {
+    return
+  }
+  await props.updateStressReason(id, {
+    reason: text,
+    category: editCategory.value,
+  })
+  editingId.value = null
+}
+
+async function onDelete(id: string) {
+  const confirmed = window.confirm('Supprimer cette raison ?')
+  if (!confirmed) {
+    return
+  }
+  await props.deleteStressReason(id)
+}
 </script>
 
 <template>
   <section class="stress-reasons-page">
+    <button
+      type="button"
+      class="stress-back-button"
+      @click="router.push({ name: 'progress' })"
+    >
+      ← Retour
+    </button>
     <h2 class="stress-reasons-title">Ce qui declenche mon stress</h2>
 
     <p v-if="!isAuthenticated" class="stress-reasons-text">
@@ -51,7 +151,7 @@ function formatDate(value: string) {
       </p>
 
       <p
-        v-else-if="!sortedReasons.length"
+        v-else-if="!groupedReasons.length"
         class="stress-reasons-text stress-reasons-text--muted"
       >
         Tu n'as pas encore enregistre de raisons de stress depuis l'espace zen. La
@@ -59,16 +159,87 @@ function formatDate(value: string) {
         qui s'est passe.
       </p>
 
-      <ul v-else class="stress-reasons-list">
-        <li v-for="item in sortedReasons" :key="item.id" class="stress-reasons-item">
-          <p class="stress-reasons-reason">
-            {{ item.reason ?? '(raison vide)' }}
-          </p>
-          <p class="stress-reasons-meta">
-            Note le {{ formatDate(item.created_at) }}
-          </p>
-        </li>
-      </ul>
+      <div v-else class="stress-reasons-groups">
+        <section
+          v-for="group in groupedReasons"
+          :key="group.key"
+          class="stress-reasons-group"
+        >
+          <h3 class="stress-reasons-group-title">
+            {{ group.label }}
+          </h3>
+          <ul class="stress-reasons-list">
+            <li
+              v-for="item in group.items"
+              :key="item.id"
+              class="stress-reasons-item"
+            >
+              <template v-if="editingId === item.id">
+                <textarea
+                  v-model="editText"
+                  class="stress-reasons-edit-textarea"
+                  rows="3"
+                ></textarea>
+                <select
+                  v-model="editCategory"
+                  class="stress-reasons-select"
+                >
+                  <option :value="null">Sans categorie precise</option>
+                  <option
+                    v-for="option in categoryOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                <div class="stress-reasons-actions">
+                  <button
+                    type="button"
+                    class="stress-reasons-action"
+                    :disabled="props.isSavingReason"
+                    @click="saveEdit(item.id)"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    class="stress-reasons-action"
+                    @click="cancelEdit"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </template>
+              <template v-else>
+                <p class="stress-reasons-reason">
+                  {{ item.reason ?? '(raison vide)' }}
+                </p>
+                <p class="stress-reasons-meta">
+                  Note le {{ formatDate(item.created_at) }} ·
+                  {{ formatCategory(item.category) }}
+                </p>
+                <div class="stress-reasons-actions">
+                  <button
+                    type="button"
+                    class="stress-reasons-action"
+                    @click="startEdit(item)">
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    class="stress-reasons-action stress-reasons-action--danger"
+                    :disabled="props.isSavingReason"
+                    @click="onDelete(item.id)"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </template>
+            </li>
+          </ul>
+        </section>
+      </div>
     </template>
   </section>
 </template>
@@ -83,6 +254,16 @@ function formatDate(value: string) {
   background: #020617;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+}
+
+.stress-back-button {
+  margin: 0 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
 }
 
 .stress-reasons-title {
@@ -115,6 +296,21 @@ function formatDate(value: string) {
   gap: 0.6rem;
 }
 
+.stress-reasons-groups {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.stress-reasons-group-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
 .stress-reasons-item {
   padding: 0.7rem 0.8rem;
   border-radius: 0.75rem;
@@ -134,5 +330,47 @@ function formatDate(value: string) {
   margin: 0;
   font-size: 0.75rem;
   opacity: 0.8;
+}
+
+.stress-reasons-actions {
+  margin-top: 0.45rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.stress-reasons-action {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.stress-reasons-action--danger {
+  border-color: rgba(248, 113, 113, 0.8);
+  color: #fecaca;
+}
+
+.stress-reasons-edit-textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.stress-reasons-select {
+  margin-top: 0.3rem;
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
 }
 </style>

@@ -88,6 +88,8 @@ const {
   isSavingReason: isSavingStressReason,
   reasonsError: stressReasonsError,
   saveStressReason,
+  updateStressReason,
+  deleteStressReason,
 } = useStressReasons(session)
 
 const todayCheckinSummary = computed(() => {
@@ -801,6 +803,9 @@ onBeforeUnmount(() => {
         :reasons="stressReasons"
         :is-loading-reasons="isLoadingStressReasons"
         :reasons-error="stressReasonsError"
+        :is-saving-reason="isSavingStressReason"
+        :delete-stress-reason="deleteStressReason"
+        :update-stress-reason="updateStressReason"
       />
       <component
         v-else-if="route.name === 'alert'"

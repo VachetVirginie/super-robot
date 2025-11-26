@@ -105,6 +105,62 @@ export function useStressReasons(session: Ref<Session | null>) {
 
   const reasonsCount = computed(() => reasons.value.length)
 
+  async function updateStressReason(id: string, updates: { reason?: string; category?: string | null }) {
+    const user = session.value?.user
+    if (!user || !id) {
+      return
+    }
+
+    const payload: { reason?: string | null; category?: string | null } = {}
+
+    if (typeof updates.reason === 'string') {
+      const text = updates.reason.trim()
+      if (!text) {
+        return
+      }
+      payload.reason = text
+    }
+
+    if (typeof updates.category !== 'undefined') {
+      const value = updates.category
+      payload.category = value && value.trim() ? value.trim() : null
+    }
+
+    reasonsError.value = null
+
+    try {
+      const { error } = await supabase
+        .from('stress_reasons')
+        .update(payload)
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        const msg = (error as { message?: string }).message ?? ''
+        if (!msg.includes('NetworkError when attempting to fetch resource')) {
+          // eslint-disable-next-line no-console
+          console.error('Error updating stress reason', error)
+        }
+        reasonsError.value = "Impossible de modifier cette raison de stress."
+        return
+      }
+
+      reasons.value = reasons.value.map((item) => {
+        if (item.id !== id) return item
+        return {
+          ...item,
+          reason: payload.reason ?? item.reason,
+          category:
+            typeof payload.category !== 'undefined' ? payload.category : item.category,
+        }
+      })
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Unexpected error in updateStressReason', error)
+      reasonsError.value = "Impossible de modifier cette raison de stress."
+    }
+  }
+
   async function deleteStressReason(id: string) {
     const user = session.value?.user
     if (!user || !id) {
@@ -146,6 +202,7 @@ export function useStressReasons(session: Ref<Session | null>) {
     reasonsError,
     loadRecentReasons,
     saveStressReason,
+    updateStressReason,
     deleteStressReason,
   }
 }

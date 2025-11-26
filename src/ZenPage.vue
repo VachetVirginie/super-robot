@@ -14,11 +14,19 @@ const MAX_DURATION = 180
 const showReflection = ref(false)
 const reflectionText = ref('')
 const reflectionSaved = ref(false)
+const reflectionCategory = ref('other')
+
+const reflectionCategories = [
+  { value: 'work', label: 'Travail' },
+  { value: 'family', label: 'Famille' },
+  { value: 'health', label: 'Sante' },
+  { value: 'other', label: 'Autre' },
+]
 
 const props = defineProps<{
   isAuthenticated: boolean
   isSavingStressReason: boolean
-  saveStressReason: (reason: string) => void | Promise<void>
+  saveStressReason: (reason: string, category?: string | null) => void | Promise<void>
 }>()
 
 const canSaveReflection = computed(() => {
@@ -114,6 +122,7 @@ function togglePlay() {
     showReflection.value = false
     reflectionSaved.value = false
     reflectionText.value = ''
+    reflectionCategory.value = 'other'
   } else {
     audio.pause()
     isPlaying.value = false
@@ -192,6 +201,7 @@ watch(selectedTrackId, () => {
   showReflection.value = false
   reflectionSaved.value = false
   reflectionText.value = ''
+  reflectionCategory.value = 'other'
 })
 
 async function onSaveReflection() {
@@ -201,7 +211,7 @@ async function onSaveReflection() {
   }
 
   reflectionSaved.value = false
-  await props.saveStressReason(text)
+  await props.saveStressReason(text, reflectionCategory.value)
   if (!props.isSavingStressReason) {
     reflectionSaved.value = true
   }
@@ -274,31 +284,53 @@ async function onSaveReflection() {
       </div>
     </div>
 
-    <section v-if="showReflection" class="reflection-card">
-      <h3 class="reflection-title">Prendre un petit recul</h3>
-      <p class="reflection-subtitle">
-        Qu'est-ce qui a declenche cette montee de stress ? Note quelques mots pour t'aider a
-        reperer ce qui revient souvent.
-      </p>
-      <textarea
-        v-model="reflectionText"
-        class="reflection-textarea"
-        rows="3"
-        placeholder="Exemples : conflit au travail, surcharge de messages, retard, impression de ne pas y arriver..."
-      ></textarea>
-      <button
-        type="button"
-        class="primary reflection-button"
-        :disabled="!canSaveReflection"
-        @click="onSaveReflection"
-      >
-        <span v-if="props.isSavingStressReason">Enregistrement...</span>
-        <span v-else>Enregistrer cette raison</span>
-      </button>
-      <p v-if="reflectionSaved" class="reflection-hint">
-        Merci, c'est note. On pourra s'en servir pour mieux comprendre ce qui revient.
-      </p>
-    </section>
+    <div
+      v-if="showReflection"
+      class="reflection-backdrop"
+      @click.self="showReflection = false"
+    >
+      <section class="reflection-card">
+        <h3 class="reflection-title">Prendre un petit recul</h3>
+        <p class="reflection-subtitle">
+          Qu'est-ce qui a declenche cette montee de stress ? Note quelques mots pour t'aider a
+          reperer ce qui revient souvent.
+        </p>
+        <textarea
+          v-model="reflectionText"
+          class="reflection-textarea"
+          rows="3"
+          placeholder="Exemples : conflit au travail, surcharge de messages, retard, impression de ne pas y arriver..."
+        ></textarea>
+        <label class="reflection-category-label" for="reflection-category">
+          Cette situation est plutot liee a :
+        </label>
+        <select
+          id="reflection-category"
+          v-model="reflectionCategory"
+          class="reflection-category-select"
+        >
+          <option
+            v-for="option in reflectionCategories"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="primary reflection-button"
+          :disabled="!canSaveReflection"
+          @click="onSaveReflection"
+        >
+          <span v-if="props.isSavingStressReason">Enregistrement...</span>
+          <span v-else>Enregistrer cette raison</span>
+        </button>
+        <p v-if="reflectionSaved" class="reflection-hint">
+          Merci, c'est note. On pourra s'en servir pour mieux comprendre ce qui revient.
+        </p>
+      </section>
+    </div>
 
     <audio
       ref="audioRef"
@@ -340,8 +372,18 @@ async function onSaveReflection() {
   opacity: 0.75;
 }
 
+.reflection-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem 2.75rem;
+  z-index: 50;
+}
+
 .reflection-card {
-  margin-top: 1rem;
   border-radius: 1rem;
   padding: 1rem 0.9rem 0.9rem;
   background: #020617;
@@ -373,6 +415,22 @@ async function onSaveReflection() {
   padding: 0.6rem 0.7rem;
   font-size: 0.85rem;
   resize: vertical;
+}
+
+.reflection-category-label {
+  margin: 0.2rem 0 0.1rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.reflection-category-select {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
 }
 
 .reflection-button {

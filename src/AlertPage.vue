@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const isPlaying = ref(false)
 const progress = ref(0)
@@ -7,8 +7,37 @@ const duration = ref(0)
 const currentTime = ref(0)
 const audioRef = ref<HTMLAudioElement | null>(null)
 
-const trackTitle = 'Respiration zen'
-const trackSubtitle = '2 minutes pour relacher la pression'
+const tracks = [
+  {
+    id: 'mer',
+    label: 'Mer',
+    title: 'Mer apaisante',
+    subtitle: 'Le bruit des vagues pour calmer le mental',
+    src: '/sounds/mer.mp3',
+  },
+  {
+    id: 'pluie',
+    label: 'Pluie',
+    title: 'Pluie douce',
+    subtitle: 'Les gouttes de pluie pour se recentrer',
+    src: '/sounds/pluie.mp3',
+  },
+  {
+    id: 'foret',
+    label: 'Fort',
+    title: 'Balade en fort',
+    subtitle: 'Vent dans les feuilles et chants doiseaux',
+    src: '/sounds/foret.mp3',
+  },
+]
+const defaultTrack = tracks[0]!
+const selectedTrackId = ref(defaultTrack.id)
+const currentTrack = computed(
+  () => tracks.find((track) => track.id === selectedTrackId.value) ?? defaultTrack,
+)
+
+const trackTitle = computed(() => currentTrack.value.title)
+const trackSubtitle = computed(() => currentTrack.value.subtitle)
 
 function formatTime(value: number) {
   if (!Number.isFinite(value) || value <= 0) {
@@ -62,6 +91,19 @@ function onScrub(event: Event) {
   const newTime = duration.value * ratio
   audio.currentTime = newTime
 }
+
+watch(selectedTrackId, () => {
+  const audio = audioRef.value
+  if (!audio) return
+
+  isPlaying.value = false
+  progress.value = 0
+  duration.value = 0
+  currentTime.value = 0
+
+  audio.pause()
+  audio.currentTime = 0
+})
 </script>
 
 <template>
@@ -71,6 +113,19 @@ function onScrub(event: Event) {
       Quand tu sens que la pression monte un peu trop, tu peux venir ici pour te poser,
       respirer et laisser ton corps se detendre quelques minutes.
     </p>
+
+    <div class="player-track-select">
+      <label class="player-track-label" for="zen-track-select">Choisir une ambiance</label>
+      <select
+        id="zen-track-select"
+        v-model="selectedTrackId"
+        class="player-track-select-input"
+      >
+        <option v-for="track in tracks" :key="track.id" :value="track.id">
+          {{ track.label }}
+        </option>
+      </select>
+    </div>
 
     <div class="player-card">
       <div class="player-header">
@@ -115,7 +170,7 @@ function onScrub(event: Event) {
 
     <audio
       ref="audioRef"
-      src=""
+      :src="currentTrack.src"
       @loadedmetadata="onLoadedMetadata"
       @timeupdate="onTimeUpdate"
       @ended="onEnded"
@@ -145,6 +200,29 @@ function onScrub(event: Event) {
   margin: 0;
   font-size: 0.9rem;
   opacity: 0.85;
+}
+
+.player-track-select {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.player-track-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.player-track-select-input {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
 }
 
 .player-card {

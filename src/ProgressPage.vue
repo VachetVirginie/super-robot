@@ -144,6 +144,9 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   <template v-else>
     <section class="card progress-card">
       <h2 class="progress-title">Bouger cette semaine</h2>
+      <p class="progress-subtitle">
+        Ton objectif et les seances deja faites cette semaine.
+      </p>
 
       <div class="progress-summary">
         <p class="progress-text">
@@ -166,10 +169,15 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
       <p class="progress-status">
         {{ weeklyStatusLabel }}
       </p>
+    </section>
+
+    <section class="card progress-card">
+      <h2 class="progress-title">Tes moments prevus pour bouger</h2>
+      <p class="progress-subtitle">
+        On regarde ton planning de la semaine, sans pression.
+      </p>
 
       <section class="planstrip">
-        <h3 class="planstrip-title">Tes moments prevus pour bouger</h3>
-
         <p v-if="isWeeklySlotsLoading" class="planstrip-text">
           Chargement de ton planning...
         </p>
@@ -211,6 +219,9 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
 
     <section class="card progress-card">
       <h2 class="progress-title">Stress et declencheurs</h2>
+      <p class="progress-subtitle">
+        Comment tu as vecu la semaine et ce qui revient souvent dans tes montes de stress.
+      </p>
 
       <section class="stress-section">
         <h3 class="stress-title">Ton stress cette semaine</h3>
@@ -262,15 +273,17 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
         <p class="stress-categories-text">
           Sur tes dernieres raisons de stress, voici ce qui apparait le plus souvent.
         </p>
-        <div class="stress-categories-chips">
-          <span
+        <div class="stress-categories-list">
+          <div
             v-for="item in stressCategoriesSummary"
             :key="item.key"
-            class="stress-category-chip"
+            class="stress-category-row"
           >
-            {{ item.label }}
-            <span class="stress-category-count">({{ item.count }})</span>
-          </span>
+            <div class="stress-category-main">
+              <span class="stress-category-label">{{ item.label }}</span>
+              <span class="stress-category-count">{{ item.count }} raison(s)</span>
+            </div>
+          </div>
         </div>
       </section>
     </section>
@@ -284,6 +297,16 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #e5e7eb;
+}
+
+.progress-card + .progress-card {
+  margin-top: 0.75rem;
+}
+
+.progress-subtitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 .progress-summary {
@@ -478,8 +501,8 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
 .stress-card {
   padding: 0.7rem 0.8rem;
   border-radius: 0.75rem;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #0b0b0b;
+  border: 1px solid #27272a;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -556,20 +579,28 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   opacity: 0.85;
 }
 
-.stress-categories-chips {
+.stress-categories-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.stress-category-chip {
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  font-size: 0.78rem;
+.stress-category-row {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.75rem;
+  background: #0b0b0b;
+  border: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stress-category-label {
+  font-size: 0.85rem;
 }
 
 .stress-category-count {
+  font-size: 0.8rem;
   opacity: 0.85;
 }
 </style>

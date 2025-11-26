@@ -60,6 +60,23 @@ const editingId = ref<string | null>(null)
 const editText = ref('')
 const editCategory = ref<string | null>(null)
 const deleteId = ref<string | null>(null)
+const activeCategory = ref<'all' | 'work' | 'family' | 'health' | 'other' | 'uncategorized'>('all')
+
+const filterOptions: { key: 'all' | 'work' | 'family' | 'health' | 'other' | 'uncategorized'; label: string }[] = [
+  { key: 'all', label: 'Toutes' },
+  { key: 'work', label: 'Travail' },
+  { key: 'family', label: 'Famille' },
+  { key: 'health', label: 'Sante' },
+  { key: 'other', label: 'Autre' },
+  { key: 'uncategorized', label: 'Sans categorie' },
+]
+
+const filteredGroups = computed(() => {
+  if (activeCategory.value === 'all') {
+    return groupedReasons.value
+  }
+  return groupedReasons.value.filter((group) => group.key === activeCategory.value)
+})
 
 function formatDate(value: string) {
   const date = new Date(value)
@@ -134,17 +151,17 @@ async function confirmDelete() {
   <div class="stress-reasons-root">
     <button
       type="button"
-      class="stress-back-button"
+      class="icon-button stress-back-button"
       @click="router.push({ name: 'progress' })"
     >
-      ← Retour
+      <i class="pi pi-chevron-left" aria-hidden="true"></i>
     </button>
 
     <section class="card stress-reasons-page">
       <h2 class="stress-reasons-title">Ce qui declenche mon stress</h2>
 
       <p v-if="!isAuthenticated" class="stress-reasons-text">
-      Connecte-toi pour enregistrer et revoir les raisons qui declenchent ton stress.
+        Connecte-toi pour enregistrer et revoir les raisons qui declenchent ton stress.
       </p>
 
       <template v-else>
@@ -171,88 +188,105 @@ async function confirmDelete() {
           qui s'est passe.
         </p>
 
-        <div v-else class="stress-reasons-groups">
-          <section
-            v-for="group in groupedReasons"
-            :key="group.key"
-            class="stress-reasons-group"
+        <div v-else class="stress-filters">
+          <button
+            v-for="option in filterOptions"
+            :key="option.key"
+            type="button"
+            class="stress-filter-button"
+            :class="{ 'is-active': activeCategory === option.key }"
+            @click="activeCategory = option.key"
           >
-            <h3 class="stress-reasons-group-title">
-              {{ group.label }}
-            </h3>
-            <ul class="stress-reasons-list">
-              <li
-                v-for="item in group.items"
-                :key="item.id"
-                class="stress-reasons-item"
-              >
-                <template v-if="editingId === item.id">
-                  <textarea
-                    v-model="editText"
-                    class="stress-reasons-edit-textarea"
-                    rows="3"
-                  ></textarea>
-                  <select
-                    v-model="editCategory"
-                    class="stress-reasons-select"
-                  >
-                    <option :value="null">Sans categorie precise</option>
-                    <option
-                      v-for="option in categoryOptions"
-                      :key="option.value"
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                  <div class="stress-reasons-actions">
-                    <button
-                      type="button"
-                      class="stress-reasons-action"
-                      :disabled="props.isSavingReason"
-                      @click="saveEdit(item.id)"
-                    >
-                      Enregistrer
-                    </button>
-                    <button
-                      type="button"
-                      class="stress-reasons-action"
-                      @click="cancelEdit"
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </template>
-                <template v-else>
-                  <p class="stress-reasons-reason">
-                    {{ item.reason ?? '(raison vide)' }}
-                  </p>
-                  <p class="stress-reasons-meta">
-                    Note le {{ formatDate(item.created_at) }} ·
-                    {{ formatCategory(item.category) }}
-                  </p>
-                  <div class="stress-reasons-actions">
-                    <button
-                      type="button"
-                      class="stress-reasons-action"
-                      @click="startEdit(item)">
-                      Modifier
-                    </button>
-                    <button
-                      type="button"
-                      class="stress-reasons-action stress-reasons-action--danger"
-                      :disabled="props.isSavingReason"
-                      @click="onDelete(item.id)"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </template>
-              </li>
-            </ul>
-          </section>
+            {{ option.label }}
+          </button>
         </div>
       </template>
+    </section>
+
+    <section
+      v-if="isAuthenticated && filteredGroups.length"
+      class="stress-categories-container"
+    >
+      <section
+        v-for="group in filteredGroups"
+        :key="group.key"
+        class="card stress-category-card"
+      >
+        <h3 class="stress-reasons-group-title">
+          {{ group.label }}
+        </h3>
+        <ul class="stress-reasons-list">
+          <li
+            v-for="item in group.items"
+            :key="item.id"
+            class="stress-reasons-item"
+          >
+            <template v-if="editingId === item.id">
+              <textarea
+                v-model="editText"
+                class="stress-reasons-edit-textarea"
+                rows="3"
+              ></textarea>
+              <select
+                v-model="editCategory"
+                class="stress-reasons-select"
+              >
+                <option :value="null">Sans categorie precise</option>
+                <option
+                  v-for="option in categoryOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <div class="stress-reasons-actions">
+                <button
+                  type="button"
+                  class="stress-reasons-action"
+                  :disabled="props.isSavingReason"
+                  @click="saveEdit(item.id)"
+                >
+                  Enregistrer
+                </button>
+                <button
+                  type="button"
+                  class="stress-reasons-action"
+                  @click="cancelEdit"
+                >
+                  Annuler
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <p class="stress-reasons-reason">
+                {{ item.reason ?? '(raison vide)' }}
+              </p>
+              <p class="stress-reasons-meta">
+                Note le {{ formatDate(item.created_at) }} ·
+                {{ formatCategory(item.category) }}
+              </p>
+              <div class="stress-reasons-actions">
+                <button
+                  type="button"
+                  class="stress-reasons-action"
+                  @click="startEdit(item)">
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  class="stress-reasons-action stress-reasons-action--danger"
+                  :disabled="props.isSavingReason"
+                  @click="onDelete(item.id)"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </template>
+          </li>
+        </ul>
+      </section>
+    </section>
 
     <div
       v-if="deleteId"
@@ -283,7 +317,6 @@ async function confirmDelete() {
         </div>
       </div>
     </div>
-    </section>
   </div>
 </template>
 
@@ -330,12 +363,6 @@ async function confirmDelete() {
 
 .stress-back-button {
   margin: 0 0 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background: transparent;
-  color: #e5e7eb;
-  padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
 }
 
 .stress-reasons-title {
@@ -357,6 +384,38 @@ async function confirmDelete() {
 
 .stress-reasons-text--error {
   color: #fecaca;
+}
+
+.stress-filters {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.stress-filter-button {
+  border-radius: 999px;
+  border: 1px solid #27272a;
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.stress-filter-button:hover {
+  background: #0b0b0b;
+  border-color: #4b5563;
+}
+
+.stress-filter-button.is-active {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #020617;
 }
 
 .stress-reasons-list {
@@ -386,8 +445,8 @@ async function confirmDelete() {
 .stress-reasons-item {
   padding: 0.7rem 0.8rem;
   border-radius: 0.75rem;
-  background: #020617;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #0b0b0b;
+  border: 1px solid #27272a;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -444,5 +503,20 @@ async function confirmDelete() {
   color: #e5e7eb;
   padding: 0.35rem 0.7rem;
   font-size: 0.85rem;
+}
+
+.stress-category-card {
+  padding: 0.7rem 0.8rem;
+  margin-top: 0.75rem;
+}
+
+.stress-reasons-item {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.card {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 </style>

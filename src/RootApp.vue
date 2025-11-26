@@ -7,6 +7,7 @@ import { useTodayStats } from './composables/useTodayStats'
 import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
 import { useCheckins } from './composables/useCheckins'
+import type { CalendarCell } from './types'
 import { useStressReasons } from './composables/useStressReasons'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
@@ -80,6 +81,7 @@ const {
   recordCheckin,
   weeklyAverageStress,
   weeklyCheckinsCount,
+  getMonthStressByDay,
 } = useCheckins(session)
 
 const {
@@ -102,6 +104,27 @@ const todayCheckinSummary = computed(() => {
     return 'Check-in enregistre pour aujourdhui.'
   }
   return `Niveau de stress: ${level}/5 aujourdhui.`
+})
+
+const calendarMonthStressSummary = computed(() => {
+  const entries = Object.values(calendarStressByDay.value)
+  if (!entries.length) {
+    return { avg: null as number | null, count: 0 }
+  }
+
+  let totalCount = 0
+  let weightedSum = 0
+  for (const info of entries) {
+    totalCount += info.count
+    weightedSum += info.avg * info.count
+  }
+
+  if (!totalCount) {
+    return { avg: null, count: 0 }
+  }
+
+  const avg = Math.round(((weightedSum / totalCount) || 0) * 10) / 10
+  return { avg, count: totalCount }
 })
 
 const todayCheckinLevel = computed(() => {
@@ -325,6 +348,7 @@ const isMonthCalendarOpen = ref(false)
 const calendarYear = ref(new Date().getFullYear())
 const calendarMonth = ref(new Date().getMonth())
 const calendarSessionDates = ref<string[]>([])
+const calendarStressByDay = ref<Record<string, { avg: number; count: number }>>({})
 const calendarTouchStartX = ref<number | null>(null)
 
 const snackbarMessage = ref<string | null>(null)
@@ -442,14 +466,9 @@ const calendarCells = computed(() => {
   const todayDay = String(today.getDate()).padStart(2, '0')
   const todayIso = `${todayYear}-${todayMonth}-${todayDay}`
   const sessionSet = new Set(calendarSessionDates.value)
+  const stressMap = calendarStressByDay.value
 
-  const cells: {
-    key: string
-    date: number | null
-    iso: string | null
-    isToday: boolean
-    hasSession: boolean
-  }[] = []
+  const cells: CalendarCell[] = []
 
   for (let i = 0; i < firstWeekday; i += 1) {
     cells.push({
@@ -469,6 +488,9 @@ const calendarCells = computed(() => {
     const iso = `${dYear}-${dMonth}-${dDay}`
     const isToday = iso === todayIso
     const hasSession = sessionSet.has(iso)
+    const stressInfo = stressMap[iso]
+    const hasCheckin = !!stressInfo
+    const stressLevel = hasCheckin ? stressInfo.avg : null
 
     cells.push({
       key: iso,
@@ -476,6 +498,8 @@ const calendarCells = computed(() => {
       iso,
       isToday,
       hasSession,
+      hasCheckin,
+      stressLevel,
     })
   }
 
@@ -625,6 +649,10 @@ async function openMonthCalendar() {
       calendarYear.value,
       calendarMonth.value,
     )
+    calendarStressByDay.value = await getMonthStressByDay(
+      calendarYear.value,
+      calendarMonth.value,
+    )
   } catch (error) {
     const msg = (error as { message?: string }).message ?? ''
     if (!msg.includes('NetworkError when attempting to fetch resource')) {
@@ -632,6 +660,7 @@ async function openMonthCalendar() {
       console.error('Error loading month sessions in openMonthCalendar', error)
     }
     calendarSessionDates.value = []
+    calendarStressByDay.value = {}
   }
 }
 
@@ -650,6 +679,7 @@ async function changeCalendarMonth(delta: number) {
   calendarYear.value = year
   calendarMonth.value = monthIndex
   calendarSessionDates.value = await getMonthSessionDates(year, monthIndex)
+  calendarStressByDay.value = await getMonthStressByDay(year, monthIndex)
 }
 
 function onCalendarTouchStart(event: TouchEvent) {
@@ -887,6 +917,8 @@ onBeforeUnmount(() => {
       v-if="isMonthCalendarOpen"
       :month-label="calendarMonthLabel"
       :cells="calendarCells"
+      :month-avg-stress="calendarMonthStressSummary.avg"
+      :month-checkins-count="calendarMonthStressSummary.count"
       @close="isMonthCalendarOpen = false"
       @prev-month="changeCalendarMonth(-1)"
       @next-month="changeCalendarMonth(1)"
@@ -1195,6 +1227,15 @@ onBeforeUnmount(() => {
 .calendar-cell.is-today {
   background: #30e097;
   color: #050505;
+}
+.calendar-cell.stress-low:not(.is-blank) {
+  border-color: #22c55e;
+}
+.calendar-cell.stress-medium:not(.is-blank) {
+  border-color: #fbbf24;
+}
+.calendar-cell.stress-high:not(.is-blank) {
+  border-color: #f97316;
 }
 .calendar-date {
   font-size: 0.85rem;

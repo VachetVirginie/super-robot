@@ -145,6 +145,62 @@ export function useCheckins(session: Ref<Session | null>) {
     }
   }
 
+  async function getMonthStressByDay(
+    year: number,
+    monthIndex: number,
+  ): Promise<Record<string, { avg: number; count: number }>> {
+    const user = session.value?.user
+
+    if (!user) {
+      return {}
+    }
+
+    const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0))
+    const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0, 0))
+
+    const { data, error } = await supabase
+      .from('wellbeing_checkins')
+      .select('created_at, stress_level')
+      .eq('user_id', user.id)
+      .gte('created_at', start.toISOString())
+      .lt('created_at', end.toISOString())
+
+    if (error) {
+      const msg = (error as { message?: string }).message ?? ''
+      if (
+        !msg.includes('relation "wellbeing_checkins" does not exist') &&
+        !msg.includes('NetworkError when attempting to fetch resource')
+      ) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading month stress checkins', error)
+      }
+      return {}
+    }
+
+    const buckets = new Map<string, number[]>()
+
+    for (const row of (data ?? []) as { created_at: string; stress_level: number | null }[]) {
+      if (typeof row.stress_level !== 'number') continue
+      const iso = row.created_at.slice(0, 10)
+      const list = buckets.get(iso) ?? []
+      list.push(row.stress_level)
+      buckets.set(iso, list)
+    }
+
+    const result: Record<string, { avg: number; count: number }> = {}
+    for (const [iso, values] of buckets.entries()) {
+      if (!values.length) continue
+      const sum = values.reduce((acc, value) => acc + value, 0)
+      const avg = sum / values.length
+      result[iso] = {
+        avg: Math.round(avg * 10) / 10,
+        count: values.length,
+      }
+    }
+
+    return result
+  }
+
   watch(
     session,
     () => {
@@ -178,5 +234,6 @@ export function useCheckins(session: Ref<Session | null>) {
     recordCheckin,
     weeklyAverageStress,
     weeklyCheckinsCount,
+    getMonthStressByDay,
   }
 }

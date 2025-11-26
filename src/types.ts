@@ -11,6 +11,9 @@ export interface CalendarCell {
   date: number | null
   isToday: boolean
   hasSession: boolean
+  iso?: string | null
+  hasCheckin?: boolean
+  stressLevel?: number | null
 }
 
 export interface TodaySection {

@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { CalendarCell } from '../types'
 
 const props = defineProps<{
   monthLabel: string
   cells: CalendarCell[]
+  monthAvgStress: number | null
+  monthCheckinsCount: number
 }>()
 
 const emit = defineEmits<{
@@ -13,6 +16,8 @@ const emit = defineEmits<{
   (e: 'touch-start', event: TouchEvent): void
   (e: 'touch-end', event: TouchEvent): void
 }>()
+
+const showSessions = ref(true)
 </script>
 
 <template>
@@ -49,6 +54,24 @@ const emit = defineEmits<{
           <i class="pi pi-chevron-right" aria-hidden="true"></i>
         </button>
       </div>
+      <div class="calendar-mode-toggle">
+        <button
+          type="button"
+          class="calendar-mode-btn"
+          :class="{ 'is-active': showSessions }"
+          @click="showSessions = true"
+        >
+          Seances + stress
+        </button>
+        <button
+          type="button"
+          class="calendar-mode-btn"
+          :class="{ 'is-active': !showSessions }"
+          @click="showSessions = false"
+        >
+          Seulement stress
+        </button>
+      </div>
       <div class="calendar-grid">
         <div
           class="calendar-weekday"
@@ -65,7 +88,10 @@ const emit = defineEmits<{
           :class="{
             'is-blank': cell.date === null,
             'is-today': cell.isToday,
-            'has-session': cell.hasSession,
+            'has-session': showSessions && cell.hasSession,
+            'stress-low': cell.stressLevel && cell.stressLevel <= 2,
+            'stress-medium': cell.stressLevel && cell.stressLevel > 2 && cell.stressLevel <= 3.5,
+            'stress-high': cell.stressLevel && cell.stressLevel > 3.5,
           }"
           :disabled="cell.date === null"
         >
@@ -74,10 +100,53 @@ const emit = defineEmits<{
           </span>
         </button>
       </div>
+      <div class="calendar-summary">
+        <p v-if="monthCheckinsCount > 0" class="calendar-summary-text">
+          Stress moyen du mois :
+          <strong>{{ monthAvgStress ?? '—' }}/5</strong>
+          ·
+          {{ monthCheckinsCount }} check-in(s)
+        </p>
+        <p v-else class="calendar-summary-text calendar-summary-text--muted">
+          Pas encore de check-ins ce mois-ci.
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 /* Utilise les styles dialog-*, calendar-* globaux definis dans RootApp.vue */
+.calendar-mode-toggle {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.calendar-mode-btn {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #27272a;
+  background: transparent;
+  color: #e5e7eb;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.4rem;
+}
+
+.calendar-mode-btn.is-active {
+  background: #0f172a;
+}
+
+.calendar-summary {
+  margin-top: 0.75rem;
+}
+
+.calendar-summary-text {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.calendar-summary-text--muted {
+  opacity: 0.75;
+}
 </style>

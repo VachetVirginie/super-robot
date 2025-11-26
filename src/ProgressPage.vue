@@ -33,13 +33,16 @@ const stressCategoriesSummary = computed(() => {
     uncategorized: 0,
   }
 
-  for (const item of props.stressReasons) {
-    const key =
-      item.category && ['work', 'family', 'health', 'other'].includes(item.category)
-        ? item.category
-        : 'uncategorized'
-    counts[key] += 1
-  }
+for (const item of props.stressReasons) {
+  const key =
+    item.category && ['work', 'family', 'health', 'other'].includes(item.category)
+      ? item.category
+      : 'uncategorized'
+
+  counts[key] ??= 0       // Initialise si undefined
+  counts[key] += 1        // Incrémente
+}
+
 
   const labels: Record<string, string> = {
     work: 'Travail',

@@ -17,8 +17,8 @@ function onRowClick(key: string) {
 
 <template>
   <section class="today-card">
-    <h2>Aujourd'hui</h2>
-    <p class="subtitle">Ton tableau de bord pour la semaine.</p>
+    <h2>Mes seances</h2>
+    <p class="subtitle">On regarde juste ou tu en es, sans pression.</p>
     <div class="today-list">
       <button
         v-for="section in sections"

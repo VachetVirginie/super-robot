@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { WellbeingExercise, TodaySection } from './types'
-import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots'
+import type { WeeklySlot } from './composables/useWeeklySlots'
 import TodayDashboard from './components/TodayDashboard.vue'
-import WellbeingCard from './components/WellbeingCard.vue'
 
 const props = defineProps<{
   isAuthenticated: boolean
@@ -18,6 +17,8 @@ const props = defineProps<{
   switchLabel: string
   todaysMotivation: { title: string; body: string } | null
   todaySections: TodaySection[]
+  todayCheckinSummary: string
+  todayCheckinLevel: number | null
   perWeekGoal: number | null
   weeklySessions: number | null
   weeklyProgressPercent: number
@@ -30,6 +31,8 @@ const props = defineProps<{
   notificationsStatus: 'idle' | 'requesting' | 'enabled' | 'error'
   notificationsError: string | null
   todaysExercise: WellbeingExercise | null
+  isCheckinSaving: boolean
+  checkinError: string | null
   onUpdateEmail: (value: string) => void
   onUpdatePassword: (value: string) => void
   submitAuth: () => void | Promise<void>
@@ -38,6 +41,7 @@ const props = defineProps<{
   onEnableNotifications: () => void | Promise<void>
   startWellbeingExercise: () => void
   onOpenWeekPlan: () => void
+  submitCheckin: (stressLevel: number) => void | Promise<void>
 }>()
 
 function onEmailInput(event: Event) {
@@ -54,39 +58,44 @@ function onRowClick(key: string) {
   props.onTodayRowClick(key)
 }
 
-const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-const timeLabels: Record<TimeOfDay, string> = {
-  morning: 'matin',
-  afternoon: 'ap.midi',
-  evening: 'soir',
-}
-
 const planSummary = computed(() => {
   if (props.isWeeklySlotsLoading) {
-    return 'Chargement de ton planning...'
+    return 'On charge ton planning...'
   }
   if (props.weeklySlotsError) {
     return props.weeklySlotsError
   }
   const count = props.weeklySlots.length
   if (count === 0) {
-    return "Aucun moment planifie pour l'instant."
+    return "Tu n'as encore rien prevu. On choisit 1 ou 2 moments faciles ?"
   }
-
-  const short = props.weeklySlots
-    .slice(0, 3)
-    .map((slot) => `${days[slot.dayIndex]} ${timeLabels[slot.timeOfDay]}`)
-
   if (count === 1) {
-    return `1 moment planifie : ${short[0]}`
-  }
-  if (count <= 3) {
-    return `${count} moments : ${short.join(', ')}`
+    return 'Tu as prevu 1 petit moment pour toi cette semaine.'
   }
 
-  const remaining = count - short.length
-  return `${count} moments : ${short.join(', ')} + ${remaining} autre(s)`
+  return `Tu as prevu ${count} moments pour toi cette semaine. C'est deja tres bien.`
 })
+
+const selectedStress = ref<number | null>(null)
+
+watch(
+  () => props.todayCheckinLevel,
+  (level) => {
+    selectedStress.value = level ?? null
+  },
+  { immediate: true },
+)
+
+function onSelectStress(level: number) {
+  selectedStress.value = level
+}
+
+async function onSubmitCheckin() {
+  if (!selectedStress.value || props.isCheckinSaving) {
+    return
+  }
+  await props.submitCheckin(selectedStress.value)
+}
 </script>
 
 <template>
@@ -101,14 +110,14 @@ const planSummary = computed(() => {
   <section v-if="isAuthenticated" class="card planweek-section">
     <div class="planweek-header">
       <div>
-        <h2 class="planweek-title">Planifier ma semaine</h2>
-        <p class="planweek-subtitle">Choisis quelques moments realistes pour bouger.</p>
+        <h2 class="planweek-title">Mon plan pour bouger</h2>
+        <p class="planweek-subtitle">On choisit quelques moments simples pour toi cette semaine.</p>
         <p class="planweek-summary">
           {{ planSummary }}
         </p>
       </div>
       <button type="button" class="secondary planweek-cta" @click="props.onOpenWeekPlan()">
-        Definir
+        Choisir mes moments
       </button>
     </div>
   </section>
@@ -149,17 +158,68 @@ const planSummary = computed(() => {
     </p>
   </section>
 
-  <TodayDashboard
-    v-else
-    :sections="todaySections"
-    :per-week-goal="perWeekGoal"
-    @row-click="onRowClick"
-  />
-  <WellbeingCard
-    v-if="isAuthenticated && todaysExercise"
-    :exercise="todaysExercise"
-    @start="startWellbeingExercise"
-  />
+  <template v-else>
+    <section class="card checkin-card">
+      <h2 class="checkin-title">Aujourd'hui : stress et mouvement</h2>
+      <p class="checkin-subtitle">
+        Dis-moi comment tu te sens, et on choisit une petite action pour t'aider
+        (bouger un peu ou faire une pause bien-etre).
+      </p>
+      <div class="checkin-scale">
+        <button
+          v-for="level in 5"
+          :key="level"
+          type="button"
+          class="checkin-dot"
+          :class="{ 'is-active': selectedStress === level }"
+          :disabled="isCheckinSaving"
+          @click="onSelectStress(level)"
+        >
+          {{ level }}
+        </button>
+      </div>
+      <button
+        type="button"
+        class="primary checkin-submit"
+        :disabled="!selectedStress || isCheckinSaving"
+        @click="onSubmitCheckin"
+      >
+        <span v-if="isCheckinSaving">Enregistrement...</span>
+        <span v-else>Enregistrer mon check-in</span>
+      </button>
+      <p class="checkin-summary">
+        {{ todayCheckinSummary }}
+      </p>
+      <div class="checkin-actions">
+        <button
+          type="button"
+          class="secondary checkin-action"
+          @click="onRowClick('today-sessions')"
+        >
+          Ajouter une petite seance
+        </button>
+        <button
+          v-if="todaysExercise"
+          type="button"
+          class="secondary checkin-action"
+          @click="startWellbeingExercise"
+        >
+          Lancer la pause bien-etre du jour
+        </button>
+      </div>
+      <p v-if="todaysExercise" class="checkin-hint">
+        Pause du jour : {{ todaysExercise.title }}
+      </p>
+      <p v-if="checkinError" class="error">
+        {{ checkinError }}
+      </p>
+    </section>
+    <TodayDashboard
+      :sections="todaySections"
+      :per-week-goal="perWeekGoal"
+      @row-click="onRowClick"
+    />
+  </template>
 </template>
 
 <style scoped>
@@ -246,6 +306,75 @@ const planSummary = computed(() => {
 
 .planweek-summary {
   margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.checkin-card {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkin-title {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.checkin-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.checkin-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.checkin-dot {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(75, 85, 99, 0.9);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.35rem 0;
+  font-size: 0.85rem;
+}
+
+.checkin-dot.is-active {
+  border-color: #22c55e;
+  background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.4), #020617);
+}
+
+.checkin-submit {
+  margin-top: 0.75rem;
+}
+
+.checkin-summary {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.checkin-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkin-action {
+  width: 100%;
+}
+
+.checkin-hint {
+  margin: 0.5rem 0 0;
   font-size: 0.8rem;
   opacity: 0.9;
 }

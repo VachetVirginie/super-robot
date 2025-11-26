@@ -6,6 +6,7 @@ import { useAuth } from './composables/useAuth'
 import { useTodayStats } from './composables/useTodayStats'
 import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
+import { useCheckins } from './composables/useCheckins'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
 import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
@@ -70,6 +71,32 @@ const {
   saveDisplayName,
   profileInitial,
 } = useProfile(session)
+
+const {
+  todayCheckin,
+  isCheckinSaving,
+  checkinError,
+  recordCheckin,
+  weeklyAverageStress,
+  weeklyCheckinsCount,
+} = useCheckins(session)
+
+const todayCheckinSummary = computed(() => {
+  const c = todayCheckin.value
+  if (!c) {
+    return "Pas encore de check-in aujourd'hui."
+  }
+  const level = typeof c.stress_level === 'number' ? c.stress_level : null
+  if (level === null) {
+    return 'Check-in enregistre pour aujourdhui.'
+  }
+  return `Niveau de stress: ${level}/5 aujourdhui.`
+})
+
+const todayCheckinLevel = computed(() => {
+  const c = todayCheckin.value
+  return typeof c?.stress_level === 'number' ? c.stress_level : null
+})
 
 const wellbeingExercises = [
   {
@@ -237,21 +264,21 @@ const todaySections = computed(() => {
   let todaySubtitle: string
   if (plannedToday > 0) {
     if (sessionsTodayCount === 0) {
-      todaySubtitle = `0/${plannedToday} seance(s) realisee(s) aujourd'hui`
+      todaySubtitle = `Tu as prevu ${plannedToday} seance(s) pour aujourd'hui. On peut en faire une petite quand tu veux.`
     } else {
       const done = Math.min(sessionsTodayCount, plannedToday)
-      todaySubtitle = `${done}/${plannedToday} seance(s) realisee(s) aujourd'hui`
+      todaySubtitle = `${done}/${plannedToday} seance(s) prevue(s) deja faites aujourd'hui.`
     }
   } else {
     todaySubtitle =
       sessionsTodayCount > 0
-        ? `${sessionsTodayCount} seance(s) realisee(s) aujourd'hui`
-        : "Pas encore de seance aujourd'hui"
+        ? `${sessionsTodayCount} seance(s) deja faites aujourd'hui, bravo.`
+        : "Pas encore de seance aujourd'hui. On peut toujours commencer par quelque chose de tres court."
   }
 
   sections.push({
     key: 'today-sessions',
-    title: "Seances aujourd'hui",
+    title: "Bouger aujourd'hui",
     subtitle: todaySubtitle,
     progress: todayProgress,
   })
@@ -259,41 +286,14 @@ const todaySections = computed(() => {
   const weeklyPercent = weeklyProgressPercent.value
   sections.push({
     key: 'weekly-sessions',
-    title: 'Seances cette semaine',
+    title: 'Bouger cette semaine',
     subtitle:
       perWeekGoal.value !== null && weeklySessions.value !== null
-        ? `${weeklySessions.value}/${perWeekGoal.value} seances realisees`
+        ? `Tu as fait ${weeklySessions.value} seance(s) sur ${perWeekGoal.value} prevues cette semaine.`
         : weeklySessions.value !== null && weeklySessions.value > 0
-          ? `${weeklySessions.value} seance(s) realisee(s)`
-          : 'Pas encore de seance cette semaine',
+          ? `Tu as deja fait ${weeklySessions.value} seance(s) cette semaine.`
+          : 'Pas encore de seance cette semaine. On peut en ajouter une petite.',
     progress: weeklyPercent,
-  })
-
-  // sections.push({
-  //   key: 'weekly-goal',
-  //   title: 'Objectif de la semaine',
-  //   subtitle:
-  //     perWeekGoal.value !== null
-  //       ? `${perWeekGoal.value} seance(s) prevue(s)`
-  //       : "Aucun objectif defini pour l'instant",
-  //   progress: 0,
-  // })
-
-  sections.push({
-    key: 'notifications',
-    title: 'Rappels motivation',
-    subtitle:
-      status.value === 'enabled'
-        ? 'Notifications de motivation actives'
-        : 'Aucun rappel actif pour le moment',
-    progress: status.value === 'enabled' ? 100 : 0,
-  })
-
-  sections.push({
-    key: 'wellbeing',
-    title: 'Pause bien-etre',
-    subtitle: todaysExercise.value?.title ?? 'Exercice bien-etre du jour',
-    progress: 0,
   })
 
   return sections
@@ -485,17 +485,17 @@ const calendarCells = computed(() => {
 const motivationMessages = [
   {
     key: 'focus',
-    title: 'Motivation du jour',
+    title: 'Petit mot pour toi',
     body: 'Ton corps est capable de beaucoup plus que tu ne le penses. C\'est ton esprit qu\'il faut convaincre.',
   },
   {
     key: 'consistency',
-    title: 'Motivation du jour',
+    title: 'Petit mot pour toi',
     body: 'Une seance aujourd\'hui vaut mieux qu\'un objectif parfait demain. Avance d\'un petit pas.',
   },
   {
     key: 'identity',
-    title: 'Motivation du jour',
+    title: 'Petit mot pour toi',
     body: 'Tu n\'as pas besoin d\'etre parfait. Tu as juste besoin d\'etre quelqu\'un qui se presente pour lui-meme.',
   },
 ]
@@ -535,6 +535,7 @@ function startWellbeingExercise() {
   if (!todaysExercise.value) {
     return
   }
+  openExercisePlayer(todaysExercise.value.key)
 }
 
 function onTodayRowClick(key: string) {
@@ -677,6 +678,20 @@ async function onSaveDisplayNameFromProfile() {
   }
 }
 
+async function submitCheckin(stressLevel: number) {
+  const previousError = checkinError.value
+  await recordCheckin(stressLevel)
+
+  if (!checkinError.value) {
+    showSnackbar('Check-in bien-etre enregistre', 'success')
+  } else if (checkinError.value !== previousError || checkinError.value) {
+    showSnackbar(
+      checkinError.value ?? 'Erreur lors de lenregistrement du check-in.',
+      'error',
+    )
+  }
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     if (
@@ -729,7 +744,7 @@ onBeforeUnmount(() => {
     </header>
 
     <WeekStrip
-      v-if="isAuthenticated"
+      v-if="isAuthenticated && route.name === 'today'"
       :greeting="userGreeting"
       :range-label="weekStrip.rangeLabel"
       :days="weekStrip.days"
@@ -767,6 +782,12 @@ onBeforeUnmount(() => {
         :weekly-slots="weeklySlots"
         :is-weekly-slots-loading="isWeeklySlotsLoading"
         :weekly-slots-error="weeklySlotsError"
+        :weekly-average-stress="weeklyAverageStress"
+        :weekly-checkins-count="weeklyCheckinsCount"
+      />
+      <component
+        v-else-if="route.name === 'alert'"
+        :is="Component"
       />
       <component
         v-else
@@ -783,6 +804,7 @@ onBeforeUnmount(() => {
         :switch-label="switchLabel"
         :todays-motivation="todaysMotivation"
         :today-sections="todaySections"
+        :today-checkin-summary="todayCheckinSummary"
         :per-week-goal="perWeekGoal"
         :weekly-sessions="weeklySessions"
         :weekly-progress-percent="weeklyProgressPercent"
@@ -795,6 +817,9 @@ onBeforeUnmount(() => {
         :notifications-status="status"
         :notifications-error="errorMessage"
         :todays-exercise="todaysExercise"
+        :is-checkin-saving="isCheckinSaving"
+        :checkin-error="checkinError"
+        :today-checkin-level="todayCheckinLevel"
         :on-update-email="(value: string) => { email = value }"
         :on-update-password="(value: string) => { password = value }"
         :submit-auth="submitAuth"
@@ -802,6 +827,7 @@ onBeforeUnmount(() => {
         :on-today-row-click="onTodayRowClick"
         :on-enable-notifications="onEnableNotifications"
         :start-wellbeing-exercise="startWellbeingExercise"
+        :submit-checkin="submitCheckin"
         :on-open-week-plan="openPlanWeekDialog"
       />
     </RouterView>
@@ -882,9 +908,15 @@ onBeforeUnmount(() => {
         <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Progression</span>
       </button>
-      <button type="button" class="nav-item">
-        <i class="pi pi-bell nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Notif</span>
+      <button
+        type="button"
+        :class="['nav-item', 'nav-item-sos', { 'is-active': route.name === 'alert' }]"
+        @click="router.push({ name: 'alert' })"
+      >
+        <span class="nav-sos-circle">
+          <i class="pi pi-moon nav-icon" aria-hidden="true"></i>
+        </span>
+        <span class="nav-label nav-label-sos">Zen</span>
       </button>
       <button type="button" class="nav-item">
         <i class="pi pi-dumbbell nav-icon" aria-hidden="true"></i>
@@ -1218,6 +1250,34 @@ onBeforeUnmount(() => {
     color 0.16s ease,
     transform 0.08s ease;
 }
+.nav-item-sos {
+  flex: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.nav-sos-circle {
+  width: 2.7rem;
+  height: 2.7rem;
+  margin-top: -1rem;
+  border-radius: 999px;
+  border: 2px solid #22c55e;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(34, 197, 94, 0.5);
+}
+.nav-item-sos .nav-icon {
+  font-size: 1.2rem;
+}
+.nav-label-sos {
+  font-weight: 600;
+  font-size: 0.65rem;
+  margin-top: 0.15rem;
+}
 .nav-item:hover {
   background: rgba(31, 41, 55, 0.9);
 }
@@ -1227,6 +1287,11 @@ onBeforeUnmount(() => {
 .nav-item.is-active {
   background: #05d970;
   color: #0b0f19;
+}
+.nav-item-sos.is-active,
+.nav-item-sos.is-active:hover {
+  background: transparent;
+  color: #bbf7d0;
 }
 .nav-icon {
   font-size: 1.05rem;

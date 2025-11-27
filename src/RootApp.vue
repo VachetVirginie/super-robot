@@ -596,10 +596,7 @@ async function signOutAndRedirect() {
 }
 
 function startWellbeingExercise() {
-  if (!todaysExercise.value) {
-    return
-  }
-  openExercisePlayer(todaysExercise.value.key)
+  router.push({ name: 'zen', query: { auto: '1' } })
 }
 
 function onTodayRowClick(key: string) {
@@ -935,6 +932,7 @@ onBeforeUnmount(() => {
         :weekly-by-kind="weeklyByKind"
         :latest-sessions-display="latestSessionsDisplay"
         :latest-sessions-detail="latestSessionsDetail"
+        @replay-template="(key: string) => { activeWorkoutTemplateKey = key; isWorkoutPlayerOpen = true }"
       />
       <component
         v-else-if="route.name === 'stress'"
@@ -1098,11 +1096,11 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', 'nav-item-rituels', { 'is-active': route.name === 'rituels' }]"
-        @click="router.push({ name: 'rituels' })"
+        :class="['nav-item', 'nav-item-seances', { 'is-active': route.name === 'seances' }]"
+        @click="router.push({ name: 'seances' })"
       >
         <i class="pi pi-clock nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Rituels</span>
+        <span class="nav-label">Seances</span>
       </button>
       <button
         type="button"
@@ -1197,9 +1195,9 @@ onBeforeUnmount(() => {
   gap: 0.9rem;
   padding: 1.2rem 1.1rem;
   border-radius: 1.75rem;
-  background: radial-gradient(circle at top left, #16a34a1a, transparent 55%), #050816;
-  border: none;
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.9);
+  background: #111111;
+  border: 1px solid #27272a;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
 }
 .week-strip-header {
   display: flex;

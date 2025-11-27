@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 const isPlaying = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
@@ -102,6 +103,8 @@ function formatTime(value: number) {
 
 const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
 
+const route = useRoute()
+
 const canSaveReflection = computed(() => {
   if (!props.isAuthenticated || props.isSavingStressReason) {
     return false
@@ -177,6 +180,20 @@ function openOverlay() {
   startTimer()
 }
 
+function openRandomOverlayIfNeeded() {
+  const auto = route.query.auto
+  if (auto === '1') {
+    if (tracks.length > 0) {
+      const index = Math.floor(Math.random() * tracks.length)
+      const randomTrack = tracks[index]
+      if (randomTrack) {
+        selectedTrackId.value = randomTrack.id
+      }
+    }
+    openOverlay()
+  }
+}
+
 function closeOverlay() {
   isOverlayOpen.value = false
   stopTimer()
@@ -207,6 +224,7 @@ watch(selectedTrackId, () => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  openRandomOverlayIfNeeded()
 })
 
 onBeforeUnmount(() => {

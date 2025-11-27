@@ -325,6 +325,14 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
               {{ progressCoachMessage }}
             </p>
 
+            <button
+              type="button"
+              class="stress-link-button"
+              @click="router.push({ name: 'seances' })"
+            >
+              Voir toutes tes seances
+            </button>
+
             <div v-if="kindTags.length" class="progress-tags">
               <span
                 v-for="tag in kindTags"
@@ -784,10 +792,11 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   width: 100%;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
-  background: transparent;
-  color: #e5e7eb;
+  background: #22c55e;
+  color: #022c22;
   padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
+  margin-bottom: 12px;
 }
 
 .stress-link-button--highlight {

@@ -122,8 +122,8 @@ function onRowClick(key: string) {
   justify-content: center;
 }
 .today-row-circle {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
   background:
     conic-gradient(#05d970 var(--p), rgba(55, 65, 81, 0.6) 0);
@@ -132,8 +132,8 @@ function onRowClick(key: string) {
   justify-content: center;
 }
 .today-row-circle-inner {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   background: #111111;
   display: flex;
@@ -141,6 +141,7 @@ function onRowClick(key: string) {
   justify-content: center;
 }
 .today-row-percent {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
+  line-height: 1;
 }
 </style>

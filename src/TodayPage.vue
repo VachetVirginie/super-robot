@@ -110,14 +110,14 @@ async function onSubmitCheckin() {
   <section v-if="isAuthenticated" class="card planweek-section">
     <div class="planweek-header">
       <div>
-        <h2 class="planweek-title">Mon plan pour bouger</h2>
-        <p class="planweek-subtitle">On choisit quelques moments simples pour toi cette semaine.</p>
+        <h2 class="planweek-title">Plan de la semaine</h2>
+        <p class="planweek-subtitle">Tes moments pour bouger cette semaine.</p>
         <p class="planweek-summary">
           {{ planSummary }}
         </p>
       </div>
       <button type="button" class="secondary planweek-cta" @click="props.onOpenWeekPlan()">
-        Mes moments
+        Plan
       </button>
     </div>
   </section>
@@ -159,12 +159,13 @@ async function onSubmitCheckin() {
   </section>
 
   <template v-else>
+    <!-- Carte 1 : stress -->
     <section class="card checkin-card">
-      <h2 class="checkin-title">Aujourd'hui : stress et mouvement</h2>
+      <h2 class="checkin-title">Comment tu te sens aujourd'hui ?</h2>
       <p class="checkin-subtitle">
-        Dis-moi comment tu te sens, et on choisit une petite action pour t'aider
-        (bouger un peu ou faire une pause bien-etre).
+        Note ton stress de 1 (tres calme) a 5 (au max).
       </p>
+
       <div class="checkin-scale">
         <button
           v-for="level in 5"
@@ -190,6 +191,17 @@ async function onSubmitCheckin() {
       <p class="checkin-summary">
         {{ todayCheckinSummary }}
       </p>
+      <p v-if="checkinError" class="error">
+        {{ checkinError }}
+      </p>
+    </section>
+
+    <!-- Carte 2 : mini action du jour -->
+    <section class="card checkin-card mini-action-card">
+      <h2 class="checkin-title">Ta mini action du jour</h2>
+      <p class="checkin-subtitle">
+        Choisis ce qui t'aiderait le plus : bouger un peu ou faire une pause zen.
+      </p>
       <div class="checkin-actions">
         <button
           type="button"
@@ -197,13 +209,6 @@ async function onSubmitCheckin() {
           @click="onRowClick('today-quick-5')"
         >
           Seance rapide 5 min
-        </button>
-        <button
-          type="button"
-          class="secondary checkin-action"
-          @click="onRowClick('today-sessions')"
-        >
-          Ajouter une petite seance
         </button>
         <button
           v-if="todaysExercise"
@@ -214,13 +219,8 @@ async function onSubmitCheckin() {
           Lancer la pause bien-etre du jour
         </button>
       </div>
-      <p v-if="todaysExercise" class="checkin-hint">
-        Pause du jour : {{ todaysExercise.title }}
-      </p>
-      <p v-if="checkinError" class="error">
-        {{ checkinError }}
-      </p>
     </section>
+
     <TodayDashboard
       :sections="todaySections"
       :per-week-goal="perWeekGoal"
@@ -307,14 +307,28 @@ async function onSubmitCheckin() {
 }
 
 .planweek-cta {
-  min-width: 0;
   padding-inline: 0.9rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .planweek-summary {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
   opacity: 0.9;
+}
+
+.checkin-divider {
+  margin: 0.75rem 0 0.75rem;
+  height: 1px;
+  border: none;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.checkin-subtitle-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .checkin-card {
@@ -333,8 +347,8 @@ async function onSubmitCheckin() {
 
 .checkin-subtitle {
   margin: 0;
-  font-size: 0.85rem;
-  opacity: 0.85;
+  font-size: 0.9rem;
+  opacity: 0.95;
 }
 
 .checkin-scale {

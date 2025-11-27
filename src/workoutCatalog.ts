@@ -1,3 +1,8 @@
+
+// =============================================================
+// TYPES
+// =============================================================
+
 export type WorkoutKind = 'cardio' | 'strength' | 'mobility' | 'mixed'
 
 export type ExerciseCategory = 'cardio' | 'strength' | 'mobility'
@@ -31,148 +36,342 @@ export interface WorkoutTemplate {
   blocks: WorkoutTemplateBlock[]
 }
 
-// --- Catalogue d'exercices de base (sans materiel) ---
+// =============================================================
+// CATALOGUE EXERCICES — COMPLET (EXISTANTS + NOUVEAUX)
+// =============================================================
 
 export const EXERCISES: Exercise[] = [
-  // Cardio leger
+
+  // ---------------------------------------------------------
+  // CARDIO — EXISTANTS
+  // ---------------------------------------------------------
   {
     id: 'EXO_CARDIO_MARCHE_PLACE',
     name: 'Marche sur place dynamique',
     category: 'cardio',
     targets: ['jambes', 'cardio'],
     level: 1,
-    description:
-      "Debout, pieds largeur de hanches, leve les genoux alternativement en balancant legerement les bras. Garde le buste droit et regarde devant toi.",
-    cues: ['Pose les pieds en douceur', 'Garde les epaules relachees'],
-    easierVariation: 'Marche plus lente avec une amplitude de genoux plus petite.',
+    description: "Leve les genoux alternativement en balançant légèrement les bras.",
+    cues: ['Pose les pieds en douceur', 'Garde les épaules relâchées'],
+    easierVariation: 'Marche plus lente.',
   },
   {
     id: 'EXO_CARDIO_STEP_TOUCH',
-    name: 'Pas cote a cote',
+    name: 'Pas cote à cote',
     category: 'cardio',
     targets: ['jambes', 'cardio'],
     level: 1,
-    description:
-      "Depuis la position debout, fais un pas sur le cote avec le pied droit puis ramene le pied gauche. Alterne droite/gauche en balancant legerement les bras.",
-    cues: ['Genoux souples', 'Mouvement fluide, sans saut'],
-    easierVariation: 'Reduis la taille des pas et garde les bras proches du corps.',
+    description: "Pas latéral puis retour au centre.",
+    cues: ['Genoux souples'],
   },
   {
     id: 'EXO_CARDIO_MARCHE_FRONTALE',
-    name: 'Marche avant / arriere',
+    name: 'Marche avant/arrière',
     category: 'cardio',
     targets: ['jambes', 'cardio'],
     level: 1,
-    description:
-      "Dans un petit espace, fais 2 a 3 pas vers l'avant puis 2 a 3 pas vers l'arriere, en continu, comme dans un couloir.",
-    cues: ['Regarde devant toi', 'Pose tout le pied au sol'],
-    easierVariation: 'Reduis a 1 pas avant / 1 pas arriere si besoin.',
+    description: "2–3 pas avant puis arrière.",
+    cues: ['Regarde devant toi'],
   },
   {
     id: 'EXO_CARDIO_JJ_LOW_IMPACT',
     name: 'Jumping jack sans saut',
     category: 'cardio',
-    targets: ['jambes', 'epaules', 'cardio'],
+    targets: ['jambes', 'epaules'],
     level: 2,
-    description:
-      "Depuis la position debout, ecarte un pied sur le cote et ouvre les bras, puis reviens au centre et change de cote, sans sauter.",
-    cues: ['Mouvement controle', 'Reste leger sur les appuis'],
-    easierVariation: "Reduis l'amplitude des bras et le rythme si besoin.",
+    description: "Jambe droite, bras ouvers, puis inverse.",
+    cues: ['Mouvement contrôlé'],
   },
 
-  // Renforcement
+  // ---------------------------------------------------------
+  // RENFO — EXISTANTS
+  // ---------------------------------------------------------
   {
     id: 'EXO_SQUAT_CHAISE',
     name: 'Squat vers chaise',
     category: 'strength',
     targets: ['jambes', 'fessiers'],
     level: 1,
-    description:
-      "Debout devant une chaise, pieds largeur des epaules, descends comme pour t'asseoir puis remonte en controlant le mouvement.",
-    cues: ['Genoux dans laxe des pieds', 'Garde la poitrine ouverte'],
-    easierVariation: 'Assieds-toi completement a chaque repetition puis releve-toi.',
+    description: "Descends vers la chaise puis remonte.",
+    cues: ['Genoux alignés', 'Poitrine ouverte'],
   },
   {
     id: 'EXO_PONT_FESSIER',
-    name: 'Pont fessier au sol',
+    name: 'Pont fessier',
     category: 'strength',
-    targets: ['fessiers', 'arriere cuisses', 'bas du dos'],
+    targets: ['fessiers'],
     level: 1,
-    description:
-      "Allongee sur le dos, pieds proches des fesses, pousse le bassin vers le haut en serrant les fessiers, puis redescends lentement.",
-    cues: ['Pousse dans les talons', 'Ne cambre pas exagere le bas du dos'],
-    easierVariation: 'Monte moins haut et marque une petite pause en bas.',
+    description: "Monte le bassin en serrant les fessiers.",
+    cues: ['Pousse dans les talons'],
   },
   {
     id: 'EXO_POMPE_MUR',
     name: 'Pompes au mur',
     category: 'strength',
-    targets: ['pectoraux', 'epaules', 'bras'],
+    targets: ['pectoraux', 'bras'],
     level: 1,
-    description:
-      "Place tes mains a plat sur un mur, corps legerement incline, flechis les coudes pour rapprocher la poitrine du mur puis repousse.",
-    cues: ['Corps gaine', 'Coudes ni trop serres ni trop ouverts'],
-    easierVariation: 'Rapproche les pieds du mur pour reduire linclinaison.',
+    description: "Flechis les coudes vers le mur et repousse.",
+    cues: ['Corps gainé'],
   },
   {
     id: 'EXO_GAINAGE_GENOUX',
     name: 'Gainage sur genoux',
     category: 'strength',
-    targets: ['ceinture abdominale', 'dos'],
+    targets: ['abdos', 'dos'],
     level: 1,
-    description:
-      "En appui sur les avant-bras et les genoux, garde le corps aligne des epaules aux genoux et tiens la position sans bouger.",
-    cues: ['Regarde le sol', 'Rentre legerement le nombril'],
-    easierVariation: 'Tiens 10 a 15 secondes, relache, puis recommence.',
+    description: "Tiens la position alignée.",
+    cues: ['Regarde le sol'],
   },
 
-  // Mobilite / etirements
+  // ---------------------------------------------------------
+  // MOBILITÉ — EXISTANTS
+  // ---------------------------------------------------------
   {
     id: 'EXO_MOB_COUP_DEBOUT',
-    name: 'Mobilite nuque / epaules',
+    name: 'Mobilité nuque/épaules',
     category: 'mobility',
     targets: ['nuque', 'epaules'],
     level: 1,
-    description:
-      "Debout ou assise, fais des cercles lents avec les epaules puis des inclinaisons douces de la tete a droite et a gauche.",
-    cues: ['Mouvement confortable', 'Respiration lente et reguliere'],
+    description: "Cercles d’épaules et inclinaisons de tête.",
+    cues: ['Mouvement doux'],
   },
   {
     id: 'EXO_MOB_COLONNE_CHAT_VACHE',
-    name: 'Chat / vache debout contre table',
+    name: 'Chat/vache debout',
     category: 'mobility',
     targets: ['dos'],
     level: 1,
-    description:
-      "Mains posees sur une table, arrondis doucement le dos puis creuse legerement en suivant ta respiration.",
-    cues: ['Mouvement fluide', 'Ne force jamais dans la douleur'],
+    description: "Alterne dos rond / dos creux.",
+    cues: ['Ne force pas'],
   },
   {
     id: 'EXO_MOB_HANCHES',
     name: 'Cercles de hanches',
     category: 'mobility',
-    targets: ['hanches', 'bassin'],
+    targets: ['hanches'],
     level: 1,
-    description:
-      "Pieds bien ancrees, mains sur les hanches, fais des cercles lents avec le bassin dans un sens puis dans lautre.",
-    cues: ['Poids reparti sur les deux pieds', 'Amplitude confortable'],
+    description: "Rotation lente du bassin.",
+    cues: ['Amplitude confortable'],
   },
   {
     id: 'EXO_ETIREMENT_ISCHIOS_MUR',
-    name: 'Etirement arriere cuisses (debout)',
+    name: 'Étirement ischios debout',
     category: 'mobility',
-    targets: ['ischios', 'jambes'],
+    targets: ['ischios'],
     level: 1,
-    description:
-      "Place un talon sur une chaise ou une marche, jambe quasi tendue, penche legerement le buste vers lavant jusqua sentir letirement a larriere de la cuisse.",
-    cues: ['Dos long', "Ne cherche pas a toucher le pied si ton dos sarrondit"],
-    easierVariation: 'Choisis un support plus bas pour reduire lamplitude.',
+    description: "Talons sur un support, buste vers l’avant.",
+    cues: ['Dos long'],
+  },
+
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // 🔥 NOUVEAUX EXERCICES — AJOUT COMPLET
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+
+  // --- Cardio nouveaux ---
+  {
+    id: 'EXO_CARDIO_TALONS_FESSES',
+    name: 'Talons-fesses sur place',
+    category: 'cardio',
+    targets: ['jambes'],
+    level: 1,
+    description: "Ramène un talon vers les fesses en alternance.",
+    cues: ['Dos droit'],
+  },
+  {
+    id: 'EXO_CARDIO_KNEE_LIFT',
+    name: 'Montées de genoux low impact',
+    category: 'cardio',
+    targets: ['jambes', 'cardio'],
+    level: 1,
+    description: "Monte les genoux et bouge les bras.",
+    cues: ['Respiration fluide'],
+  },
+  {
+    id: 'EXO_CARDIO_PAS_ARC_COURBE',
+    name: 'Pas en arc de cercle',
+    category: 'cardio',
+    targets: ['jambes', 'coordination'],
+    level: 1,
+    description: "Déplacement latéral semi-circulaire.",
+    cues: ['Transfert de poids fluide'],
+  },
+  {
+    id: 'EXO_CARDIO_BOX_JABS',
+    name: 'Jabs boxe',
+    category: 'cardio',
+    targets: ['epaules', 'bras'],
+    level: 1,
+    description: "Poings vers l’avant en alternance.",
+    cues: ['Gaine légère'],
+  },
+  {
+    id: 'EXO_CARDIO_SIDE_KICKS',
+    name: 'Side kicks doux',
+    category: 'cardio',
+    targets: ['jambes'],
+    level: 1,
+    description: "Petit coup de pied latéral contrôlé.",
+    cues: ['Ne force pas la hauteur'],
+  },
+  {
+    id: 'EXO_CARDIO_DOUBLE_STEP',
+    name: 'Double step lateral',
+    category: 'cardio',
+    targets: ['jambes'],
+    level: 1,
+    description: "Deux pas droite, deux pas gauche.",
+    cues: ['Genoux souples'],
+  },
+  {
+    id: 'EXO_CARDIO_STEP_BACK',
+    name: 'Pas arrière alterné',
+    category: 'cardio',
+    targets: ['jambes'],
+    level: 1,
+    description: "Reculer une jambe puis l’autre.",
+    cues: ['Pose complète du pied'],
+  },
+
+  // --- Renforcement nouveaux ---
+  {
+    id: 'EXO_SQUAT_DEMI',
+    name: 'Demi-squat',
+    category: 'strength',
+    targets: ['jambes'],
+    level: 1,
+    description: "Mini-squat contrôlé.",
+    cues: ['Poids dans les talons'],
+  },
+  {
+    id: 'EXO_FENTE_STATIQUE',
+    name: 'Fente statique',
+    category: 'strength',
+    targets: ['jambes'],
+    level: 1,
+    description: "Fente fixe, amplitude courte.",
+    cues: ['Bassin centré'],
+  },
+  {
+    id: 'EXO_ROW_BAND_IMAGINARY',
+    name: 'Tirage bras imaginaire',
+    category: 'strength',
+    targets: ['dos', 'bras'],
+    level: 1,
+    description: "Ramène les coudes vers l’arrière.",
+    cues: ['Omoplates serrées'],
+  },
+  {
+    id: 'EXO_PUSH_UP_TABLE',
+    name: 'Pompes contre table',
+    category: 'strength',
+    targets: ['pectoraux', 'bras'],
+    level: 1,
+    description: "Inclinaison faible, bras fléchis.",
+    cues: ['Coude 45°'],
+  },
+  {
+    id: 'EXO_CHAIR_SIT_HOLD',
+    name: 'Chaise murale semi',
+    category: 'strength',
+    targets: ['jambes'],
+    level: 2,
+    description: "Position chaise peu profonde.",
+    cues: ['Genoux au-dessus des chevilles'],
+  },
+  {
+    id: 'EXO_GLUTE_KICKBACK',
+    name: 'Kick arrière debout',
+    category: 'strength',
+    targets: ['fessiers'],
+    level: 1,
+    description: "Tends la jambe vers l’arrière.",
+    cues: ['Mouvement lent'],
+  },
+  {
+    id: 'EXO_ABS_STANDING_CRUNCH',
+    name: 'Crunch debout',
+    category: 'strength',
+    targets: ['abdos'],
+    level: 1,
+    description: "Genou vers les coudes.",
+    cues: ['Souffle à la montée'],
+  },
+
+  // --- Mobilité nouveaux ---
+  {
+    id: 'EXO_MOB_ANKLES',
+    name: 'Cercles de chevilles',
+    category: 'mobility',
+    targets: ['chevilles'],
+    level: 1,
+    description: "Rotation douce de la cheville.",
+    cues: ['Amplitude douce'],
+  },
+  {
+    id: 'EXO_MOB_POIGNETS',
+    name: 'Cercles de poignets',
+    category: 'mobility',
+    targets: ['poignets'],
+    level: 1,
+    description: "Mobilisation lente.",
+    cues: ['Respiration calme'],
+  },
+  {
+    id: 'EXO_MOB_HANCHE_OUVERTURE',
+    name: 'Ouverture de hanche',
+    category: 'mobility',
+    targets: ['hanches'],
+    level: 1,
+    description: "Monte un genou et ouvre vers l’extérieur.",
+    cues: ['Contrôle'],
+  },
+  {
+    id: 'EXO_ETIREMENT_QUADRICEPS',
+    name: 'Étirement quadriceps debout',
+    category: 'mobility',
+    targets: ['quadriceps'],
+    level: 1,
+    description: "Tire le pied vers les fesses.",
+    cues: ['Genou vers le sol'],
+  },
+  {
+    id: 'EXO_ETIREMENT_TRICEPS',
+    name: 'Étirement triceps',
+    category: 'mobility',
+    targets: ['bras'],
+    level: 1,
+    description: "Main derrière la tête.",
+    cues: ['Épaule relâchée'],
+  },
+  {
+    id: 'EXO_MOB_TWIST_DEBOUT',
+    name: 'Rotation douce du buste',
+    category: 'mobility',
+    targets: ['dos'],
+    level: 1,
+    description: "Tourne doucement droite/gauche.",
+    cues: ['Hanches fixes'],
   },
 ]
 
-// --- Templates de seances ---
+
+
+
+
+// =============================================================
+// =============================================================
+// 🧩 WORKOUT TEMPLATES — COMPLET (EXISTANTS + 20 NOUVEAUX)
+// =============================================================
+// =============================================================
 
 export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
+
+  // ---------------------------------------------------------
+  // TEMPLATES D'ORIGINE
+  // ---------------------------------------------------------
+
   {
     key: 'WT_MOB_5_MIN_EASY',
     name: 'Reveil doux (mobilite 5 min)',
@@ -180,33 +379,14 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     level: 1,
     targetDurationMinutes: 5,
     blocks: [
-      {
-        type: 'warmup',
-        durationSeconds: 60,
-        exerciseIds: ['EXO_MOB_COUP_DEBOUT'],
-      },
-      {
-        type: 'main',
-        durationSeconds: 60,
-        exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'],
-      },
-      {
-        type: 'main',
-        durationSeconds: 60,
-        exerciseIds: ['EXO_MOB_HANCHES'],
-      },
-      {
-        type: 'cooldown',
-        durationSeconds: 60,
-        exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'],
-      },
-      {
-        type: 'cooldown',
-        durationSeconds: 60,
-        exerciseIds: ['EXO_CARDIO_MARCHE_PLACE'],
-      },
+      { type: 'warmup', durationSeconds: 60, exerciseIds: ['EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 60, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
+      { type: 'main', durationSeconds: 60, exerciseIds: ['EXO_MOB_HANCHES'] },
+      { type: 'cooldown', durationSeconds: 60, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'] },
+      { type: 'cooldown', durationSeconds: 60, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE'] },
     ],
   },
+
   {
     key: 'WT_CARDIO_10_MIN_BEGINNER',
     name: 'Cardio doux 10 min',
@@ -214,36 +394,13 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     level: 1,
     targetDurationMinutes: 10,
     blocks: [
-      {
-        type: 'warmup',
-        durationSeconds: 120,
-        exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_MOB_HANCHES'],
-      },
-      {
-        type: 'main',
-        durationSeconds: 180,
-        exerciseIds: [
-          'EXO_CARDIO_MARCHE_PLACE',
-          'EXO_CARDIO_STEP_TOUCH',
-          'EXO_CARDIO_MARCHE_FRONTALE',
-        ],
-      },
-      {
-        type: 'main',
-        durationSeconds: 180,
-        exerciseIds: [
-          'EXO_CARDIO_MARCHE_PLACE',
-          'EXO_CARDIO_STEP_TOUCH',
-          'EXO_CARDIO_JJ_LOW_IMPACT',
-        ],
-      },
-      {
-        type: 'cooldown',
-        durationSeconds: 120,
-        exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'],
-      },
+      { type: 'warmup', durationSeconds: 120, exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_MOB_HANCHES'] },
+      { type: 'main', durationSeconds: 180, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE', 'EXO_CARDIO_STEP_TOUCH', 'EXO_CARDIO_MARCHE_FRONTALE'] },
+      { type: 'main', durationSeconds: 180, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE', 'EXO_CARDIO_STEP_TOUCH', 'EXO_CARDIO_JJ_LOW_IMPACT'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
     ],
   },
+
   {
     key: 'WT_FULLBODY_15_MIN_BEGINNER',
     name: 'Full body 15 min (debutant)',
@@ -251,38 +408,13 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     level: 1,
     targetDurationMinutes: 15,
     blocks: [
-      {
-        type: 'warmup',
-        durationSeconds: 180,
-        exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_MOB_COLONNE_CHAT_VACHE', 'EXO_CARDIO_MARCHE_PLACE'],
-      },
-      {
-        type: 'main',
-        durationSeconds: 360,
-        exerciseIds: [
-          'EXO_SQUAT_CHAISE',
-          'EXO_PONT_FESSIER',
-          'EXO_POMPE_MUR',
-          'EXO_GAINAGE_GENOUX',
-        ],
-      },
-      {
-        type: 'main',
-        durationSeconds: 360,
-        exerciseIds: [
-          'EXO_SQUAT_CHAISE',
-          'EXO_PONT_FESSIER',
-          'EXO_POMPE_MUR',
-          'EXO_GAINAGE_GENOUX',
-        ],
-      },
-      {
-        type: 'cooldown',
-        durationSeconds: 120,
-        exerciseIds: ['EXO_MOB_HANCHES', 'EXO_ETIREMENT_ISCHIOS_MUR'],
-      },
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_MOB_COLONNE_CHAT_VACHE','EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_PONT_FESSIER','EXO_POMPE_MUR','EXO_GAINAGE_GENOUX'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_PONT_FESSIER','EXO_POMPE_MUR','EXO_GAINAGE_GENOUX'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_MOB_HANCHES','EXO_ETIREMENT_ISCHIOS_MUR'] },
     ],
   },
+
   {
     key: 'WT_MIX_20_MIN_BEGINNER',
     name: 'Mix renfo + cardio 20 min',
@@ -290,42 +422,13 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     level: 1,
     targetDurationMinutes: 20,
     blocks: [
-      {
-        type: 'warmup',
-        durationSeconds: 180,
-        exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_MOB_COLONNE_CHAT_VACHE', 'EXO_CARDIO_MARCHE_PLACE'],
-      },
-      {
-        type: 'main',
-        durationSeconds: 420,
-        exerciseIds: [
-          'EXO_SQUAT_CHAISE',
-          'EXO_CARDIO_STEP_TOUCH',
-          'EXO_PONT_FESSIER',
-          'EXO_CARDIO_MARCHE_FRONTALE',
-          'EXO_POMPE_MUR',
-          'EXO_GAINAGE_GENOUX',
-        ],
-      },
-      {
-        type: 'main',
-        durationSeconds: 420,
-        exerciseIds: [
-          'EXO_SQUAT_CHAISE',
-          'EXO_CARDIO_STEP_TOUCH',
-          'EXO_PONT_FESSIER',
-          'EXO_CARDIO_JJ_LOW_IMPACT',
-          'EXO_POMPE_MUR',
-          'EXO_GAINAGE_GENOUX',
-        ],
-      },
-      {
-        type: 'cooldown',
-        durationSeconds: 180,
-        exerciseIds: ['EXO_MOB_HANCHES', 'EXO_ETIREMENT_ISCHIOS_MUR'],
-      },
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_MOB_COLONNE_CHAT_VACHE','EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_CARDIO_STEP_TOUCH','EXO_PONT_FESSIER','EXO_CARDIO_MARCHE_FRONTALE','EXO_POMPE_MUR','EXO_GAINAGE_GENOUX'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_CARDIO_STEP_TOUCH','EXO_PONT_FESSIER','EXO_CARDIO_JJ_LOW_IMPACT','EXO_POMPE_MUR','EXO_GAINAGE_GENOUX'] },
+      { type: 'cooldown', durationSeconds: 180, exerciseIds: ['EXO_MOB_HANCHES','EXO_ETIREMENT_ISCHIOS_MUR'] },
     ],
   },
+
   {
     key: 'WT_FULLBODY_30_MIN_BASE',
     name: 'Full body 30 min (base)',
@@ -333,43 +436,332 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
     level: 2,
     targetDurationMinutes: 30,
     blocks: [
-      {
-        type: 'warmup',
-        durationSeconds: 240,
-        exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_MOB_COLONNE_CHAT_VACHE', 'EXO_CARDIO_MARCHE_PLACE'],
-      },
-      {
-        type: 'main',
-        durationSeconds: 480,
-        exerciseIds: [
-          'EXO_SQUAT_CHAISE',
-          'EXO_CARDIO_STEP_TOUCH',
-          'EXO_PONT_FESSIER',
-          'EXO_CARDIO_MARCHE_FRONTALE',
-          'EXO_POMPE_MUR',
-          'EXO_GAINAGE_GENOUX',
-        ],
-      },
-      {
-        type: 'main',
-        durationSeconds: 480,
-        exerciseIds: [
-          'EXO_SQUAT_CHAISE',
-          'EXO_CARDIO_STEP_TOUCH',
-          'EXO_PONT_FESSIER',
-          'EXO_CARDIO_JJ_LOW_IMPACT',
-          'EXO_POMPE_MUR',
-          'EXO_GAINAGE_GENOUX',
-        ],
-      },
-      {
-        type: 'cooldown',
-        durationSeconds: 300,
-        exerciseIds: ['EXO_MOB_HANCHES', 'EXO_ETIREMENT_ISCHIOS_MUR'],
-      },
+      { type: 'warmup', durationSeconds: 240, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_MOB_COLONNE_CHAT_VACHE','EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_CARDIO_STEP_TOUCH','EXO_PONT_FESSIER','EXO_CARDIO_MARCHE_FRONTALE','EXO_POMPE_MUR','EXO_GAINAGE_GENOUX'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_CARDIO_STEP_TOUCH','EXO_PONT_FESSIER','EXO_CARDIO_JJ_LOW_IMPACT','EXO_POMPE_MUR','EXO_GAINAGE_GENOUX'] },
+      { type: 'cooldown', durationSeconds: 300, exerciseIds: ['EXO_MOB_HANCHES','EXO_ETIREMENT_ISCHIOS_MUR'] },
     ],
   },
+
+
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+  // 🆕 NOUVEAUX WORKOUTS — 20 SÉANCES PROGRESSION N1→N3
+  // ---------------------------------------------------------
+  // ---------------------------------------------------------
+
+  // ==============================================================  
+  // 5 minutes — 4 templates (N1 → N2)
+  // ==============================================================
+
+  {
+    key: 'WT_5_MIN_N1_MOB_CARDIO',
+    name: 'Échauffement doux 5 min (N1)',
+    kind: 'mixed',
+    level: 1,
+    targetDurationMinutes: 5,
+    blocks: [
+      { type: 'warmup', durationSeconds: 60, exerciseIds: ['EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_MOB_HANCHES'] },
+      { type: 'cooldown', durationSeconds: 60, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'] },
+    ],
+  },
+
+  {
+    key: 'WT_5_MIN_N1_LOWER',
+    name: 'Renfo bas du corps 5 min (N1)',
+    kind: 'strength',
+    level: 1,
+    targetDurationMinutes: 5,
+    blocks: [
+      { type: 'warmup', durationSeconds: 60, exerciseIds: ['EXO_MOB_HANCHES'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_SQUAT_CHAISE'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_PONT_FESSIER'] },
+      { type: 'cooldown', durationSeconds: 60, exerciseIds: ['EXO_ETIREMENT_QUADRICEPS'] },
+    ],
+  },
+
+  {
+    key: 'WT_5_MIN_N2_CARDIO',
+    name: 'Cardio léger 5 min (N2)',
+    kind: 'cardio',
+    level: 2,
+    targetDurationMinutes: 5,
+    blocks: [
+      { type: 'warmup', durationSeconds: 60, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_CARDIO_STEP_TOUCH','EXO_CARDIO_KNEE_LIFT'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_CARDIO_TALONS_FESSES'] },
+      { type: 'cooldown', durationSeconds: 60, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
+    ],
+  },
+
+  {
+    key: 'WT_5_MIN_N2_UPPER',
+    name: 'Renfo haut du corps 5 min (N2)',
+    kind: 'strength',
+    level: 2,
+    targetDurationMinutes: 5,
+    blocks: [
+      { type: 'warmup', durationSeconds: 60, exerciseIds: ['EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_PUSH_UP_TABLE'] },
+      { type: 'main', durationSeconds: 120, exerciseIds: ['EXO_ROW_BAND_IMAGINARY'] },
+      { type: 'cooldown', durationSeconds: 60, exerciseIds: ['EXO_ETIREMENT_TRICEPS'] },
+    ],
+  },  
+
+
+  // ==============================================================  
+  // 10 minutes — 4 templates (N1 → N2 → N3)
+  // ==============================================================
+
+  {
+    key: 'WT_10_MIN_N1_CARDIO',
+    name: 'Cardio débutant 10 min (N1)',
+    kind: 'cardio',
+    level: 1,
+    targetDurationMinutes: 10,
+    blocks: [
+      { type: 'warmup', durationSeconds: 120, exerciseIds: ['EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_CARDIO_STEP_TOUCH'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_CARDIO_MARCHE_FRONTALE'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
+    ],
+  },
+
+  {
+    key: 'WT_10_MIN_N2_FULLBODY',
+    name: 'Full body dynamique 10 min (N2)',
+    kind: 'mixed',
+    level: 2,
+    targetDurationMinutes: 10,
+    blocks: [
+      { type: 'warmup', durationSeconds: 120, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_HANCHE_OUVERTURE'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_SQUAT_DEMI','EXO_PUSH_UP_TABLE','EXO_ABS_STANDING_CRUNCH'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_GLUTE_KICKBACK','EXO_ROW_BAND_IMAGINARY'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'] },
+    ],
+  },
+
+  {
+    key: 'WT_10_MIN_N3_CARDIO',
+    name: 'Cardio modéré 10 min (N3)',
+    kind: 'cardio',
+    level: 3,
+    targetDurationMinutes: 10,
+    blocks: [
+      { type: 'warmup', durationSeconds: 120, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_CARDIO_KNEE_LIFT','EXO_CARDIO_BOX_JABS','EXO_CARDIO_SIDE_KICKS'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_CARDIO_DOUBLE_STEP','EXO_CARDIO_TALONS_FESSES'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_MOB_TWIST_DEBOUT'] },
+    ],
+  },
+
+  {
+    key: 'WT_10_MIN_N3_STRENGTH',
+    name: 'Renfo tonique 10 min (N3)',
+    kind: 'strength',
+    level: 3,
+    targetDurationMinutes: 10,
+    blocks: [
+      { type: 'warmup', durationSeconds: 120, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_MOB_HANCHES'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_FENTE_STATIQUE','EXO_CHAIR_SIT_HOLD'] },
+      { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_PUSH_UP_TABLE','EXO_GAINAGE_GENOUX'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_ETIREMENT_QUADRICEPS'] },
+    ],
+  },
+
+
+  // ==============================================================  
+  // 15 minutes — 4 templates (N1 → N2 → N3)
+  // ==============================================================
+
+  {
+    key: 'WT_15_MIN_N1_MOBILITY',
+    name: 'Mobilité profonde 15 min (N1)',
+    kind: 'mobility',
+    level: 1,
+    targetDurationMinutes: 15,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_MOB_POIGNETS'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE','EXO_MOB_HANCHES','EXO_MOB_ANKLES'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_MOB_HANCHE_OUVERTURE','EXO_MOB_TWIST_DEBOUT'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'] },
+    ],
+  },
+
+  {
+    key: 'WT_15_MIN_N2_CARDIO_MIX',
+    name: 'Cardio mix 15 min (N2)',
+    kind: 'cardio',
+    level: 2,
+    targetDurationMinutes: 15,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_HANCHE_OUVERTURE'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_CARDIO_STEP_TOUCH','EXO_CARDIO_KNEE_LIFT','EXO_CARDIO_DOUBLE_STEP'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_CARDIO_SIDE_KICKS','EXO_CARDIO_BOX_JABS'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
+    ],
+  },
+
+  {
+    key: 'WT_15_MIN_N3_FULLBODY',
+    name: 'Full body tonique 15 min (N3)',
+    kind: 'mixed',
+    level: 3,
+    targetDurationMinutes: 15,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_SQUAT_DEMI','EXO_PUSH_UP_TABLE','EXO_ABS_STANDING_CRUNCH'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_GLUTE_KICKBACK','EXO_ROW_BAND_IMAGINARY','EXO_CHAIR_SIT_HOLD'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_ETIREMENT_TRICEPS'] },
+    ],
+  },
+
+  {
+    key: 'WT_15_MIN_N3_LOWER',
+    name: 'Bas du corps intense 15 min (N3)',
+    kind: 'strength',
+    level: 3,
+    targetDurationMinutes: 15,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_MOB_HANCHES','EXO_MOB_ANKLES'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_SQUAT_DEMI','EXO_FENTE_STATIQUE','EXO_CHAIR_SIT_HOLD'] },
+      { type: 'main', durationSeconds: 360, exerciseIds: ['EXO_PONT_FESSIER','EXO_GLUTE_KICKBACK'] },
+      { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_ETIREMENT_QUADRICEPS'] },
+    ],
+  },
+
+
+  // ==============================================================  
+  // 20 minutes — 4 templates (progression complète)
+  // ==============================================================
+
+  {
+    key: 'WT_20_MIN_N1_STRETCH',
+    name: 'Étirements & mobilité 20 min (N1)',
+    kind: 'mobility',
+    level: 1,
+    targetDurationMinutes: 20,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_MOB_POIGNETS'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE','EXO_MOB_HANCHE_OUVERTURE','EXO_MOB_TWIST_DEBOUT'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR','EXO_ETIREMENT_QUADRICEPS','EXO_ETIREMENT_TRICEPS'] },
+      { type: 'cooldown', durationSeconds: 180, exerciseIds: ['EXO_MOB_ANKLES'] },
+    ],
+  },
+
+  {
+    key: 'WT_20_MIN_N2_MIX',
+    name: 'Mix renfo/cardio 20 min (N2)',
+    kind: 'mixed',
+    level: 2,
+    targetDurationMinutes: 20,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_HANCHES'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_CARDIO_STEP_TOUCH','EXO_CARDIO_KNEE_LIFT','EXO_SQUAT_DEMI','EXO_PUSH_UP_TABLE'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_CARDIO_DOUBLE_STEP','EXO_CARDIO_BOX_JABS','EXO_GLUTE_KICKBACK'] },
+      { type: 'cooldown', durationSeconds: 180, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'] },
+    ],
+  },
+
+  {
+    key: 'WT_20_MIN_N3_CARDIO',
+    name: 'Cardio modéré + tonique 20 min (N3)',
+    kind: 'cardio',
+    level: 3,
+    targetDurationMinutes: 20,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_HANCHES'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_CARDIO_KNEE_LIFT','EXO_CARDIO_BOX_JABS','EXO_CARDIO_SIDE_KICKS'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_CARDIO_DOUBLE_STEP','EXO_CARDIO_TALONS_FESSES','EXO_CARDIO_PAS_ARC_COURBE'] },
+      { type: 'cooldown', durationSeconds: 180, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
+    ],
+  },
+
+  {
+    key: 'WT_20_MIN_N3_FULLBODY',
+    name: 'Full body tonique 20 min (N3)',
+    kind: 'mixed',
+    level: 3,
+    targetDurationMinutes: 20,
+    blocks: [
+      { type: 'warmup', durationSeconds: 180, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_SQUAT_DEMI','EXO_PUSH_UP_TABLE','EXO_ABS_STANDING_CRUNCH'] },
+      { type: 'main', durationSeconds: 420, exerciseIds: ['EXO_GLUTE_KICKBACK','EXO_ROW_BAND_IMAGINARY','EXO_CHAIR_SIT_HOLD'] },
+      { type: 'cooldown', durationSeconds: 180, exerciseIds: ['EXO_ETIREMENT_TRICEPS'] },
+    ],
+  },
+
+
+  // ==============================================================  
+  // 30 minutes — 4 templates (N1 → N2 → N3 progression complète)
+  // ==============================================================
+
+  {
+    key: 'WT_30_MIN_N1_FULLBODY',
+    name: 'Full body facile 30 min (N1)',
+    kind: 'mixed',
+    level: 1,
+    targetDurationMinutes: 30,
+    blocks: [
+      { type: 'warmup', durationSeconds: 240, exerciseIds: ['EXO_MOB_COUP_DEBOUT','EXO_CARDIO_MARCHE_PLACE'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_SQUAT_CHAISE','EXO_PONT_FESSIER','EXO_PUSH_UP_TABLE'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_CARDIO_STEP_TOUCH','EXO_CARDIO_MARCHE_FRONTALE','EXO_GLUTE_KICKBACK'] },
+      { type: 'cooldown', durationSeconds: 300, exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR','EXO_MOB_TWIST_DEBOUT'] },
+    ],
+  },
+
+  {
+    key: 'WT_30_MIN_N2_CARDIO_MIX',
+    name: 'Cardio mix 30 min (N2)',
+    kind: 'cardio',
+    level: 2,
+    targetDurationMinutes: 30,
+    blocks: [
+      { type: 'warmup', durationSeconds: 240, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_HANCHE_OUVERTURE'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_CARDIO_STEP_TOUCH','EXO_CARDIO_KNEE_LIFT','EXO_CARDIO_DOUBLE_STEP'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_CARDIO_SIDE_KICKS','EXO_CARDIO_BOX_JABS','EXO_CARDIO_TALONS_FESSES'] },
+      { type: 'cooldown', durationSeconds: 300, exerciseIds: ['EXO_MOB_COLONNE_CHAT_VACHE'] },
+    ],
+  },
+
+  {
+    key: 'WT_30_MIN_N3_STRENGTH',
+    name: 'Renfo avancé 30 min (N3)',
+    kind: 'strength',
+    level: 3,
+    targetDurationMinutes: 30,
+    blocks: [
+      { type: 'warmup', durationSeconds: 240, exerciseIds: ['EXO_MOB_HANCHES','EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_SQUAT_DEMI','EXO_FENTE_STATIQUE','EXO_CHAIR_SIT_HOLD'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_PUSH_UP_TABLE','EXO_ROW_BAND_IMAGINARY','EXO_GAINAGE_GENOUX'] },
+      { type: 'cooldown', durationSeconds: 300, exerciseIds: ['EXO_ETIREMENT_QUADRICEPS'] },
+    ],
+  },
+
+  {
+    key: 'WT_30_MIN_N3_FULLBODY',
+    name: 'Full body tonique 30 min (N3)',
+    kind: 'mixed',
+    level: 3,
+    targetDurationMinutes: 30,
+    blocks: [
+      { type: 'warmup', durationSeconds: 240, exerciseIds: ['EXO_CARDIO_MARCHE_PLACE','EXO_MOB_COUP_DEBOUT'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_SQUAT_DEMI','EXO_PUSH_UP_TABLE','EXO_ABS_STANDING_CRUNCH'] },
+      { type: 'main', durationSeconds: 480, exerciseIds: ['EXO_CARDIO_KNEE_LIFT','EXO_CARDIO_BOX_JABS','EXO_GLUTE_KICKBACK'] },
+      { type: 'cooldown', durationSeconds: 300, exerciseIds: ['EXO_ETIREMENT_TRICEPS','EXO_MOB_TWIST_DEBOUT'] },
+    ],
+  },
+
 ]
+
+
+
+
+// =============================================================
+// SÉLECTION DE TEMPLATE
+// =============================================================
 
 export interface PickWorkoutOptions {
   desiredDurationMinutes: 5 | 10 | 15 | 20 | 30
@@ -380,29 +772,21 @@ export interface PickWorkoutOptions {
 export function pickWorkoutTemplate(options: PickWorkoutOptions): WorkoutTemplate | null {
   const { desiredDurationMinutes, preferredKind, maxLevel = 2 } = options
 
-  let candidates = WORKOUT_TEMPLATES.filter((tpl) => {
-    if (tpl.targetDurationMinutes !== desiredDurationMinutes) return false
-    if (tpl.level > maxLevel) return false
-    if (preferredKind && tpl.kind !== preferredKind) return false
-    return true
-  })
+  let candidates = WORKOUT_TEMPLATES.filter(tpl =>
+    tpl.targetDurationMinutes === desiredDurationMinutes &&
+    tpl.level <= maxLevel &&
+    (!preferredKind || tpl.kind === preferredKind)
+  )
 
   if (!candidates.length) {
-    candidates = WORKOUT_TEMPLATES.filter((tpl) => {
-      if (tpl.targetDurationMinutes !== desiredDurationMinutes) return false
-      if (tpl.level > maxLevel) return false
-      return true
-    })
+    candidates = WORKOUT_TEMPLATES.filter(
+      tpl => tpl.targetDurationMinutes === desiredDurationMinutes && tpl.level <= maxLevel
+    )
   }
 
-  if (!candidates.length) {
-    return null
-  }
+  if (!candidates.length) return null
 
-  if (candidates.length === 1) {
-    return candidates[0]!
-  }
-
-  const index = Math.floor(Math.random() * candidates.length)
+    const index = Math.floor(Math.random() * candidates.length)
   return candidates[index]!
 }
+

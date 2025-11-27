@@ -1,25 +1,48 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineProps, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const isPlaying = ref(false)
-const progress = ref(0)
-const duration = ref(0)
-const currentTime = ref(0)
 const audioRef = ref<HTMLAudioElement | null>(null)
+
+const SESSION_DURATION = 180
+
+const isOverlayOpen = ref(false)
+const remainingSeconds = ref(SESSION_DURATION)
+const timerId = ref<number | null>(null)
+const showCongrats = ref(false)
+const congratsTimeoutId = ref<number | null>(null)
+
+const showReflection = ref(false)
+const reflectionText = ref('')
+const reflectionSaved = ref(false)
+const reflectionCategory = ref('other')
+
+const reflectionCategories = [
+  { value: 'work', label: 'Travail' },
+  { value: 'family', label: 'Famille' },
+  { value: 'health', label: 'Sante' },
+  { value: 'other', label: 'Autre' },
+]
+
+const props = defineProps<{
+  isAuthenticated: boolean
+  isSavingStressReason: boolean
+  saveStressReason: (reason: string, category?: string | null) => void | Promise<void>
+}>()
 
 const tracks = [
   {
     id: 'waves',
     label: 'Vagues',
-    title: 'Vagues ocenes',
+    title: 'Mer',
     subtitle: "Le roulement des vagues pour apaiser l'esprit",
     src: '/sounds/waves.mp3',
   },
   {
     id: 'ocean',
-    label: 'Oc1an',
-    title: 'Oc1an calme',
-    subtitle: "Un oc1an paisible pour respirer en profondeur",
+    label: 'Océan',
+    title: 'Océan calme',
+    subtitle: "Un océan paisible pour respirer en profondeur",
     src: '/sounds/ocean.mp3',
   },
   {
@@ -58,6 +81,7 @@ const tracks = [
     src: '/sounds/gong.mp3',
   },
 ]
+
 const defaultTrack = tracks[0]!
 const selectedTrackId = ref(defaultTrack.id)
 const currentTrack = computed(
@@ -76,62 +100,139 @@ function formatTime(value: number) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-function togglePlay() {
-  const audio = audioRef.value
-  if (!audio) return
+const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
 
-  if (audio.paused) {
-    void audio.play()
-    isPlaying.value = true
-  } else {
-    audio.pause()
-    isPlaying.value = false
+const canSaveReflection = computed(() => {
+  if (!props.isAuthenticated || props.isSavingStressReason) {
+    return false
   }
-}
+  return reflectionText.value.trim().length > 0
+})
 
-function onLoadedMetadata() {
-  const audio = audioRef.value
-  if (!audio) return
-  duration.value = Number.isFinite(audio.duration) ? audio.duration : 0
-}
-
-function onTimeUpdate() {
-  const audio = audioRef.value
-  if (!audio || !duration.value) return
-
-  currentTime.value = audio.currentTime
-  progress.value = Math.min(100, Math.max(0, (audio.currentTime / duration.value) * 100))
-}
-
-function onEnded() {
-  isPlaying.value = false
-  progress.value = 0
-  currentTime.value = 0
-}
-
-function onScrub(event: Event) {
-  const input = event.target as HTMLInputElement | null
-  const audio = audioRef.value
-  if (!input || !audio || !duration.value) return
-
-  const value = Number(input.value)
-  const ratio = Math.min(100, Math.max(0, value)) / 100
-  const newTime = duration.value * ratio
-  audio.currentTime = newTime
-}
-
-watch(selectedTrackId, () => {
+function startAudio() {
   const audio = audioRef.value
   if (!audio) return
 
-  isPlaying.value = false
-  progress.value = 0
-  duration.value = 0
-  currentTime.value = 0
+  audio.currentTime = 0
+  audio.loop = true
+  void audio.play()
+  isPlaying.value = true
+}
+
+function stopAudio() {
+  const audio = audioRef.value
+  if (!audio) return
 
   audio.pause()
   audio.currentTime = 0
+  isPlaying.value = false
+}
+
+function startTimer() {
+  stopTimer()
+  remainingSeconds.value = SESSION_DURATION
+  timerId.value = window.setInterval(() => {
+    if (remainingSeconds.value > 0) {
+      remainingSeconds.value -= 1
+    }
+
+    if (remainingSeconds.value <= 0) {
+      stopTimer()
+      onTimerComplete()
+    }
+  }, 1000)
+}
+
+function stopTimer() {
+  if (timerId.value !== null) {
+    window.clearInterval(timerId.value)
+    timerId.value = null
+  }
+}
+
+function onTimerComplete() {
+  isOverlayOpen.value = false
+  stopAudio()
+  showCongrats.value = true
+
+  if (congratsTimeoutId.value !== null) {
+    window.clearTimeout(congratsTimeoutId.value)
+  }
+
+  congratsTimeoutId.value = window.setTimeout(() => {
+    showCongrats.value = false
+    congratsTimeoutId.value = null
+  }, 4000)
+}
+
+function openOverlay() {
+  showCongrats.value = false
+  showReflection.value = false
+  reflectionSaved.value = false
+  reflectionText.value = ''
+  reflectionCategory.value = 'other'
+  isOverlayOpen.value = true
+  remainingSeconds.value = SESSION_DURATION
+  startAudio()
+  startTimer()
+}
+
+function closeOverlay() {
+  isOverlayOpen.value = false
+  stopTimer()
+  stopAudio()
+
+  const hasStarted = remainingSeconds.value < SESSION_DURATION
+  const finished = remainingSeconds.value <= 0
+  if (hasStarted && !finished) {
+    showReflection.value = true
+  }
+}
+
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isOverlayOpen.value) {
+    event.preventDefault()
+    closeOverlay()
+  }
+}
+
+watch(selectedTrackId, () => {
+  if (isOverlayOpen.value) {
+    stopAudio()
+    startAudio()
+  } else {
+    stopAudio()
+  }
 })
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  stopTimer()
+  stopAudio()
+
+  if (congratsTimeoutId.value !== null) {
+    window.clearTimeout(congratsTimeoutId.value)
+  }
+})
+
+async function onSaveReflection() {
+  const text = reflectionText.value.trim()
+  if (!text || !canSaveReflection.value) {
+    return
+  }
+
+  reflectionSaved.value = false
+  await props.saveStressReason(text, reflectionCategory.value)
+  if (!props.isSavingStressReason) {
+    showReflection.value = false
+    reflectionText.value = ''
+    reflectionCategory.value = 'other'
+  }
+}
 </script>
 
 <template>
@@ -158,51 +259,102 @@ watch(selectedTrackId, () => {
     <div class="player-card">
       <div class="player-header">
         <div class="player-badge">Anti-stress</div>
-        <span class="player-duration">
-          {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
-        </span>
       </div>
 
-      <div class="player-main">
-        <div class="player-visual">
-          <div class="circle outer"></div>
-          <div class="circle middle"></div>
-          <div class="circle inner"></div>
-        </div>
-        <div class="player-info">
-          <h3 class="player-title">{{ trackTitle }}</h3>
-          <p class="player-subtitle">
-            {{ trackSubtitle }}
-          </p>
-        </div>
-      </div>
-
-      <div class="player-controls">
-        <button type="button" class="player-play" @click="togglePlay">
-          <i v-if="!isPlaying" class="pi pi-play" aria-hidden="true"></i>
-          <i v-else class="pi pi-pause" aria-hidden="true"></i>
+      <div class="player-card-main">
+        <button type="button" class="player-play main-play" @click="openOverlay">
+          <i class="pi pi-play" aria-hidden="true"></i>
         </button>
-        <div class="player-progress">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            :value="progress"
-            class="player-slider"
-            @input="onScrub"
-          />
+      </div>
+    </div>
+
+    <div v-if="isOverlayOpen" class="zen-overlay">
+      <div class="zen-overlay-inner">
+        <header class="zen-overlay-header">
+          <div class="zen-overlay-timer">
+            {{ formattedRemainingTime }}
+          </div>
+          <button type="button" class="zen-overlay-close" @click="closeOverlay">
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="zen-overlay-body">
+          <div class="zen-overlay-text">
+            <h3 class="zen-overlay-title">{{ trackTitle }}</h3>
+            <p class="zen-overlay-subtitle">
+              {{ trackSubtitle }}
+            </p>
+          </div>
+
+          <div :class="['zen-overlay-visual', { 'is-playing': isPlaying }]">
+            <div class="circle outer"></div>
+            <div class="circle middle"></div>
+            <div class="circle inner"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <audio
-      ref="audioRef"
-      :src="currentTrack.src"
-      @loadedmetadata="onLoadedMetadata"
-      @timeupdate="onTimeUpdate"
-      @ended="onEnded"
-    ></audio>
+    <div v-if="showCongrats" class="zen-congrats">
+      <div class="zen-congrats-card">
+        <p class="zen-congrats-title">Prendre un petit recul</p>
+        <p class="zen-congrats-text">
+          Bravo, tu as pris 3 minutes pour toi. Prends encore une respiration profonde avant de
+          reprendre ta journee.
+        </p>
+      </div>
+    </div>
+
+    <div
+      v-if="showReflection"
+      class="dialog-backdrop"
+      @click.self="showReflection = false"
+    >
+      <div class="dialog-card reflection-card">
+        <h3 class="reflection-title">Prendre un petit recul</h3>
+        <p class="reflection-subtitle">
+          Qu'est-ce qui a declenche cette montee de stress ? Note quelques mots pour t'aider a
+          reperer ce qui revient souvent.
+        </p>
+        <textarea
+          v-model="reflectionText"
+          class="reflection-textarea"
+          rows="3"
+          placeholder="Exemples : conflit au travail, surcharge de messages, retard, impression de ne pas y arriver..."
+        ></textarea>
+        <label class="reflection-category-label" for="reflection-category">
+          Cette situation est plutot liee a :
+        </label>
+        <select
+          id="reflection-category"
+          v-model="reflectionCategory"
+          class="reflection-category-select"
+        >
+          <option
+            v-for="option in reflectionCategories"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="primary reflection-button"
+          :disabled="!canSaveReflection"
+          @click="onSaveReflection"
+        >
+          <span v-if="props.isSavingStressReason">Enregistrement...</span>
+          <span v-else>Enregistrer cette raison</span>
+        </button>
+        <p v-if="reflectionSaved" class="reflection-hint">
+          Merci, c'est note. On pourra s'en servir pour mieux comprendre ce qui revient.
+        </p>
+      </div>
+    </div>
+
+    <audio ref="audioRef" :src="currentTrack.src"></audio>
   </section>
 </template>
 
@@ -257,6 +409,7 @@ watch(selectedTrackId, () => {
   margin-top: 0.25rem;
   border-radius: 1.5rem;
   padding: 1.1rem 1rem 1.1rem;
+  min-height: 17rem;
   background:
     radial-gradient(circle at top left, rgba(248, 113, 113, 0.3), transparent 55%),
     radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.35), transparent 55%),
@@ -394,5 +547,238 @@ watch(selectedTrackId, () => {
   background: #f9fafb;
   border: 2px solid #020617;
   box-shadow: 0 6px 12px rgba(15, 23, 42, 0.8);
+}
+
+.player-card-main {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-play.main-play {
+  width: 5.5rem;
+  height: 5.5rem;
+  margin-top: 2rem;
+}
+
+.zen-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 23, 24, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.zen-overlay-inner {
+  width: 100%;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.zen-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zen-overlay-timer {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.zen-overlay-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+}
+
+.zen-overlay-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+.zen-overlay-text {
+  text-align: center;
+  align-self: center;
+  margin-top: 0;
+}
+
+.zen-overlay-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.zen-overlay-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.zen-overlay-visual {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin-top: 4.25rem;
+}
+
+.zen-overlay-visual.is-playing .circle.outer {
+  animation: breatheOuter 8s ease-in-out infinite;
+}
+
+.zen-overlay-visual.is-playing .circle.middle {
+  animation: breatheMiddle 8s ease-in-out infinite;
+}
+
+.zen-overlay-visual.is-playing .circle.inner {
+  animation: breatheInner 8s ease-in-out infinite;
+}
+
+@keyframes breatheOuter {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+}
+
+@keyframes breatheMiddle {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.6;
+  }
+}
+
+@keyframes breatheInner {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 16px 38px rgba(248, 113, 113, 0.9);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 22px 48px rgba(248, 113, 113, 1);
+  }
+}
+
+.zen-congrats {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.zen-congrats-card {
+  max-width: 420px;
+  width: 100%;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), transparent 55%),
+    rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.95);
+  padding: 0.9rem 1rem;
+}
+
+.zen-congrats-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.zen-congrats-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.reflection-card {
+  padding: 1rem 0.9rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.reflection-title {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reflection-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.reflection-textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #050505;
+  color: #e5e7eb;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.reflection-category-label {
+  margin: 0.2rem 0 0.1rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.reflection-category-select {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #050505;
+  color: #e5e7eb;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.reflection-button {
+  margin-top: 0.1rem;
+}
+
+.reflection-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.8;
 }
 </style>

@@ -3,7 +3,7 @@ import TodayPage from './TodayPage.vue'
 import ProfilePageRoute from './ProfilePageRoute.vue'
 import ProgressPage from './ProgressPage.vue'
 import RootApp from './RootApp.vue'
-import ZenPage from './ZenPage.vue'
+import AlertPage from './AlertPage.vue'
 import StressReasonsPage from './StressReasonsPage.vue'
 import SessionsPage from './SessionsPage.vue'
 import RituelsPage from './RituelsPage.vue'
@@ -50,7 +50,7 @@ const routes = [
       {
         path: 'alert',
         name: 'zen',
-        component: ZenPage,
+        component: AlertPage,
       },
     ],
   },

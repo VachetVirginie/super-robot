@@ -990,7 +990,7 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', { 'is-active': route.name === 'equilibre' }]"
+        :class="['nav-item', 'nav-item-equilibre', { 'is-active': route.name === 'equilibre' }]"
         @click="router.push({ name: 'equilibre' })"
       >
         <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
@@ -1008,7 +1008,7 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', { 'is-active': route.name === 'rituels' }]"
+        :class="['nav-item', 'nav-item-rituels', { 'is-active': route.name === 'rituels' }]"
         @click="router.push({ name: 'rituels' })"
       >
         <i class="pi pi-clock nav-icon" aria-hidden="true"></i>
@@ -1325,8 +1325,9 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: rgba(17, 17, 17, 0.96);
   border: 1px solid #262626;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
   gap: 0.4rem;
   position: sticky;
   bottom: 0.75rem;
@@ -1352,7 +1353,6 @@ onBeforeUnmount(() => {
     transform 0.08s ease;
 }
 .nav-item-sos {
-  flex: 0;
   padding: 0;
   background: transparent;
   box-shadow: none;

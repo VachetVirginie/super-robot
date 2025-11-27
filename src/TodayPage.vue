@@ -194,6 +194,13 @@ async function onSubmitCheckin() {
         <button
           type="button"
           class="secondary checkin-action"
+          @click="onRowClick('today-quick-5')"
+        >
+          Seance rapide 5 min
+        </button>
+        <button
+          type="button"
+          class="secondary checkin-action"
           @click="onRowClick('today-sessions')"
         >
           Ajouter une petite seance

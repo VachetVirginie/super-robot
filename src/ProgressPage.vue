@@ -9,6 +9,9 @@ const props = defineProps<{
   perWeekGoal: number | null
   weeklyProgressPercent: number
   weeklyStatusLabel: string
+  weeklyMinutes: number | null
+  weeklyActiveDays: number | null
+  weeklyByKind: Record<string, { sessions: number; minutes: number }>
   weeklyAverageStress: number | null
   weeklyCheckinsCount: number
   weeklySlots: WeeklySlot[]
@@ -157,6 +160,49 @@ const goalLabel = computed(() => {
   return `Ton objectif actuel : ${props.perWeekGoal} seance(s) par semaine.`
 })
 
+const minutesLabel = computed(() => {
+  const minutes = props.weeklyMinutes ?? 0
+  if (!minutes) {
+    return null
+  }
+  return `Soit ${minutes} minute(s) de sport maison cette semaine.`
+})
+
+const activeDaysLabel = computed(() => {
+  const days = props.weeklyActiveDays ?? 0
+  if (!days) {
+    return null
+  }
+  if (days === 1) {
+    return "1 jour actif cette semaine : c'est ton premier \"jamais zero\"." 
+  }
+  return `${days} jours actifs cette semaine : tu construis ton \"jamais zero\".`
+})
+
+const kindTags = computed(() => {
+  const entries = Object.entries(props.weeklyByKind || {})
+    .filter(([, value]) => (value?.sessions ?? 0) > 0)
+    .sort((a, b) => (b[1].minutes ?? 0) - (a[1].minutes ?? 0))
+    .slice(0, 3)
+
+  const labels: Record<string, string> = {
+    cardio: 'Cardio leger',
+    strength: 'Renfo',
+    mobility: 'Mobilite',
+    mixed: 'Mixte',
+    other: 'Autre',
+  }
+
+  return entries.map(([key, value]) => {
+    const base = labels[key] ?? 'Autre'
+    const minutes = value.minutes
+    return {
+      key,
+      label: `${base} (${minutes} min)`,
+    }
+  })
+})
+
 const progressCoachLevel = computed(() => {
   const value = safePercent.value
   if (value === 0) return 'start' as const
@@ -255,6 +301,12 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
               <p class="progress-text progress-text--muted">
                 {{ goalLabel }}
               </p>
+              <p v-if="minutesLabel" class="progress-text progress-text--muted">
+                {{ minutesLabel }}
+              </p>
+              <p v-if="activeDaysLabel" class="progress-text progress-text--muted">
+                {{ activeDaysLabel }}
+              </p>
             </div>
 
             <div class="progress-bar-wrapper">
@@ -272,6 +324,16 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
             <p class="progress-status progress-status--muted">
               {{ progressCoachMessage }}
             </p>
+
+            <div v-if="kindTags.length" class="progress-tags">
+              <span
+                v-for="tag in kindTags"
+                :key="tag.key"
+                class="tag tag--mint"
+              >
+                {{ tag.label }}
+              </span>
+            </div>
           </section>
 
           <section class="card progress-card">

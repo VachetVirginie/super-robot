@@ -3,13 +3,14 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { enablePushNotifications, isPushSupported } from './pushNotifications'
 import { useAuth } from './composables/useAuth'
-import { useTodayStats } from './composables/useTodayStats'
+import { useTodayStats, type RecordSessionOptions } from './composables/useTodayStats'
 import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
 import { useCheckins } from './composables/useCheckins'
 import type { CalendarCell } from './types'
 import { useStressReasons } from './composables/useStressReasons'
 import { useRituals } from './composables/useRituals'
+import { pickWorkoutTemplate, type WorkoutKind, WORKOUT_TEMPLATES } from './workoutCatalog'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
 import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
@@ -18,6 +19,7 @@ import WellbeingDialog from './components/WellbeingDialog.vue'
 import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
 import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
 import PlanWeekDialog from './components/PlanWeekDialog.vue'
+import WorkoutPlayerDialog from './components/WorkoutPlayerDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -51,14 +53,23 @@ const {
   weeklyProgressPercent,
   weeklyStatusLabel,
   latestSessionsDisplay,
+  latestSessionsDetail,
   recordSession,
   changeGoal,
   removeLastSession,
   weekSessionDates,
+  weeklyMinutes,
+  weeklyActiveDays,
+  weeklyByKind,
   getMonthSessionDates,
   recordSessionForDate,
   removeSessionForDate,
 } = useTodayStats(session)
+
+const selectedDuration = ref<5 | 10 | 15 | 20 | 30>(10)
+const selectedKind = ref<WorkoutKind | 'auto'>('mixed')
+const isWorkoutPlayerOpen = ref(false)
+const activeWorkoutTemplateKey = ref<string | null>(null)
 
 const {
   slots: weeklySlots,
@@ -115,6 +126,14 @@ const todayCheckinSummary = computed(() => {
   }
   return `Niveau de stress: ${level}/5 aujourdhui.`
 })
+
+function updateSelectedDuration(value: 5 | 10 | 15 | 20 | 30) {
+  selectedDuration.value = value
+}
+
+function updateSelectedKind(value: WorkoutKind | 'auto') {
+  selectedKind.value = value
+}
 
 const calendarMonthStressSummary = computed(() => {
   const entries = Object.values(calendarStressByDay.value)
@@ -584,6 +603,13 @@ function startWellbeingExercise() {
 }
 
 function onTodayRowClick(key: string) {
+  if (key === 'today-quick-5') {
+    selectedDuration.value = 5
+    selectedKind.value = 'auto'
+    isAddSessionDialogOpen.value = true
+    return
+  }
+
   if (key === 'today-sessions') {
     isAddSessionDialogOpen.value = true
     return
@@ -608,7 +634,23 @@ function onTodayRowClick(key: string) {
 }
 
 async function confirmAddSessionFromDialog() {
-  await recordSession()
+  const kindForPicker: WorkoutKind | undefined =
+    selectedKind.value === 'auto' ? undefined : selectedKind.value
+
+  const template = pickWorkoutTemplate({
+    desiredDurationMinutes: selectedDuration.value,
+    preferredKind: kindForPicker,
+    maxLevel: 2,
+  })
+
+  if (!template) {
+    await recordSession()
+    isAddSessionDialogOpen.value = false
+    return
+  }
+
+  activeWorkoutTemplateKey.value = template.key
+  isWorkoutPlayerOpen.value = true
   isAddSessionDialogOpen.value = false
 }
 
@@ -647,6 +689,36 @@ function openExercisePlayer(key: string) {
   activeExerciseKey.value = key
   isWellbeingDialogOpen.value = false
   isWellbeingPlayerOpen.value = true
+}
+
+async function onWorkoutPlayerFinish() {
+  const key = activeWorkoutTemplateKey.value
+
+  if (!key) {
+    isWorkoutPlayerOpen.value = false
+    activeWorkoutTemplateKey.value = null
+    return
+  }
+
+  const template = WORKOUT_TEMPLATES.find((tpl) => tpl.key === key) ?? null
+
+  if (template) {
+    const options: RecordSessionOptions = {
+      durationMinutes: template.targetDurationMinutes,
+      kind: template.kind,
+      templateKey: template.key,
+    }
+
+    await recordSession(options)
+  }
+
+  isWorkoutPlayerOpen.value = false
+  activeWorkoutTemplateKey.value = null
+}
+
+function closeWorkoutPlayer() {
+  isWorkoutPlayerOpen.value = false
+  activeWorkoutTemplateKey.value = null
 }
 
 async function openMonthCalendar() {
@@ -830,6 +902,9 @@ onBeforeUnmount(() => {
         :per-week-goal="perWeekGoal"
         :weekly-progress-percent="weeklyProgressPercent"
         :weekly-status-label="weeklyStatusLabel"
+        :weekly-minutes="weeklyMinutes"
+        :weekly-active-days="weeklyActiveDays"
+        :weekly-by-kind="weeklyByKind"
         :weekly-slots="weeklySlots"
         :is-weekly-slots-loading="isWeeklySlotsLoading"
         :weekly-slots-error="weeklySlotsError"
@@ -855,7 +930,11 @@ onBeforeUnmount(() => {
         :per-week-goal="perWeekGoal"
         :weekly-progress-percent="weeklyProgressPercent"
         :weekly-status-label="weeklyStatusLabel"
+        :weekly-minutes="weeklyMinutes"
+        :weekly-active-days="weeklyActiveDays"
+        :weekly-by-kind="weeklyByKind"
         :latest-sessions-display="latestSessionsDisplay"
+        :latest-sessions-detail="latestSessionsDetail"
       />
       <component
         v-else-if="route.name === 'stress'"
@@ -922,7 +1001,11 @@ onBeforeUnmount(() => {
       v-if="isAddSessionDialogOpen"
       :is-saving-session="isSavingSession"
       :weekly-sessions="weeklySessions"
+      :selected-duration="selectedDuration"
+      :selected-kind="selectedKind"
       @close="isAddSessionDialogOpen = false"
+      @update:selected-duration="updateSelectedDuration"
+      @update:selected-kind="updateSelectedKind"
       @confirm-add="confirmAddSessionFromDialog"
       @confirm-remove="confirmRemoveSessionFromDialog"
     />
@@ -967,6 +1050,13 @@ onBeforeUnmount(() => {
       v-if="isWellbeingPlayerOpen"
       :exercise="activeExercise"
       @close="isWellbeingPlayerOpen = false"
+    />
+
+    <WorkoutPlayerDialog
+      v-if="isWorkoutPlayerOpen"
+      :template-key="activeWorkoutTemplateKey"
+      @close="closeWorkoutPlayer"
+      @finish="onWorkoutPlayerFinish"
     />
 
     <AdjustGoalDialog

@@ -2,10 +2,30 @@ import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
+import { WORKOUT_TEMPLATES } from '../workoutCatalog'
 
 interface RawSession {
   id: number
   performed_at: string
+  duration_minutes: number | null
+  kind: string | null
+  template_key: string | null
+}
+
+export interface RecordSessionOptions {
+  durationMinutes?: number | null
+  kind?: string | null
+  templateKey?: string | null
+}
+
+export interface LatestSessionDetail {
+  id: number
+  dateLabel: string
+  kindLabel: string | null
+  durationLabel: string | null
+  templateKey: string | null
+  templateName: string | null
+  fullLabel: string
 }
 
 export function useTodayStats(session: Ref<Session | null>) {
@@ -15,6 +35,9 @@ export function useTodayStats(session: Ref<Session | null>) {
   const isSavingSession = ref(false)
   const latestSessions = ref<RawSession[]>([])
   const weekSessionDates = ref<string[]>([])
+  const weeklyMinutes = ref<number | null>(null)
+  const weeklyActiveDays = ref<number | null>(null)
+  const weeklyByKind = ref<Record<string, { sessions: number; minutes: number }>>({})
 
   const weeklyProgressPercent = computed(() => {
     if (
@@ -42,15 +65,69 @@ export function useTodayStats(session: Ref<Session | null>) {
     return `Plus que ${remaining} seances pour atteindre ton objectif.`
   })
 
-  const latestSessionsDisplay = computed(() =>
-    latestSessions.value.map((sessionItem) => {
+  const latestSessionsDetail = computed<LatestSessionDetail[]>(() => {
+    const kindLabels: Record<string, string> = {
+      cardio: 'Cardio leger',
+      strength: 'Renfo',
+      mobility: 'Mobilite',
+      mixed: 'Mixte',
+      other: 'Autre',
+    }
+
+    return latestSessions.value.map((sessionItem) => {
       const date = new Date(sessionItem.performed_at)
-      return date.toLocaleDateString('fr-FR', {
-        weekday: 'short',
-        day: '2-digit',
-        month: '2-digit',
-      })
+      const dateLabel = date
+        .toLocaleDateString('fr-FR', {
+          weekday: 'short',
+          day: '2-digit',
+          month: '2-digit',
+        })
+        .replace('.', '')
+
+      const minutes =
+        typeof sessionItem.duration_minutes === 'number' && sessionItem.duration_minutes > 0
+          ? sessionItem.duration_minutes
+          : null
+      const durationLabel = minutes !== null ? `${minutes} min` : null
+
+      const kindKey = sessionItem.kind ?? 'other'
+      const kindLabel = kindLabels[kindKey] ?? null
+
+      const templateKey = sessionItem.template_key
+      const template =
+        templateKey != null
+          ? WORKOUT_TEMPLATES.find((tpl) => tpl.key === templateKey) ?? null
+          : null
+      const templateName = template?.name ?? null
+
+      const parts: string[] = [dateLabel]
+
+      if (templateName) {
+        parts.push(templateName)
+      } else if (kindLabel) {
+        parts.push(kindLabel)
+      }
+
+      if (!templateName && durationLabel) {
+        parts.push(durationLabel)
+      }
+
+      const fullLabel = parts.join(' · ')
+
+      return {
+        id: sessionItem.id,
+        dateLabel,
+        kindLabel,
+        durationLabel,
+        templateKey,
+        templateName,
+        fullLabel,
+      }
     })
+  })
+
+  const latestSessionsDisplay = computed(() =>
+    latestSessionsDetail.value.map((item) => item.fullLabel),
   )
 
   async function ensureUserData(userId: string) {
@@ -112,7 +189,7 @@ export function useTodayStats(session: Ref<Session | null>) {
 
     const { data: sessionsData } = await supabase
       .from('sessions')
-      .select('id, performed_at')
+      .select('id, performed_at, duration_minutes, kind, template_key')
       .eq('user_id', userId)
       .gte('performed_at', startOfWeek.toISOString())
       .order('performed_at', { ascending: false })
@@ -129,6 +206,47 @@ export function useTodayStats(session: Ref<Session | null>) {
       const dayNum = String(d.getDate()).padStart(2, '0')
       return `${year}-${month}-${dayNum}`
     })
+
+    const uniqueDates = Array.from(new Set(weekSessionDates.value))
+
+    weeklyActiveDays.value = uniqueDates.length
+
+    let totalMinutes = 0
+
+    const byKindMap = new Map<string, { sessions: number; minutes: number }>()
+
+    for (const sessionItem of allSessions) {
+      const minutes =
+        typeof sessionItem.duration_minutes === 'number' && sessionItem.duration_minutes > 0
+          ? sessionItem.duration_minutes
+          : 0
+
+      if (minutes > 0) {
+        totalMinutes += minutes
+      }
+
+      const kindKey = sessionItem.kind ?? 'other'
+
+      const existing = byKindMap.get(kindKey) ?? { sessions: 0, minutes: 0 }
+
+      existing.sessions += 1
+
+      if (minutes > 0) {
+        existing.minutes += minutes
+      }
+
+      byKindMap.set(kindKey, existing)
+    }
+
+    weeklyMinutes.value = totalMinutes
+
+    const byKind: Record<string, { sessions: number; minutes: number }> = {}
+
+    for (const [kindKey, agg] of byKindMap.entries()) {
+      byKind[kindKey] = agg
+    }
+
+    weeklyByKind.value = byKind
 
     const { data: goalsData, error: goalError } = await supabase
       .from('goals')
@@ -159,6 +277,9 @@ export function useTodayStats(session: Ref<Session | null>) {
     currentGoalId.value = null
     latestSessions.value = []
     weekSessionDates.value = []
+    weeklyMinutes.value = null
+    weeklyActiveDays.value = null
+    weeklyByKind.value = {}
   }
 
   async function syncForCurrentUser() {
@@ -174,7 +295,7 @@ export function useTodayStats(session: Ref<Session | null>) {
     await loadTodayData(userId)
   }
 
-  async function recordSession() {
+  async function recordSession(options?: RecordSessionOptions) {
     const user = session.value?.user
     if (!user) {
       return
@@ -184,9 +305,28 @@ export function useTodayStats(session: Ref<Session | null>) {
     const userId = user.id
 
     try {
-      const { error } = await supabase.from('sessions').insert({
+      const payload: {
+        user_id: string
+        duration_minutes?: number | null
+        kind?: string | null
+        template_key?: string | null
+      } = {
         user_id: userId,
-      })
+      }
+
+      if (typeof options?.durationMinutes === 'number') {
+        payload.duration_minutes = options.durationMinutes
+      }
+
+      if (options?.kind) {
+        payload.kind = options.kind
+      }
+
+      if (options?.templateKey) {
+        payload.template_key = options.templateKey
+      }
+
+      const { error } = await supabase.from('sessions').insert(payload)
 
       if (!error) {
         await loadTodayData(userId)
@@ -444,9 +584,13 @@ export function useTodayStats(session: Ref<Session | null>) {
     isSavingSession,
     latestSessions,
     weekSessionDates,
+    weeklyMinutes,
+    weeklyActiveDays,
+    weeklyByKind,
     weeklyProgressPercent,
     weeklyStatusLabel,
     latestSessionsDisplay,
+    latestSessionsDetail,
     recordSession,
     removeLastSession,
     recordSessionForDate,

@@ -340,6 +340,13 @@ async function onSubmitCheckin() {
   gap: 0.75rem;
 }
 
+.mini-action-card {
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), transparent 55%),
+    #111111;
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
 .checkin-title {
   margin: 0;
   font-size: 0.95rem;
@@ -395,6 +402,12 @@ async function onSubmitCheckin() {
 
 .checkin-action {
   width: 100%;
+}
+
+.mini-action-card .checkin-action:first-child {
+  background: #22c55e;
+  color: #022c22;
+  border-color: transparent;
 }
 
 .checkin-hint {

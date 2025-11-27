@@ -1,5 +1,5 @@
 <script setup lang="ts">
-type DialogWorkoutKind = 'cardio' | 'strength' | 'mobility' | 'mixed' | 'auto'
+type DialogWorkoutKind = 'cardio' | 'strength' | 'mobility' | 'mixed' | 'auto' | 'jump' | 'stretch' | 'yoga' | 'rowing'
 
 const props = defineProps<{
   isSavingSession: boolean
@@ -22,6 +22,10 @@ const kindOptions: { key: DialogWorkoutKind; label: string }[] = [
   { key: 'cardio', label: 'Cardio leger' },
   { key: 'strength', label: 'Renfo' },
   { key: 'mobility', label: 'Mobilite / reveil' },
+  { key: 'jump', label: 'Corde à sauter' },
+  { key: 'stretch', label: 'Flexibilite' },
+  { key: 'yoga', label: 'Yoga' },
+  { key: 'rowing', label: 'Rameur' },
   { key: 'mixed', label: 'Mix cardio + renfo' },
   { key: 'auto', label: "Auto (laisse l'app choisir)" },
 ]

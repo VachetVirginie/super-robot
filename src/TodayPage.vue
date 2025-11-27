@@ -310,6 +310,8 @@ async function onSubmitCheckin() {
   padding-inline: 0.9rem;
   white-space: nowrap;
   flex-shrink: 0;
+  background-color: #22c55e;
+  color: #022c22;
 }
 
 .planweek-summary {

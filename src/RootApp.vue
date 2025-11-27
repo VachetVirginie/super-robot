@@ -1074,7 +1074,7 @@ onBeforeUnmount(() => {
         @click="router.push({ name: 'today' })"
       >
         <i class="pi pi-calendar nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Aujourdhui</span>
+        <span class="nav-label">Aujourd'hui</span>
       </button>
       <button
         type="button"
@@ -1082,7 +1082,7 @@ onBeforeUnmount(() => {
         @click="router.push({ name: 'equilibre' })"
       >
         <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Equilibre</span>
+        <span class="nav-label">Bilan</span>
       </button>
       <button
         type="button"
@@ -1092,7 +1092,7 @@ onBeforeUnmount(() => {
         <span class="nav-sos-circle">
           <i class="pi pi-pause nav-icon" aria-hidden="true"></i>
         </span>
-        <!-- <span class="nav-label nav-label-sos">Zen</span> -->
+        <span class="nav-label nav-label-sos">Zen</span>
       </button>
       <button
         type="button"
@@ -1130,6 +1130,8 @@ onBeforeUnmount(() => {
   max-width: 420px;
   width: 100%;
   margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 4.5rem;
 }
 .topbar {
   display: flex;
@@ -1408,7 +1410,8 @@ onBeforeUnmount(() => {
 }
 .bottom-nav {
   max-width: 420px;
-  margin: 0.25rem auto 0;
+  width: 100%;
+  margin: 0.25rem auto;
   padding: 0.45rem 0.75rem 0.5rem;
   border-radius: 999px;
   background: rgba(17, 17, 17, 0.96);
@@ -1417,7 +1420,9 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   gap: 0.4rem;
-  position: sticky;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0.75rem;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(16px);

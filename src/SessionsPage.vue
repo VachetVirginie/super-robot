@@ -79,6 +79,10 @@ const kindSummary = computed(() => {
     strength: 'Renfo',
     mobility: 'Mobilite',
     mixed: 'Mixte',
+    jump: 'Corde à sauter',
+    stretch: 'Flexibilite',
+    yoga : 'Yoga',
+    rowing: 'Rameur',
     other: 'Autre',
   }
 

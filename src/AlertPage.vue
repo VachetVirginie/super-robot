@@ -104,6 +104,7 @@ function formatTime(value: number) {
 const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
 
 const route = useRoute()
+const isQuickPause = computed(() => route.query.auto === '1')
 
 const canSaveReflection = computed(() => {
   if (!props.isAuthenticated || props.isSavingStressReason) {
@@ -201,8 +202,15 @@ function closeOverlay() {
 
   const hasStarted = remainingSeconds.value < SESSION_DURATION
   const finished = remainingSeconds.value <= 0
-  if (hasStarted && !finished) {
+  if (!isQuickPause.value && hasStarted && !finished) {
     showReflection.value = true
+  }
+}
+
+function onVisualClick() {
+  // Permet de (re)lancer l'audio par un vrai geste utilisateur
+  if (!isPlaying.value) {
+    startAudio()
   }
 }
 
@@ -305,7 +313,10 @@ async function onSaveReflection() {
             </p>
           </div>
 
-          <div :class="['zen-overlay-visual', { 'is-playing': isPlaying }]">
+          <div
+            :class="['zen-overlay-visual', { 'is-playing': isPlaying }]"
+            @click="onVisualClick"
+          >
             <div class="circle outer"></div>
             <div class="circle middle"></div>
             <div class="circle inner"></div>

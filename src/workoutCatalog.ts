@@ -3,7 +3,7 @@
 // TYPES
 // =============================================================
 
-export type WorkoutKind = 'cardio' | 'strength' | 'mobility' | 'mixed'
+export type WorkoutKind = 'cardio' | 'strength' | 'mobility' | 'mixed' | 'jump' | 'stretch' | 'yoga' | 'rowing'
 
 export type ExerciseCategory = 'cardio' | 'strength' | 'mobility'
 

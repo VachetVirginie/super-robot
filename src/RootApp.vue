@@ -131,8 +131,25 @@ function updateSelectedDuration(value: 5 | 10 | 15 | 20 | 30) {
   selectedDuration.value = value
 }
 
-function updateSelectedKind(value: WorkoutKind | 'auto') {
-  selectedKind.value = value
+type DialogWorkoutKindForHandler =
+  | WorkoutKind
+  | 'auto'
+
+function updateSelectedKind(value: DialogWorkoutKindForHandler) {
+  // Map extended dialog kinds back to a WorkoutKind used by the catalog
+  let mapped: WorkoutKind | 'auto'
+
+  if (value === 'auto') {
+    mapped = 'auto'
+  } else if (value === 'jump' || value === 'rowing') {
+    mapped = 'cardio'
+  } else if (value === 'stretch' || value === 'yoga') {
+    mapped = 'mobility'
+  } else {
+    mapped = value
+  }
+
+  selectedKind.value = mapped
 }
 
 const calendarMonthStressSummary = computed(() => {

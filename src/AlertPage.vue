@@ -403,6 +403,7 @@ async function onSaveReflection() {
   font-size: 1.15rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .alert-subtitle {
@@ -620,6 +621,8 @@ async function onSaveReflection() {
 .zen-overlay-timer {
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .zen-overlay-close {
@@ -653,7 +656,9 @@ async function onSaveReflection() {
 
 .zen-overlay-title {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 
 .zen-overlay-subtitle {

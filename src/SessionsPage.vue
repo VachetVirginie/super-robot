@@ -196,6 +196,7 @@ const hasDetailedSessions = computed(
   font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .sessions-subtitle {
@@ -257,6 +258,7 @@ const hasDetailedSessions = computed(
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.85;
+  font-weight: 600;
 }
 
 .sessions-list {

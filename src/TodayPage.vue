@@ -298,6 +298,7 @@ async function onSubmitCheckin() {
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .planweek-subtitle {
@@ -352,6 +353,7 @@ async function onSubmitCheckin() {
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .checkin-subtitle {

@@ -183,8 +183,8 @@ function onInputDisplayName(event: Event) {
 }
 .profile-hero-name {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 .profile-hero-email {
   margin: 0;
@@ -206,6 +206,7 @@ function onInputDisplayName(event: Event) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.85;
+  font-weight: 600;
 }
 .profile-input {
   width: 100%;

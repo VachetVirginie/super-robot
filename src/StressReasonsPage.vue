@@ -401,6 +401,7 @@ async function confirmDelete() {
   font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .stress-delete-text {
@@ -438,6 +439,7 @@ async function confirmDelete() {
   font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .stress-reasons-text {
@@ -508,6 +510,7 @@ async function confirmDelete() {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.85;
+  font-weight: 600;
 }
 
 .stress-reasons-item {

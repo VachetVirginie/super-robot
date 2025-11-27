@@ -486,6 +486,7 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #e5e7eb;
+  font-weight: 600;
 }
 
 .progress-tabs {
@@ -643,6 +644,7 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.85;
+  font-weight: 600;
 }
 
 .planstrip-text {
@@ -717,6 +719,7 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.85;
+  font-weight: 600;
 }
 
 .stress-text {
@@ -816,6 +819,7 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.85;
+  font-weight: 600;
 }
 
 .stress-categories-text {

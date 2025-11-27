@@ -1002,7 +1002,7 @@ onBeforeUnmount(() => {
         @click="router.push({ name: 'zen' })"
       >
         <span class="nav-sos-circle">
-          <i class="pi pi-heart-fill nav-icon" aria-hidden="true"></i>
+          <i class="pi pi-power-off nav-icon" aria-hidden="true"></i>
         </span>
         <!-- <span class="nav-label nav-label-sos">Zen</span> -->
       </button>

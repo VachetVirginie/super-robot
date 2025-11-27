@@ -78,6 +78,26 @@ const filteredGroups = computed(() => {
   return groupedReasons.value.filter((group) => group.key === activeCategory.value)
 })
 
+const stressSummary = computed(() => {
+  const groups = groupedReasons.value
+  if (!groups.length) {
+    return [] as { key: string; label: string; count: number }[]
+  }
+
+  const sorted = [...groups].sort(
+    (a, b) => (b.items?.length ?? 0) - (a.items?.length ?? 0),
+  )
+
+  return sorted
+    .filter((group) => (group.items?.length ?? 0) > 0)
+    .slice(0, 3)
+    .map((group) => ({
+      key: group.key,
+      label: group.label,
+      count: group.items?.length ?? 0,
+    }))
+})
+
 function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
@@ -98,6 +118,22 @@ function formatCategory(value: string | null) {
   if (value === 'health') return 'Sante'
   if (value === 'other') return 'Autre'
   return 'Sans categorie precise'
+}
+
+function categoryCoachingText(key: string) {
+  if (key === 'work') {
+    return "Travail : regarde si ce sont surtout la charge, les delais ou les relations. Choisis une petite action simple pour alleger un peu ta semaine."
+  }
+  if (key === 'family') {
+    return "Famille : pense a un moment de la journee ou la tension monte. Quelle petite chose pourrais-tu changer pour te proteger un peu plus ?"
+  }
+  if (key === 'health') {
+    return "Sante : concentre-toi sur ce qui est sous ton controle (sommeil, marche, pause respiration) et choisis une seule action realiste pour cette semaine."
+  }
+  if (key === 'other') {
+    return "Autre : prends un exemple recent et demande-toi ce qui t'a le plus pese. Note une idee a tester la prochaine fois."
+  }
+  return "Ne cherche pas a tout corriger. Repere ce qui revient le plus et choisis une seule idee d'action a tester cette semaine."
 }
 
 function startEdit(item: {
@@ -152,7 +188,7 @@ async function confirmDelete() {
     <button
       type="button"
       class="icon-button stress-back-button"
-      @click="router.push({ name: 'progress' })"
+      @click="router.push({ name: 'equilibre' })"
     >
       <i class="pi pi-chevron-left" aria-hidden="true"></i>
     </button>
@@ -166,9 +202,9 @@ async function confirmDelete() {
 
       <template v-else>
         <p class="stress-reasons-text">
-          A chaque fois que tu utilises l'espace zen, tu peux noter ce qui a declenche ta
-          montee de stress. Ici, tu retrouves ces raisons pour reperer ce qui revient
-          souvent.
+          Ton coach se base sur ce que tu notes ici pour comprendre ce qui pese le plus
+          en ce moment. Le but n'est pas de tout regler d'un coup, mais de reperer 1 ou
+          2 pistes sur lesquelles tu peux agir plus facilement.
         </p>
 
         <p v-if="isLoadingReasons" class="stress-reasons-text">
@@ -188,18 +224,36 @@ async function confirmDelete() {
           qui s'est passe.
         </p>
 
-        <div v-else class="stress-filters">
-          <button
-            v-for="option in filterOptions"
-            :key="option.key"
-            type="button"
-            class="stress-filter-button"
-            :class="{ 'is-active': activeCategory === option.key }"
-            @click="activeCategory = option.key"
-          >
-            {{ option.label }}
-          </button>
-        </div>
+        <template v-else>
+          <section v-if="stressSummary.length" class="stress-summary">
+            <p class="stress-reasons-text stress-reasons-text--muted">
+              Sur tes dernieres notes, voici ce qui ressort le plus souvent :
+            </p>
+            <ul class="stress-summary-list">
+              <li
+                v-for="item in stressSummary"
+                :key="item.key"
+                class="stress-summary-item"
+              >
+                <span class="stress-summary-label">{{ item.label }}</span>
+                <span class="stress-summary-count">{{ item.count }} raison(s)</span>
+              </li>
+            </ul>
+          </section>
+
+          <div class="stress-filters">
+            <button
+              v-for="option in filterOptions"
+              :key="option.key"
+              type="button"
+              class="stress-filter-button"
+              :class="{ 'is-active': activeCategory === option.key }"
+              @click="activeCategory = option.key"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </template>
       </template>
     </section>
 
@@ -215,6 +269,9 @@ async function confirmDelete() {
         <h3 class="stress-reasons-group-title">
           {{ group.label }}
         </h3>
+        <p class="stress-reasons-text stress-reasons-text--muted">
+          {{ categoryCoachingText(group.key) }}
+        </p>
         <ul class="stress-reasons-list">
           <li
             v-for="item in group.items"
@@ -286,6 +343,17 @@ async function confirmDelete() {
           </li>
         </ul>
       </section>
+    </section>
+
+    <section
+      v-if="isAuthenticated && groupedReasons.length"
+      class="card stress-reasons-page"
+    >
+      <p class="stress-reasons-text stress-reasons-text--muted">
+        Tu n'as pas besoin de tout changer d'un coup. Choisis un seul theme ou une
+        seule situation sur laquelle tu as envie de tester quelque chose de different
+        cette semaine.
+      </p>
     </section>
 
     <div

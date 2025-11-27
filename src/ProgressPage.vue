@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots'
 
@@ -18,6 +18,8 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+
+const activeTab = ref<'sessions' | 'stress'>('sessions')
 
 const safePercent = computed(() => {
   if (!Number.isFinite(props.weeklyProgressPercent)) return 0
@@ -101,6 +103,42 @@ const stressMoodLabel = computed(() => {
   return 'Semaine un peu intense. Pense a prendre quelques pauses pour toi.'
 })
 
+const stressCoachLevel = computed(() => {
+  const avg = props.weeklyAverageStress
+  if (avg == null) return 'none' as const
+  if (avg <= 2) return 'low' as const
+  if (avg <= 3.5) return 'medium' as const
+  return 'high' as const
+})
+
+const stressCoachMessage = computed(() => {
+  const level = stressCoachLevel.value
+  if (level === 'low') {
+    return "Ton stress reste plutot bas. Continue a garder quelques moments de pause et de recuperation, meme quand ca va bien."
+  }
+  if (level === 'medium') {
+    return "Ton stress est present mais reste gerable. Repere les situations qui reviennent et demande-toi ou tu peux inserer une petite pause ou un moment zen."
+  }
+  if (level === 'high') {
+    return "Ton corps t'envoie le signal que la semaine est intense. L'idee n'est pas de tout changer, mais de proteger un peu plus ton energie la ou c'est possible."
+  }
+  return "Plus tu prends quelques secondes pour nommer ton stress, plus il devient facile de reperer ce qui te pese le plus."
+})
+
+const stressCoachSuggestion = computed(() => {
+  const level = stressCoachLevel.value
+  if (level === 'low') {
+    return "Choisis un moment de la semaine ou tu te sens deja calme et garde-le comme rendez-vous regulier avec toi-meme."
+  }
+  if (level === 'medium') {
+    return "Identifie une situation qui te tend un peu et decide a l'avance d'une petite strategie (pause respiration, marche rapide, message a quelqu'un) pour la prochaine fois."
+  }
+  if (level === 'high') {
+    return "Planifie un moment pour utiliser l'espace zen cette semaine et pense a une situation ou tu pourrais dire non ou demander un peu d'aide."
+  }
+  return "Cette semaine, demande-toi simplement : quel serait le plus petit geste pour te traiter avec un peu plus de douceur ?"
+})
+
 const sessionsLabel = computed(() => {
   const count = props.weeklySessions ?? 0
   if (count === 0) {
@@ -117,6 +155,42 @@ const goalLabel = computed(() => {
     return "Tu n'as pas encore d'objectif par semaine. On peut en definir un tres simple (1 ou 2 seances)."
   }
   return `Ton objectif actuel : ${props.perWeekGoal} seance(s) par semaine.`
+})
+
+const progressCoachLevel = computed(() => {
+  const value = safePercent.value
+  if (value === 0) return 'start' as const
+  if (value < 40) return 'low' as const
+  if (value < 90) return 'medium' as const
+  return 'high' as const
+})
+
+const progressCoachMessage = computed(() => {
+  const level = progressCoachLevel.value
+  if (level === 'start') {
+    return "On commence doucement : l'objectif est surtout de planifier 1 premiere seance cette semaine."
+  }
+  if (level === 'low') {
+    return "Tu as deja mis quelques pas en mouvement. On cherche juste a consolider 1 ou 2 moments simples."
+  }
+  if (level === 'medium') {
+    return "Tu es en bon mouvement. L'idee est de garder ce rythme sans te mettre plus de pression."
+  }
+  return "Tu es tres proche ou deja sur ton objectif. Pense aussi a te feliciter et a garder des jours plus legers quand tu en as besoin."
+})
+
+const progressCoachSuggestion = computed(() => {
+  const level = progressCoachLevel.value
+  if (level === 'start') {
+    return "Choisis un seul moment cette semaine ou tu pourrais faire une courte seance (meme 5 minutes) et note-le dans ton planning."
+  }
+  if (level === 'low') {
+    return "Identifie le jour le plus simple pour ajouter une petite seance en plus, sans toucher au reste de ta semaine."
+  }
+  if (level === 'medium') {
+    return "Repere le jour ou tu es le plus fatigue et autorise-toi une version plus courte de ta seance ce jour-la."
+  }
+  return "Garde 1 ou 2 moments fixes qui te font du bien et accepte que certaines semaines soient plus legeres sans que ce soit un echec."
 })
 
 const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -142,151 +216,196 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   </section>
 
   <template v-else>
-    <section class="card progress-card">
-      <h2 class="progress-title">Bouger cette semaine</h2>
-      <p class="progress-subtitle">
-        Ton objectif et les seances deja faites cette semaine.
-      </p>
+    <div class="progress-tabs">
+      <button
+        type="button"
+        class="progress-tab"
+        :class="{ 'is-active': activeTab === 'sessions' }"
+        @click="activeTab = 'sessions'"
+      >
+        Bouger
+      </button>
+      <button
+        type="button"
+        class="progress-tab"
+        :class="{ 'is-active': activeTab === 'stress' }"
+        @click="activeTab = 'stress'"
+      >
+        Stress et declencheurs
+      </button>
+    </div>
 
-      <div class="progress-summary">
-        <p class="progress-text">
-          {{ sessionsLabel }}
-        </p>
-        <p class="progress-text progress-text--muted">
-          {{ goalLabel }}
-        </p>
+    <div class="progress-tabs-panels">
+      <div
+        class="progress-tabs-inner"
+        :class="activeTab === 'sessions' ? 'is-sessions' : 'is-stress'"
+      >
+        <div class="progress-tab-panel">
+          <section class="card progress-card">
+            <h2 class="progress-title">Bouger cette semaine</h2>
+            <p class="progress-subtitle">
+              Ton coach regarde avec toi ton objectif et les seances deja faites cette semaine,
+              sans chercher la perfection.
+            </p>
+
+            <div class="progress-summary">
+              <p class="progress-text">
+                {{ sessionsLabel }}
+              </p>
+              <p class="progress-text progress-text--muted">
+                {{ goalLabel }}
+              </p>
+            </div>
+
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" :style="{ width: safePercent + '%' }"></div>
+              </div>
+              <span class="progress-bar-label">
+                Tu es a {{ safePercent }}% de ton objectif de la semaine.
+              </span>
+            </div>
+
+            <p class="progress-status">
+              {{ weeklyStatusLabel }}
+            </p>
+            <p class="progress-status progress-status--muted">
+              {{ progressCoachMessage }}
+            </p>
+          </section>
+
+          <section class="card progress-card">
+            <h2 class="progress-title">Tes moments prevus pour bouger</h2>
+            <p class="progress-subtitle">
+              Ton coach t'aide a verifier si ton planning de la semaine te parait realiste et
+              simple a tenir.
+            </p>
+            <p class="progress-text progress-text--muted">
+              {{ progressCoachSuggestion }}
+            </p>
+
+            <section class="planstrip">
+              <p v-if="isWeeklySlotsLoading" class="planstrip-text">
+                Chargement de ton planning...
+              </p>
+              <p v-else-if="weeklySlotsError" class="planstrip-text planstrip-text--error">
+                {{ weeklySlotsError }}
+              </p>
+              <p
+                v-else-if="!weeklySlots.length"
+                class="planstrip-text planstrip-text--muted"
+              >
+                Tu n'as pas encore prevu de moments pour bouger cette semaine. Tu peux les
+                choisir depuis la page Aujourd'hui.
+              </p>
+
+              <div v-else class="planstrip-grid">
+                <div
+                  v-for="(day, dayIndex) in days"
+                  :key="day"
+                  class="planstrip-day"
+                >
+                  <div class="planstrip-day-label">
+                    {{ day }}
+                  </div>
+                  <div class="planstrip-day-slots">
+                    <span
+                      v-for="slot in timeSlots"
+                      :key="slot.key"
+                      class="planstrip-dot"
+                      :class="[
+                        'planstrip-dot--' + slot.key,
+                        { 'is-active': hasSlot(dayIndex, slot.key) },
+                      ]"
+                    ></span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="progress-tab-panel">
+          <section class="card progress-card">
+            <h2 class="progress-title">Stress et declencheurs</h2>
+            <p class="progress-subtitle">
+              Comment tu as vecu la semaine et ce qui revient souvent dans tes montes de stress.
+            </p>
+
+            <section class="stress-section">
+              <h3 class="stress-title">Ton stress cette semaine</h3>
+
+              <p v-if="!hasStressData" class="stress-text stress-text--muted">
+                Pas encore assez de check-ins cette semaine pour voir une tendance.
+              </p>
+
+              <div v-else class="stress-grid">
+                <div class="stress-card">
+                  <p class="stress-card-label">Note moyenne</p>
+                  <p class="stress-card-value">
+                    {{ weeklyAverageStress }}/5
+                  </p>
+                  <div class="stress-bar-track">
+                    <div class="stress-bar-fill" :style="{ width: stressLevelPercent + '%' }"></div>
+                  </div>
+                </div>
+
+                <div class="stress-card">
+                  <p class="stress-card-label">Check-ins</p>
+                  <p class="stress-card-value">
+                    {{ weeklyCheckinsCount }}
+                  </p>
+                  <p class="stress-card-hint">
+                    {{ stressCountLabel }}
+                  </p>
+                </div>
+
+                <div class="stress-card stress-card--mood">
+                  <p class="stress-card-label">Tendance</p>
+                  <p class="stress-card-mood">
+                    {{ stressMoodLabel }}
+                  </p>
+                </div>
+              </div>
+
+              <p class="stress-text stress-text--muted">
+                {{ stressCoachMessage }}
+              </p>
+
+              <button
+                type="button"
+                class="stress-link-button stress-link-button--highlight"
+                @click="router.push({ name: 'stress' })"
+              >
+                Explorer ce qui declenche ton stress
+              </button>
+            </section>
+
+            <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
+              <h3 class="stress-categories-title">Ce qui revient souvent</h3>
+              <p class="stress-categories-text">
+                Sur tes dernieres raisons de stress, voici ce qui apparait le plus souvent.
+              </p>
+              <p class="stress-text stress-text--muted">
+                {{ stressCoachSuggestion }}
+              </p>
+              <div class="stress-categories-list">
+                <div
+                  v-for="item in stressCategoriesSummary"
+                  :key="item.key"
+                  class="stress-category-row"
+                >
+                  <div class="stress-category-main">
+                    <span class="stress-category-label">{{ item.label }}</span>
+                    <span class="stress-category-count">{{ item.count }} raison(s)</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
+        </div>
       </div>
-
-      <div class="progress-bar-wrapper">
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" :style="{ width: safePercent + '%' }"></div>
-        </div>
-        <span class="progress-bar-label">
-          Tu es a {{ safePercent }}% de ton objectif de la semaine.
-        </span>
-      </div>
-
-      <p class="progress-status">
-        {{ weeklyStatusLabel }}
-      </p>
-    </section>
-
-    <section class="card progress-card">
-      <h2 class="progress-title">Tes moments prevus pour bouger</h2>
-      <p class="progress-subtitle">
-        On regarde ton planning de la semaine, sans pression.
-      </p>
-
-      <section class="planstrip">
-        <p v-if="isWeeklySlotsLoading" class="planstrip-text">
-          Chargement de ton planning...
-        </p>
-        <p v-else-if="weeklySlotsError" class="planstrip-text planstrip-text--error">
-          {{ weeklySlotsError }}
-        </p>
-        <p
-          v-else-if="!weeklySlots.length"
-          class="planstrip-text planstrip-text--muted"
-        >
-          Tu n'as pas encore prevu de moments pour bouger cette semaine. Tu peux les
-          choisir depuis la page Aujourd'hui.
-        </p>
-
-        <div v-else class="planstrip-grid">
-          <div
-            v-for="(day, dayIndex) in days"
-            :key="day"
-            class="planstrip-day"
-          >
-            <div class="planstrip-day-label">
-              {{ day }}
-            </div>
-            <div class="planstrip-day-slots">
-              <span
-                v-for="slot in timeSlots"
-                :key="slot.key"
-                class="planstrip-dot"
-                :class="[
-                  'planstrip-dot--' + slot.key,
-                  { 'is-active': hasSlot(dayIndex, slot.key) },
-                ]"
-              ></span>
-            </div>
-          </div>
-        </div>
-      </section>
-    </section>
-
-    <section class="card progress-card">
-      <h2 class="progress-title">Stress et declencheurs</h2>
-      <p class="progress-subtitle">
-        Comment tu as vecu la semaine et ce qui revient souvent dans tes montes de stress.
-      </p>
-
-      <section class="stress-section">
-        <h3 class="stress-title">Ton stress cette semaine</h3>
-
-        <p v-if="!hasStressData" class="stress-text stress-text--muted">
-          Pas encore assez de check-ins cette semaine pour voir une tendance.
-        </p>
-
-        <div v-else class="stress-grid">
-          <div class="stress-card">
-            <p class="stress-card-label">Note moyenne</p>
-            <p class="stress-card-value">
-              {{ weeklyAverageStress }}/5
-            </p>
-            <div class="stress-bar-track">
-              <div class="stress-bar-fill" :style="{ width: stressLevelPercent + '%' }"></div>
-            </div>
-          </div>
-
-          <div class="stress-card">
-            <p class="stress-card-label">Check-ins</p>
-            <p class="stress-card-value">
-              {{ weeklyCheckinsCount }}
-            </p>
-            <p class="stress-card-hint">
-              {{ stressCountLabel }}
-            </p>
-          </div>
-
-          <div class="stress-card stress-card--mood">
-            <p class="stress-card-label">Tendance</p>
-            <p class="stress-card-mood">
-              {{ stressMoodLabel }}
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="stress-link-button"
-          @click="router.push({ name: 'stress-reasons' })"
-        >
-          Voir les raisons que tu as notees
-        </button>
-      </section>
-
-      <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
-        <h3 class="stress-categories-title">Ce qui revient souvent</h3>
-        <p class="stress-categories-text">
-          Sur tes dernieres raisons de stress, voici ce qui apparait le plus souvent.
-        </p>
-        <div class="stress-categories-list">
-          <div
-            v-for="item in stressCategoriesSummary"
-            :key="item.key"
-            class="stress-category-row"
-          >
-            <div class="stress-category-main">
-              <span class="stress-category-label">{{ item.label }}</span>
-              <span class="stress-category-count">{{ item.count }} raison(s)</span>
-            </div>
-          </div>
-        </div>
-      </section>
-    </section>
+    </div>
   </template>
 </template>
 
@@ -297,6 +416,54 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #e5e7eb;
+}
+
+.progress-tabs {
+  margin-bottom: 0.75rem;
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.15rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #1f2937;
+}
+
+.progress-tab {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.progress-tab.is-active {
+  background: #22c55e;
+  color: #020617;
+  font-weight: 500;
+}
+
+.progress-tabs-panels {
+  overflow: hidden;
+}
+
+.progress-tabs-inner {
+  display: flex;
+  width: 200%;
+  transition: transform 0.25s ease-out;
+}
+
+.progress-tabs-inner.is-sessions {
+  transform: translateX(0%);
+}
+
+.progress-tabs-inner.is-stress {
+  transform: translateX(-50%);
+}
+
+.progress-tab-panel {
+  width: 100%;
 }
 
 .progress-card + .progress-card {
@@ -559,6 +726,13 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   color: #e5e7eb;
   padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
+}
+
+.stress-link-button--highlight {
+  border-color: #22c55e;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  color: #022c22;
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.55);
 }
 
 .stress-categories-section {

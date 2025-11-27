@@ -5,6 +5,8 @@ import ProgressPage from './ProgressPage.vue'
 import RootApp from './RootApp.vue'
 import ZenPage from './ZenPage.vue'
 import StressReasonsPage from './StressReasonsPage.vue'
+import SessionsPage from './SessionsPage.vue'
+import RituelsPage from './RituelsPage.vue'
 
 const routes = [
   {
@@ -27,17 +29,27 @@ const routes = [
       },
       {
         path: 'progress',
-        name: 'progress',
+        name: 'equilibre',
         component: ProgressPage,
       },
       {
+        path: 'seances',
+        name: 'seances',
+        component: SessionsPage,
+      },
+      {
+        path: 'rituels',
+        name: 'rituels',
+        component: RituelsPage,
+      },
+      {
         path: 'stress-reasons',
-        name: 'stress-reasons',
+        name: 'stress',
         component: StressReasonsPage,
       },
       {
         path: 'alert',
-        name: 'alert',
+        name: 'zen',
         component: ZenPage,
       },
     ],

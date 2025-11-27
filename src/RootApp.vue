@@ -9,6 +9,7 @@ import { useProfile } from './composables/useProfile'
 import { useCheckins } from './composables/useCheckins'
 import type { CalendarCell } from './types'
 import { useStressReasons } from './composables/useStressReasons'
+import { useRituals } from './composables/useRituals'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
 import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
@@ -49,6 +50,7 @@ const {
   isSavingSession,
   weeklyProgressPercent,
   weeklyStatusLabel,
+  latestSessionsDisplay,
   recordSession,
   changeGoal,
   removeLastSession,
@@ -93,6 +95,14 @@ const {
   updateStressReason,
   deleteStressReason,
 } = useStressReasons(session)
+
+const {
+  ritualsByMoment,
+  isLoadingRituals,
+  isSavingRitual,
+  ritualsError,
+  upsertRitual,
+} = useRituals(session)
 
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
@@ -813,7 +823,7 @@ onBeforeUnmount(() => {
         :on-close="() => router.push({ name: 'today' })"
       />
       <component
-        v-else-if="route.name === 'progress'"
+        v-else-if="route.name === 'equilibre'"
         :is="Component"
         :is-authenticated="isAuthenticated"
         :weekly-sessions="weeklySessions"
@@ -828,7 +838,27 @@ onBeforeUnmount(() => {
         :stress-reasons="stressReasons"
       />
       <component
-        v-else-if="route.name === 'stress-reasons'"
+        v-else-if="route.name === 'rituels'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+        :rituals-by-moment="ritualsByMoment"
+        :is-loading-rituals="isLoadingRituals"
+        :is-saving-ritual="isSavingRitual"
+        :rituals-error="ritualsError"
+        :upsert-ritual="upsertRitual"
+      />
+      <component
+        v-else-if="route.name === 'seances'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+        :weekly-sessions="weeklySessions"
+        :per-week-goal="perWeekGoal"
+        :weekly-progress-percent="weeklyProgressPercent"
+        :weekly-status-label="weeklyStatusLabel"
+        :latest-sessions-display="latestSessionsDisplay"
+      />
+      <component
+        v-else-if="route.name === 'stress'"
         :is="Component"
         :is-authenticated="isAuthenticated"
         :reasons="stressReasons"
@@ -839,7 +869,7 @@ onBeforeUnmount(() => {
         :update-stress-reason="updateStressReason"
       />
       <component
-        v-else-if="route.name === 'alert'"
+        v-else-if="route.name === 'zen'"
         :is="Component"
         :is-authenticated="isAuthenticated"
         :is-saving-stress-reason="isSavingStressReason"
@@ -960,25 +990,29 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', { 'is-active': route.name === 'progress' }]"
-        @click="router.push({ name: 'progress' })"
+        :class="['nav-item', { 'is-active': route.name === 'equilibre' }]"
+        @click="router.push({ name: 'equilibre' })"
       >
         <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Equilibre</span>
       </button>
       <button
         type="button"
-        :class="['nav-item', 'nav-item-sos', { 'is-active': route.name === 'alert' }]"
-        @click="router.push({ name: 'alert' })"
+        :class="['nav-item', 'nav-item-sos', { 'is-active': route.name === 'zen' }]"
+        @click="router.push({ name: 'zen' })"
       >
         <span class="nav-sos-circle">
-          <i class="pi pi-moon nav-icon" aria-hidden="true"></i>
+          <i class="pi pi-heart-fill nav-icon" aria-hidden="true"></i>
         </span>
-        <span class="nav-label nav-label-sos">Zen</span>
+        <!-- <span class="nav-label nav-label-sos">Zen</span> -->
       </button>
-      <button type="button" class="nav-item">
-        <i class="pi pi-dumbbell nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Seances</span>
+      <button
+        type="button"
+        :class="['nav-item', { 'is-active': route.name === 'rituels' }]"
+        @click="router.push({ name: 'rituels' })"
+      >
+        <i class="pi pi-clock nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Rituels</span>
       </button>
       <button
         type="button"
@@ -1339,6 +1373,7 @@ onBeforeUnmount(() => {
 }
 .nav-item-sos .nav-icon {
   font-size: 1.2rem;
+  color: #22c55e;
 }
 .nav-label-sos {
   font-weight: 600;

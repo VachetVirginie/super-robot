@@ -226,6 +226,32 @@ export function useCheckins(session: Ref<Session | null>) {
 
   const weeklyCheckinsCount = computed(() => recentCheckins.value.length)
 
+  const weeklyStressByDay = computed(() => {
+    const buckets = new Map<string, number[]>()
+
+    for (const row of recentCheckins.value) {
+      if (typeof row.stress_level !== 'number') continue
+      const iso = row.created_at.slice(0, 10)
+      const list = buckets.get(iso) ?? []
+      list.push(row.stress_level)
+      buckets.set(iso, list)
+    }
+
+    const result: Record<string, { avg: number; count: number }> = {}
+
+    for (const [iso, values] of buckets.entries()) {
+      if (!values.length) continue
+      const sum = values.reduce((acc, value) => acc + value, 0)
+      const avg = sum / values.length
+      result[iso] = {
+        avg: Math.round(avg * 10) / 10,
+        count: values.length,
+      }
+    }
+
+    return result
+  })
+
   return {
     todayCheckin,
     isCheckinLoading,
@@ -234,6 +260,7 @@ export function useCheckins(session: Ref<Session | null>) {
     recordCheckin,
     weeklyAverageStress,
     weeklyCheckinsCount,
+    weeklyStressByDay,
     getMonthStressByDay,
   }
 }

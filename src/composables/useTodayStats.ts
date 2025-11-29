@@ -38,6 +38,7 @@ export function useTodayStats(session: Ref<Session | null>) {
   const weeklyMinutes = ref<number | null>(null)
   const weeklyActiveDays = ref<number | null>(null)
   const weeklyByKind = ref<Record<string, { sessions: number; minutes: number }>>({})
+  const weeklyMovementByDay = ref<Record<string, { duration: number; count: number }>>({})
 
   const weeklyProgressPercent = computed(() => {
     if (
@@ -199,13 +200,30 @@ export function useTodayStats(session: Ref<Session | null>) {
     weeklySessions.value = allSessions.length
     latestSessions.value = allSessions.slice(0, 3)
 
+    const movementByDay: Record<string, { duration: number; count: number }> = {}
+
     weekSessionDates.value = allSessions.map((sessionItem) => {
       const d = new Date(sessionItem.performed_at)
       const year = d.getFullYear()
       const month = String(d.getMonth() + 1).padStart(2, '0')
       const dayNum = String(d.getDate()).padStart(2, '0')
-      return `${year}-${month}-${dayNum}`
+      const iso = `${year}-${month}-${dayNum}`
+
+      const minutes =
+        typeof sessionItem.duration_minutes === 'number' &&
+        sessionItem.duration_minutes > 0
+          ? sessionItem.duration_minutes
+          : 0
+
+      const entry = movementByDay[iso] ?? { duration: 0, count: 0 }
+      entry.duration += minutes
+      entry.count += 1
+      movementByDay[iso] = entry
+
+      return iso
     })
+
+    weeklyMovementByDay.value = movementByDay
 
     const uniqueDates = Array.from(new Set(weekSessionDates.value))
 
@@ -280,6 +298,7 @@ export function useTodayStats(session: Ref<Session | null>) {
     weeklyMinutes.value = null
     weeklyActiveDays.value = null
     weeklyByKind.value = {}
+    weeklyMovementByDay.value = {}
   }
 
   async function syncForCurrentUser() {
@@ -587,6 +606,7 @@ export function useTodayStats(session: Ref<Session | null>) {
     weeklyMinutes,
     weeklyActiveDays,
     weeklyByKind,
+     weeklyMovementByDay,
     weeklyProgressPercent,
     weeklyStatusLabel,
     latestSessionsDisplay,

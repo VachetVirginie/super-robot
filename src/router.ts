@@ -7,6 +7,7 @@ import AlertPage from './AlertPage.vue'
 import StressReasonsPage from './StressReasonsPage.vue'
 import SessionsPage from './SessionsPage.vue'
 import RituelsPage from './RituelsPage.vue'
+import WeekConfigPage from './WeekConfigPage.vue'
 
 const routes = [
   {
@@ -23,13 +24,18 @@ const routes = [
         component: TodayPage,
       },
       {
+        path: 'semaine',
+        name: 'semaine',
+        component: WeekConfigPage,
+      },
+      {
         path: 'profile',
         name: 'profile',
         component: ProfilePageRoute,
       },
       {
-        path: 'progress',
-        name: 'equilibre',
+        path: 'bilan',
+        name: 'bilan',
         component: ProgressPage,
       },
       {
@@ -48,8 +54,8 @@ const routes = [
         component: StressReasonsPage,
       },
       {
-        path: 'alert',
-        name: 'zen',
+        path: 'pause',
+        name: 'pause',
         component: AlertPage,
       },
     ],

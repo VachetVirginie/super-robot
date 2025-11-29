@@ -10,6 +10,7 @@ import { useCheckins } from './composables/useCheckins'
 import type { CalendarCell } from './types'
 import { useStressReasons } from './composables/useStressReasons'
 import { useRituals } from './composables/useRituals'
+import { useDailyPlan, type TodaySlot, type DailyIntention } from './composables/useDailyPlan'
 import { pickWorkoutTemplate, type WorkoutKind, WORKOUT_TEMPLATES } from './workoutCatalog'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
@@ -20,6 +21,7 @@ import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
 import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
 import PlanWeekDialog from './components/PlanWeekDialog.vue'
 import WorkoutPlayerDialog from './components/WorkoutPlayerDialog.vue'
+import MorningDialog from './components/MorningDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -94,6 +96,7 @@ const {
   recordCheckin,
   weeklyAverageStress,
   weeklyCheckinsCount,
+  weeklyStressByDay,
   getMonthStressByDay,
 } = useCheckins(session)
 
@@ -114,6 +117,15 @@ const {
   ritualsError,
   upsertRitual,
 } = useRituals(session)
+
+const {
+  todaySlot,
+  todayIntention,
+  isDailyPlanLoading,
+  isDailyPlanSaving,
+  dailyPlanError,
+  saveDailyPlan,
+} = useDailyPlan(session)
 
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
@@ -384,6 +396,8 @@ const isWeeklySessionsDialogOpen = ref(false)
 const isAdjustGoalDialogOpen = ref(false)
 const goalDraft = ref<number | null>(null)
 
+const isMorningDialogOpen = ref(false)
+
 const isWellbeingDialogOpen = ref(false)
 const isWellbeingPlayerOpen = ref(false)
 const activeExerciseKey = ref<string | null>(null)
@@ -613,10 +627,16 @@ async function signOutAndRedirect() {
 }
 
 function startWellbeingExercise() {
-  router.push({ name: 'zen', query: { auto: '1' } })
+  router.push({ name: 'pause', query: { auto: '1' } })
 }
 
 function onTodayRowClick(key: string) {
+  if (key === 'morning-dialog') {
+    if (!isAuthenticated) return
+    isMorningDialogOpen.value = true
+    return
+  }
+
   if (key === 'today-quick-5') {
     selectedDuration.value = 5
     selectedKind.value = 'auto'
@@ -829,6 +849,21 @@ async function submitCheckin(stressLevel: number) {
   }
 }
 
+async function onMorningConfirm(payload: { slot: TodaySlot; intention: DailyIntention }) {
+  const previousError = dailyPlanError.value
+  await saveDailyPlan(payload)
+
+  if (!dailyPlanError.value) {
+    showSnackbar('Ton plan du jour est pret.', 'success')
+    isMorningDialogOpen.value = false
+  } else if (dailyPlanError.value !== previousError || dailyPlanError.value) {
+    showSnackbar(
+      dailyPlanError.value ?? "Impossible d'enregistrer ton plan du jour.",
+      'error',
+    )
+  }
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     if (
@@ -838,6 +873,7 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingDialogOpen.value ||
       isWellbeingPlayerOpen.value ||
       isMonthCalendarOpen.value ||
+      isMorningDialogOpen.value ||
       isProfileOpen.value
     ) {
       isAddSessionDialogOpen.value = false
@@ -846,6 +882,7 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingDialogOpen.value = false
       isWellbeingPlayerOpen.value = false
       isMonthCalendarOpen.value = false
+      isMorningDialogOpen.value = false
       if (isProfileOpen.value) {
         router.push({ name: 'today' })
       }
@@ -866,7 +903,7 @@ onBeforeUnmount(() => {
 <template>
   <main class="app">
     <header class="topbar">
-      <h1 class="brand">Motivly</h1>
+      <h1 class="brand">Mouvea</h1>
       <div v-if="isAuthenticated" class="topbar-right">
         <button
           type="button"
@@ -909,7 +946,7 @@ onBeforeUnmount(() => {
         :on-close="() => router.push({ name: 'today' })"
       />
       <component
-        v-else-if="route.name === 'equilibre'"
+        v-else-if="route.name === 'bilan'"
         :is="Component"
         :is-authenticated="isAuthenticated"
         :weekly-sessions="weeklySessions"
@@ -919,12 +956,25 @@ onBeforeUnmount(() => {
         :weekly-minutes="weeklyMinutes"
         :weekly-active-days="weeklyActiveDays"
         :weekly-by-kind="weeklyByKind"
+        :week-session-dates="weekSessionDates"
         :weekly-slots="weeklySlots"
         :is-weekly-slots-loading="isWeeklySlotsLoading"
         :weekly-slots-error="weeklySlotsError"
         :weekly-average-stress="weeklyAverageStress"
         :weekly-checkins-count="weeklyCheckinsCount"
+        :weekly-stress-by-day="weeklyStressByDay"
         :stress-reasons="stressReasons"
+        :on-open-week-plan="openPlanWeekDialog"
+      />
+      <component
+        v-else-if="route.name === 'semaine'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+        :per-week-goal="perWeekGoal"
+        :weekly-slots="weeklySlots"
+        :is-weekly-slots-loading="isWeeklySlotsLoading"
+        :weekly-slots-error="weeklySlotsError"
+        :on-open-week-plan="openPlanWeekDialog"
       />
       <component
         v-else-if="route.name === 'rituels'"
@@ -963,7 +1013,7 @@ onBeforeUnmount(() => {
         :update-stress-reason="updateStressReason"
       />
       <component
-        v-else-if="route.name === 'zen'"
+        v-else-if="route.name === 'pause'"
         :is="Component"
         :is-authenticated="isAuthenticated"
         :is-saving-stress-reason="isSavingStressReason"
@@ -1041,6 +1091,19 @@ onBeforeUnmount(() => {
       @save="savePlanWeekDialog"
     />
 
+    <MorningDialog
+      v-if="isMorningDialogOpen"
+      :display-name="displayName"
+      :per-week-goal="perWeekGoal"
+      :weekly-sessions="weeklySessions"
+      :initial-slot="todaySlot"
+      :initial-intention="todayIntention"
+      :is-loading="isDailyPlanLoading"
+      :is-saving="isDailyPlanSaving"
+      @close="isMorningDialogOpen = false"
+      @confirm="onMorningConfirm"
+    />
+
     <MonthCalendarDialog
       v-if="isMonthCalendarOpen"
       :month-label="calendarMonthLabel"
@@ -1095,37 +1158,29 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', 'nav-item-equilibre', { 'is-active': route.name === 'equilibre' }]"
-        @click="router.push({ name: 'equilibre' })"
+        :class="['nav-item', { 'is-active': route.name === 'semaine' }]"
+        @click="router.push({ name: 'semaine' })"
       >
-        <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Bilan</span>
+        <i class="pi pi-calendar-plus nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Semaine</span>
       </button>
       <button
         type="button"
-        :class="['nav-item', 'nav-item-sos', { 'is-active': route.name === 'zen' }]"
-        @click="router.push({ name: 'zen' })"
+        :class="['nav-item', 'nav-item-sos', { 'is-active': route.name === 'pause' }]"
+        @click="router.push({ name: 'pause' })"
       >
         <span class="nav-sos-circle">
           <i class="pi pi-pause nav-icon" aria-hidden="true"></i>
         </span>
-        <span class="nav-label nav-label-sos">Zen</span>
+        <span class="nav-label nav-label-sos">Pause</span>
       </button>
       <button
         type="button"
-        :class="['nav-item', 'nav-item-seances', { 'is-active': route.name === 'seances' }]"
-        @click="router.push({ name: 'seances' })"
+        :class="['nav-item', 'nav-item-equilibre', { 'is-active': route.name === 'bilan' }]"
+        @click="router.push({ name: 'bilan' })"
       >
-        <i class="pi pi-clock nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Seances</span>
-      </button>
-      <button
-        type="button"
-        :class="['nav-item', { 'is-active': route.name === 'profile' }]"
-        @click="router.push({ name: 'profile' })"
-      >
-        <i class="pi pi-user nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Profil</span>
+        <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Bilan</span>
       </button>
     </nav>
     <div
@@ -1184,9 +1239,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 0.85rem;
   font-weight: 600;
-  background: radial-gradient(circle at top left, #22c55e, #05d970);
   color: #020617;
-  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.65);
 }
 .link {
   background: transparent;

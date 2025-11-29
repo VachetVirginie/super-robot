@@ -105,7 +105,7 @@ async function saveCurrentRitual() {
     <button
       type="button"
       class="icon-button rituals-back-button"
-      @click="router.push({ name: 'equilibre' })"
+      @click="router.push({ name: 'bilan' })"
     >
       <i class="pi pi-chevron-left" aria-hidden="true"></i>
     </button>

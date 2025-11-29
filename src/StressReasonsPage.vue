@@ -188,7 +188,7 @@ async function confirmDelete() {
     <button
       type="button"
       class="icon-button stress-back-button"
-      @click="router.push({ name: 'equilibre' })"
+      @click="router.push({ name: 'bilan' })"
     >
       <i class="pi pi-chevron-left" aria-hidden="true"></i>
     </button>

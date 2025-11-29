@@ -14,10 +14,13 @@ const props = defineProps<{
   weeklyByKind: Record<string, { sessions: number; minutes: number }>
   weeklyAverageStress: number | null
   weeklyCheckinsCount: number
+  weekSessionDates: string[]
   weeklySlots: WeeklySlot[]
   isWeeklySlotsLoading: boolean
   weeklySlotsError: string | null
   stressReasons: { id: string; created_at: string; reason: string | null; category: string | null }[]
+  weeklyStressByDay: Record<string, { avg: number; count: number }>
+  onOpenWeekPlan: () => void
 }>()
 
 const router = useRouter()
@@ -142,22 +145,38 @@ const stressCoachSuggestion = computed(() => {
   return "Cette semaine, demande-toi simplement : quel serait le plus petit geste pour te traiter avec un peu plus de douceur ?"
 })
 
-const sessionsLabel = computed(() => {
-  const count = props.weeklySessions ?? 0
-  if (count === 0) {
-    return 'Pas encore de seance cette semaine. On peut toujours en ajouter une petite.'
+const stressWeekSummary = computed(() => {
+  const avg = props.weeklyAverageStress
+  if (avg == null) {
+    return "Stress non renseigne cette semaine."
   }
-  if (count === 1) {
-    return "1 seance faite cette semaine. C'est deja un bon debut."
+  if (avg <= 2) {
+    return 'Semaine plutot calme.'
   }
-  return `Tu as fait ${count} seances cette semaine. Bravo, tu crees de l'espace pour toi.`
+  if (avg <= 3.5) {
+    return 'Semaine chargee mais sous controle.'
+  }
+  return 'Semaine plutot tendue.'
 })
 
-const goalLabel = computed(() => {
-  if (props.perWeekGoal == null) {
-    return "Tu n'as pas encore d'objectif par semaine. On peut en definir un tres simple (1 ou 2 seances)."
+const summarySessionsLabel = computed(() => {
+  const done = props.weeklySessions ?? 0
+  const goal = props.perWeekGoal
+
+  if (goal != null && goal > 0) {
+    return `${done} seance(s) / ${goal}`
   }
-  return `Ton objectif actuel : ${props.perWeekGoal} seance(s) par semaine.`
+
+  if (done === 0) return '0 seance cette semaine'
+  if (done === 1) return '1 seance cette semaine'
+  return `${done} seances cette semaine`
+})
+
+const summaryPercentLabel = computed(() => {
+  if (!Number.isFinite(safePercent.value) || safePercent.value <= 0) {
+    return null as string | null
+  }
+  return `${safePercent.value}% de ton objectif`
 })
 
 const minutesLabel = computed(() => {
@@ -251,6 +270,78 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
     (slot) => slot.dayIndex === dayIndex && slot.timeOfDay === timeOfDay,
   )
 }
+
+const movementStressCorrelation = computed(() => {
+  const stressByDay = props.weeklyStressByDay ?? {}
+  const sessionDays = new Set(props.weekSessionDates ?? [])
+
+  const withMove: number[] = []
+  const withoutMove: number[] = []
+
+  for (const [iso, info] of Object.entries(stressByDay)) {
+    const avg = info?.avg
+    const count = info?.count
+    if (typeof avg !== 'number' || !count) continue
+    if (sessionDays.has(iso)) {
+      withMove.push(avg)
+    } else {
+      withoutMove.push(avg)
+    }
+  }
+
+  const computeAvg = (values: number[]) => {
+    if (!values.length) return null
+    const sum = values.reduce((acc, value) => acc + value, 0)
+    return Math.round((sum / values.length) * 10) / 10
+  }
+
+  const avgWithMove = computeAvg(withMove)
+  const avgWithoutMove = computeAvg(withoutMove)
+
+  return {
+    avgWithMove,
+    avgWithoutMove,
+    hasData: avgWithMove !== null && avgWithoutMove !== null,
+  }
+})
+
+const movementStressNumbers = computed(() => {
+  const { avgWithMove, avgWithoutMove } = movementStressCorrelation.value
+  if (avgWithMove == null && avgWithoutMove == null) {
+    return null as { withMove: number | null; withoutMove: number | null } | null
+  }
+  return {
+    withMove: avgWithMove,
+    withoutMove: avgWithoutMove,
+  }
+})
+
+const movementStressInsight = computed(() => {
+  const { avgWithMove, avgWithoutMove, hasData } = movementStressCorrelation.value
+
+  if (!hasData) {
+    if (!Object.keys(props.weeklyStressByDay ?? {}).length) {
+      return "Des que tu notes ton stress quelques jours, on pourra te montrer l'effet de tes seances sur ta semaine."
+    }
+    return "On a encore peu de jours avec seance et check-in cette semaine. On affinera ce lien au fil du temps."
+  }
+
+  const diffRaw = avgWithoutMove! - avgWithMove!
+
+  if (diffRaw > 0.3) {
+    return 'Les jours ou tu bouges, ton stress est nettement plus bas.'
+  }
+
+  if (diffRaw > 0.1) {
+    return "Bouger semble taider un peu a reduire ton stress." 
+  }
+
+  if (diffRaw >= 0) {
+    return 'Tu peux observer ton stress avec ou sans mouvement, sans pression.'
+  }
+
+  return "Tu peux continuer a explorer ce qui taide le plus, a ton rythme." 
+})
 </script>
 
 <template>
@@ -290,17 +381,22 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
           <section class="card progress-card">
             <h2 class="progress-title">Bouger cette semaine</h2>
             <p class="progress-subtitle">
-              Ton coach regarde avec toi ton objectif et les seances deja faites cette semaine,
-              sans chercher la perfection.
+              Ton bilan hebdo sans culte de la perf.
             </p>
 
+            <div class="progress-summary-key">
+              <p class="progress-summary-main">
+                <strong>{{ summarySessionsLabel }}</strong>
+              </p>
+              <p
+                v-if="summaryPercentLabel"
+                class="progress-summary-secondary"
+              >
+                {{ summaryPercentLabel }}
+              </p>
+            </div>
+
             <div class="progress-summary">
-              <p class="progress-text">
-                {{ sessionsLabel }}
-              </p>
-              <p class="progress-text progress-text--muted">
-                {{ goalLabel }}
-              </p>
               <p v-if="minutesLabel" class="progress-text progress-text--muted">
                 {{ minutesLabel }}
               </p>
@@ -345,10 +441,9 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
           </section>
 
           <section class="card progress-card">
-            <h2 class="progress-title">Tes moments prevus pour bouger</h2>
+            <h2 class="progress-title">Tes moments pour bouger cette semaine</h2>
             <p class="progress-subtitle">
-              Ton coach t'aide a verifier si ton planning de la semaine te parait realiste et
-              simple a tenir.
+              Un coup d'oeil rapide sur les moments que tu as bloques pour toi.
             </p>
             <p class="progress-text progress-text--muted">
               {{ progressCoachSuggestion }}
@@ -393,13 +488,52 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
               </div>
             </section>
           </section>
+
+          <section class="card progress-card">
+            <h2 class="progress-title">Lien mouvement et stress</h2>
+            <p class="progress-subtitle">
+              Ce que montre ta semaine entre seances et stress.
+            </p>
+
+            <p class="progress-text">
+              {{ movementStressInsight }}
+            </p>
+
+            <div
+              v-if="movementStressNumbers"
+              class="progress-summary progress-summary--linked"
+            >
+              <p class="progress-text progress-text--muted">
+                Jours avec seance :
+                <strong>{{ movementStressNumbers.withMove ?? '\u2014' }}/5</strong>
+                de stress en moyenne.
+              </p>
+              <p class="progress-text progress-text--muted">
+                Jours sans seance :
+                <strong>{{ movementStressNumbers.withoutMove ?? '\u2014' }}/5</strong>
+                de stress en moyenne.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="stress-link-button"
+              @click="props.onOpenWeekPlan()"
+            >
+              Planifier ma semaine
+            </button>
+          </section>
         </div>
 
         <div class="progress-tab-panel">
           <section class="card progress-card">
             <h2 class="progress-title">Stress et declencheurs</h2>
             <p class="progress-subtitle">
-              Comment tu as vecu la semaine et ce qui revient souvent dans tes montes de stress.
+              Comment tu as vecu la semaine du point de vue du stress.
+            </p>
+
+            <p class="stress-text">
+              <strong>{{ stressWeekSummary }}</strong>
             </p>
 
             <section class="stress-section">
@@ -472,6 +606,41 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
                 </div>
               </div>
             </section>
+          </section>
+
+          <section class="card progress-card">
+            <h2 class="progress-title">Lien mouvement et stress</h2>
+            <p class="progress-subtitle">
+              Une vue simple du lien entre mouvement et stress cette semaine.
+            </p>
+
+            <p class="progress-text">
+              {{ movementStressInsight }}
+            </p>
+
+            <div
+              v-if="movementStressNumbers"
+              class="progress-summary progress-summary--linked"
+            >
+              <p class="progress-text progress-text--muted">
+                Jours avec seance :
+                <strong>{{ movementStressNumbers.withMove ?? '\u2014' }}/5</strong>
+                de stress en moyenne.
+              </p>
+              <p class="progress-text progress-text--muted">
+                Jours sans seance :
+                <strong>{{ movementStressNumbers.withoutMove ?? '\u2014' }}/5</strong>
+                de stress en moyenne.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="stress-link-button"
+              @click="props.onOpenWeekPlan()"
+            >
+              Planifier ma semaine
+            </button>
           </section>
         </div>
       </div>
@@ -552,6 +721,24 @@ function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
   flex-direction: column;
   gap: 0.25rem;
   margin-bottom: 1rem;
+}
+
+.progress-summary-key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.progress-summary-main {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.progress-summary-secondary {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 .progress-text {

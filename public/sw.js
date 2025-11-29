@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Motivly-cache-v1'
+const CACHE_NAME = 'Mouvea-cache-v1'
 const URLS_TO_CACHE = ['/', '/index.html', '/vite.svg']
 
 self.addEventListener('install', (event) => {

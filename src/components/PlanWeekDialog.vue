@@ -37,8 +37,8 @@ function save() {
       </div>
 
       <p class="dialog-text">
-        Choisis des moments concrets dans ta semaine pour bouger. Commence petit,
-        tu pourras toujours ajuster ensuite.
+        Choisis des moments concrets pour toi dans ta semaine : bouger un peu, souffler,
+        faire une pause zen... Commence petit, tu pourras toujours ajuster ensuite.
       </p>
       <p class="planweek-counter">
         {{ selectedCount }} moment(s) planifiés

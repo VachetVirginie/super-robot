@@ -140,7 +140,7 @@ function hasSlot(dayIndex: number, slotKey: TimeOfDay) {
             class="secondary put"
             @click="props.onOpenWeeklySessions()"
           >
-            Corriger mes seances de la semaine
+            Modifier mes seances
           </button>
         </div>
       </div>

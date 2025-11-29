@@ -187,6 +187,7 @@ input:-webkit-autofill:focus {
   border-radius: 999px;
   border: 1px solid #27272a;
   background: transparent;
+  width: 100%;
 }
 .dialog-primary {
   width: 100%;

@@ -1,5 +1,5 @@
 const CACHE_NAME = 'Mouvea-cache-v1'
-const URLS_TO_CACHE = ['/', '/index.html', '/vite.svg']
+const URLS_TO_CACHE = ['/', '/index.html', '/logo.png']
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -29,7 +29,7 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Notification'
   const options = {
     body: data.body || '',
-    icon: '/vite.svg',
+    icon: '/logo.png',
     data: {
       url: data.url || '/',
     },

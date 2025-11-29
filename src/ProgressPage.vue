@@ -435,7 +435,7 @@ const movementStressInsight = computed(() => {
               class="secondary"
               @click="props.onOpenWeeklySessions()"
             >
-              Corriger mes seances de la semaine
+              Modifier mes seances
             </button>
 
             <div v-if="kindTags.length" class="progress-tags">

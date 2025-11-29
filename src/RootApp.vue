@@ -190,6 +190,167 @@ const todayCheckinLevel = computed(() => {
   return typeof c?.stress_level === 'number' ? c.stress_level : null
 })
 
+const thermoLast3Days = computed(() => {
+  const today = new Date()
+  const sessionDays = new Set(weekSessionDates.value ?? [])
+  const stressByDay = weeklyStressByDay.value ?? {}
+
+  const days: {
+    iso: string
+    weekday: string
+    stress: number | null
+    hasSession: boolean
+  }[] = []
+
+  for (let offset = 2; offset >= 0; offset -= 1) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - offset)
+
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const dayNum = String(d.getDate()).padStart(2, '0')
+    const iso = `${year}-${month}-${dayNum}`
+
+    const weekday = d
+      .toLocaleDateString('fr-FR', { weekday: 'short' })
+      .replace('.', '')
+
+    const info = (stressByDay as Record<string, { avg: number; count: number }>)[iso]
+    const stress = typeof info?.avg === 'number' ? info.avg : null
+    const hasSession = sessionDays.has(iso)
+
+    days.push({ iso, weekday, stress, hasSession })
+  }
+
+  return days
+})
+
+const thermoStats = computed(() => {
+  const days = thermoLast3Days.value
+
+  const stressValues = days
+    .map((d) => d.stress)
+    .filter((v): v is number => typeof v === 'number')
+
+  const avgStress =
+    stressValues.length === 0
+      ? null
+      : Math.round(
+          (stressValues.reduce((acc, v) => acc + v, 0) / stressValues.length) * 10,
+        ) / 10
+
+  const sessionsCount = days.filter((d) => d.hasSession).length
+  const sosCount = 0
+
+  return { avgStress, sessionsCount, sosCount }
+})
+
+const thermoScore = computed(() => {
+  const { avgStress, sessionsCount, sosCount } = thermoStats.value
+  if (avgStress == null) {
+    return null
+  }
+
+  const movementBonus = sessionsCount * 0.5
+  const sosPenalty = sosCount * 0.5
+
+  const raw = avgStress + sosPenalty - movementBonus
+  return Math.round(raw * 10) / 10
+})
+
+const thermoState = computed<'green' | 'orange' | 'red'>(() => {
+  const score = thermoScore.value
+  if (score == null) {
+    return 'green'
+  }
+  if (score < 2.8) {
+    return 'green'
+  }
+  if (score < 3.5) {
+    return 'orange'
+  }
+  return 'red'
+})
+
+const thermoTitle = computed(() => {
+  const state = thermoState.value
+  if (state === 'green') {
+    return 'Tu sembles plutot bien ces derniers jours 🌿'
+  }
+  if (state === 'orange') {
+    return 'Un peu de charge en ce moment'
+  }
+  return 'On traverse une periode tendue ❤️‍🩹'
+})
+
+const thermoSuggestion = computed(() => {
+  const state = thermoState.value
+  if (state === 'green') {
+    return 'Tu peux choisir un petit moment qui te fait du bien aujourdhui.'
+  }
+  if (state === 'orange') {
+    return "Aujourdhui, un geste simple suffit : une mini pause ou un peu de mouvement."
+  }
+  return 'Priorite au calme. On te propose une respiration de 2 minutes.'
+})
+
+const thermoCtaLabel = computed(() => {
+  const state = thermoState.value
+  if (state === 'green') {
+    return 'Faire une mini-seance'
+  }
+  if (state === 'orange') {
+    return 'Faire une pause douce'
+  }
+  return 'Lancer une respiration 2 min'
+})
+
+const thermoSeries = computed(() =>
+  thermoLast3Days.value.map((d) => ({
+    label: d.weekday,
+    value: d.stress,
+  })),
+)
+
+const isMentalThermoOpen = ref(false)
+
+function openMentalThermo() {
+  if (!isAuthenticated) return
+  isMentalThermoOpen.value = true
+}
+
+function closeMentalThermo() {
+  isMentalThermoOpen.value = false
+}
+
+function onThermoCtaClick() {
+  const state = thermoState.value
+
+  if (state === 'green') {
+    selectedDuration.value = 5
+    selectedKind.value = 'auto'
+    if (!isAuthenticated) return
+    isAddSessionDialogOpen.value = true
+    isMentalThermoOpen.value = false
+    return
+  }
+
+  if (state === 'orange') {
+    router.push({ name: 'pause' })
+    isMentalThermoOpen.value = false
+    return
+  }
+
+  router.push({ name: 'pause', query: { auto: '1' } })
+  isMentalThermoOpen.value = false
+}
+
+function onThermoZenClick() {
+  if (!isAuthenticated) return
+  startWellbeingExercise()
+  isMentalThermoOpen.value = false
+}
+
 const wellbeingExercises = [
   {
     key: 'mindfulness-3min',
@@ -932,7 +1093,9 @@ onBeforeUnmount(() => {
       :greeting="userGreeting"
       :range-label="weekStrip.rangeLabel"
       :days="weekStrip.days"
+      :thermo-state="thermoState"
       @open-month-calendar="openMonthCalendar"
+      @open-thermo="openMentalThermo"
     />
 
     <RouterView v-slot="{ Component, route }">
@@ -1130,6 +1293,77 @@ onBeforeUnmount(() => {
       @touch-end="onCalendarTouchEnd"
     />
 
+    <div
+      v-if="isMentalThermoOpen"
+      class="thermo-sheet-backdrop"
+      @click.self="closeMentalThermo"
+    >
+      <div class="thermo-sheet">
+        <div class="thermo-sheet-handle"></div>
+
+        <h2 class="thermo-sheet-title">
+          {{ thermoTitle }}
+        </h2>
+
+        <div class="thermo-sheet-stats">
+          <div class="thermo-sheet-stat-row">
+            <i class="pi pi-megaphone thermo-sheet-icon" aria-hidden="true"></i>
+            <span>Stress moyen : {{ thermoStats.avgStress ?? '—' }}/5</span>
+          </div>
+          <div class="thermo-sheet-stat-row">
+            <i class="pi pi-bolt thermo-sheet-icon" aria-hidden="true"></i>
+            <span>Seances : {{ thermoStats.sessionsCount }}</span>
+          </div>
+          <div class="thermo-sheet-stat-row">
+            <i class="pi pi-exclamation-circle thermo-sheet-icon" aria-hidden="true"></i>
+            <span>Pauses SOS : {{ thermoStats.sosCount }}</span>
+          </div>
+        </div>
+
+        <div v-if="thermoSeries.length" class="thermo-sheet-sparkline">
+          <div
+            v-for="point in thermoSeries"
+            :key="point.label"
+            class="thermo-sheet-spark-bar"
+            :style="{
+              height: (point.value ? (point.value / 5) * 32 : 4) + 'px',
+              opacity: point.value ? 1 : 0.35,
+            }"
+          >
+            <span class="thermo-sheet-spark-label">{{ point.label }}</span>
+          </div>
+        </div>
+
+        <p class="thermo-sheet-text">
+          {{ thermoSuggestion }}
+        </p>
+
+        <button
+          type="button"
+          class="primary thermo-sheet-cta"
+          @click="onThermoCtaClick"
+        >
+          {{ thermoCtaLabel }}
+        </button>
+
+        <button
+          type="button"
+          class="secondary thermo-sheet-cta-secondary"
+          @click="onThermoZenClick"
+        >
+          Faire une session zen
+        </button>
+
+        <button
+          type="button"
+          class="link-small thermo-sheet-close"
+          @click="closeMentalThermo"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+
     <WellbeingDialog
       v-if="isWellbeingDialogOpen"
       :exercises="wellbeingExercises"
@@ -1237,6 +1471,32 @@ onBeforeUnmount(() => {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.thermo-button {
+  border-radius: 999px;
+  border: none;
+  padding: 0.15rem;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.thermo-dot {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+}
+.thermo-dot--green {
+  background: #22c55e;
+  animation: thermo-breathe 2.5s ease-in-out infinite;
+}
+.thermo-dot--orange {
+  background: #f97316;
+  animation: thermo-tilt 2s ease-in-out infinite;
+}
+.thermo-dot--red {
+  background: #ef4444;
+  animation: thermo-halo 3s ease-in-out infinite;
+}
 .avatar-button {
   border-radius: 999px;
   border: none;
@@ -1299,6 +1559,125 @@ onBeforeUnmount(() => {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.thermo-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 45;
+}
+.thermo-sheet {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 1.25rem 1.25rem 0 0;
+  padding: 1.25rem 1.3rem 1.4rem;
+  background: #020617;
+  border-top: 1px solid #1f2937;
+  box-shadow: 0 -18px 45px rgba(0, 0, 0, 0.9);
+}
+.thermo-sheet-handle {
+  width: 2.5rem;
+  height: 0.22rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.65);
+  margin: 0 auto 0.9rem;
+}
+.thermo-sheet-title {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+}
+.thermo-sheet-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+.thermo-sheet-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+.thermo-sheet-icon {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.thermo-sheet-sparkline {
+  margin: 0.4rem 0 0.9rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+  height: 32px;
+}
+.thermo-sheet-spark-bar {
+  flex: 1;
+  border-radius: 999px;
+  background: #22c55e;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: #022c22;
+  font-weight: 900;
+}
+.thermo-sheet-spark-label {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+.thermo-sheet-text {
+  margin: 0 0 0.9rem;
+  font-size: 0.9rem;
+}
+.thermo-sheet-cta {
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+.thermo-sheet-close {
+  display: block;
+  margin: 0 auto;
+}
+
+.thermo-sheet-cta-secondary {
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+
+@keyframes thermo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.92;
+  }
+}
+
+@keyframes thermo-tilt {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes thermo-halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.32);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.16);
+  }
 }
 .week-strip-icons {
   display: flex;

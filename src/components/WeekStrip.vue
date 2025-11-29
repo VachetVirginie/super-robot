@@ -13,14 +13,20 @@ const props = defineProps<{
   greeting: string
   rangeLabel: string
   days: WeekDay[]
+  thermoState: 'green' | 'orange' | 'red'
 }>()
 
 const emit = defineEmits<{
   (e: 'open-month-calendar'): void
+  (e: 'open-thermo'): void
 }>()
 
 function onOpenMonthCalendar() {
   emit('open-month-calendar')
+}
+
+function onOpenThermo() {
+  emit('open-thermo')
 }
 
 function progressOpacity(day: WeekDay) {
@@ -51,6 +57,26 @@ function progressOpacity(day: WeekDay) {
           @click="onOpenMonthCalendar"
         >
           <i class="pi pi-calendar" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="thermo-button"
+          @click="onOpenThermo"
+          aria-label="Thermometre de charge mentale"
+        >
+          <span
+            v-if="props.thermoState !== 'green'"
+            class="thermo-dot"
+            :class="{
+              'thermo-dot--orange': props.thermoState === 'orange',
+              'thermo-dot--red': props.thermoState === 'red',
+            }"
+          ></span>
+          <i
+            v-else
+            class="pi pi-heart thermo-heart"
+            aria-hidden="true"
+          ></i>
         </button>
       </div>
     </div>
@@ -126,6 +152,32 @@ function progressOpacity(day: WeekDay) {
   justify-content: center;
   color: inherit;
 }
+.thermo-button {
+  border-radius: 999px;
+  border: none;
+  padding: 0.1rem;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.thermo-dot {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+}
+.thermo-dot--green {
+  background: #22c55e;
+  animation: thermo-breathe 2.5s ease-in-out infinite;
+}
+.thermo-dot--orange {
+  background: #f97316;
+  animation: thermo-tilt 2s ease-in-out infinite;
+}
+.thermo-dot--red {
+  background: #ef4444;
+  animation: thermo-halo 3s ease-in-out infinite;
+}
 .week-strip-range {
   margin: 0;
   font-size: 0.78rem;
@@ -187,5 +239,45 @@ function progressOpacity(day: WeekDay) {
   margin-top: 0.15rem;
   font-size: 0.65rem;
   color: #22c55e;
+}
+
+.thermo-heart {
+  font-size: 1.1rem;
+  color: #22c55e;
+  animation: thermo-breathe 2.5s ease-in-out infinite;
+}
+
+@keyframes thermo-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.92;
+  }
+}
+
+@keyframes thermo-tilt {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes thermo-halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.32);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.16);
+  }
 }
 </style>

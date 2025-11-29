@@ -422,6 +422,11 @@ function openPlanWeekDialog() {
   isPlanWeekDialogOpen.value = true
 }
 
+function openWeeklySessionsDialog() {
+  if (!isAuthenticated) return
+  isWeeklySessionsDialogOpen.value = true
+}
+
 async function savePlanWeekDialog(slots: { dayIndex: number; timeOfDay: 'morning' | 'afternoon' | 'evening' }[]) {
   await saveWeeklySlots(slots)
 
@@ -429,8 +434,13 @@ async function savePlanWeekDialog(slots: { dayIndex: number; timeOfDay: 'morning
   const current = perWeekGoal.value ?? 0
   const delta = target - current
 
-  if (delta !== 0) {
+  if (delta > 0) {
     await changeGoal(delta)
+  } else if (delta < 0 && current > 0) {
+    showSnackbar(
+      "Tu as reduit tes moments cette semaine. Ton objectif reste le meme, tu pourras l'ajuster depuis le Bilan si tu veux.",
+      'success',
+    )
   }
 
   isPlanWeekDialogOpen.value = false
@@ -965,6 +975,7 @@ onBeforeUnmount(() => {
         :weekly-stress-by-day="weeklyStressByDay"
         :stress-reasons="stressReasons"
         :on-open-week-plan="openPlanWeekDialog"
+        :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
       <component
         v-else-if="route.name === 'semaine'"
@@ -974,7 +985,9 @@ onBeforeUnmount(() => {
         :weekly-slots="weeklySlots"
         :is-weekly-slots-loading="isWeeklySlotsLoading"
         :weekly-slots-error="weeklySlotsError"
+        :weekly-sessions="weeklySessions"
         :on-open-week-plan="openPlanWeekDialog"
+        :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
       <component
         v-else-if="route.name === 'rituels'"
@@ -1153,7 +1166,7 @@ onBeforeUnmount(() => {
         :class="['nav-item', { 'is-active': route.name === 'today' }]"
         @click="router.push({ name: 'today' })"
       >
-        <i class="pi pi-calendar nav-icon" aria-hidden="true"></i>
+        <i class="pi pi-home nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Aujourd'hui</span>
       </button>
       <button
@@ -1162,7 +1175,7 @@ onBeforeUnmount(() => {
         @click="router.push({ name: 'semaine' })"
       >
         <i class="pi pi-calendar-plus nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Semaine</span>
+        <span class="nav-label">Planifier</span>
       </button>
       <button
         type="button"
@@ -1179,7 +1192,7 @@ onBeforeUnmount(() => {
         :class="['nav-item', 'nav-item-equilibre', { 'is-active': route.name === 'bilan' }]"
         @click="router.push({ name: 'bilan' })"
       >
-        <i class="pi pi-heart nav-icon" aria-hidden="true"></i>
+        <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Bilan</span>
       </button>
     </nav>
@@ -1240,6 +1253,9 @@ onBeforeUnmount(() => {
   font-size: 0.85rem;
   font-weight: 600;
   color: #020617;
+  background: #22c55e;
+  border: 1px solid #22c55e;
+  box-shadow: 0 14px 35px #22c55e;
 }
 .link {
   background: transparent;

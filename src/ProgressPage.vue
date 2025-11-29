@@ -21,6 +21,7 @@ const props = defineProps<{
   stressReasons: { id: string; created_at: string; reason: string | null; category: string | null }[]
   weeklyStressByDay: Record<string, { avg: number; count: number }>
   onOpenWeekPlan: () => void
+  onOpenWeeklySessions: () => void
 }>()
 
 const router = useRouter()
@@ -427,6 +428,14 @@ const movementStressInsight = computed(() => {
               @click="router.push({ name: 'seances' })"
             >
               Voir toutes tes seances
+            </button>
+
+            <button
+              type="button"
+              class="secondary"
+              @click="props.onOpenWeeklySessions()"
+            >
+              Corriger mes seances de la semaine
             </button>
 
             <div v-if="kindTags.length" class="progress-tags">

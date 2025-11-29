@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   isAuthenticated: boolean
@@ -25,6 +26,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'replay-template', key: string): void
 }>()
+
+const router = useRouter()
 
 const safePercent = computed(() => {
   if (!Number.isFinite(props.weeklyProgressPercent)) return 0
@@ -103,19 +106,28 @@ const hasDetailedSessions = computed(
 </script>
 
 <template>
-  <section v-if="!isAuthenticated" class="card sessions-card">
-    <h2 class="sessions-title">Mes seances</h2>
-    <p class="sessions-text">
-      Connecte-toi pour enregistrer et suivre tes seances au fil des semaines.
-    </p>
-  </section>
+  <div class="sessions-root">
+    <button
+      type="button"
+      class="icon-button sessions-back-button"
+      @click="router.push({ name: 'bilan' })"
+    >
+      <i class="pi pi-chevron-left" aria-hidden="true"></i>
+    </button>
 
-  <template v-else>
-    <section class="card sessions-card">
+    <section v-if="!isAuthenticated" class="card sessions-card">
       <h2 class="sessions-title">Mes seances</h2>
-      <p class="sessions-subtitle">
-        Un coup d'oeil sur tes seances de la semaine.
+      <p class="sessions-text">
+        Connecte-toi pour enregistrer et suivre tes seances au fil des semaines.
       </p>
+    </section>
+
+    <template v-else>
+      <section class="card sessions-card">
+        <h2 class="sessions-title">Mes seances</h2>
+        <p class="sessions-subtitle">
+          Un coup d'oeil sur tes seances de la semaine.
+        </p>
 
       <div class="sessions-summary">
         <p class="sessions-text">
@@ -140,13 +152,13 @@ const hasDetailedSessions = computed(
           Tu es a {{ safePercent }}% de ton objectif de la semaine.
         </span>
       </div>
-    </section>
+      </section>
 
-    <section class="card sessions-card sessions-card--secondary">
-      <h3 class="sessions-section-title">Dernieres seances</h3>
-      <p v-if="kindSummary.length" class="sessions-text sessions-text--muted">
-        {{ kindSummary.map((item) => item.label).join(' · ') }}
-      </p>
+      <section class="card sessions-card sessions-card--secondary">
+        <h3 class="sessions-section-title">Dernieres seances</h3>
+        <p v-if="kindSummary.length" class="sessions-text sessions-text--muted">
+          {{ kindSummary.map((item) => item.label).join(' · ') }}
+        </p>
       <p
         v-if="!hasDetailedSessions && !latestSessionsDisplay.length"
         class="sessions-text sessions-text--muted"
@@ -173,20 +185,32 @@ const hasDetailedSessions = computed(
           </button>
         </li>
       </ul>
-      <ul v-else class="sessions-list">
-        <li
-          v-for="(label, index) in latestSessionsDisplay"
-          :key="index"
-          class="sessions-list-item"
-        >
-          {{ label }}
-        </li>
-      </ul>
-    </section>
-  </template>
+        <ul v-else class="sessions-list">
+          <li
+            v-for="(label, index) in latestSessionsDisplay"
+            :key="index"
+            class="sessions-list-item"
+          >
+            {{ label }}
+          </li>
+        </ul>
+      </section>
+    </template>
+  </div>
 </template>
 
 <style scoped>
+.sessions-root {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.75rem 0.25rem 0.5rem;
+}
+
+.sessions-back-button {
+  margin: 0 0 0.75rem;
+}
+
 .sessions-card + .sessions-card {
   margin-top: 0.75rem;
 }

@@ -185,7 +185,7 @@ async function onSubmitCheckin() {
           class="secondary checkin-action"
           @click="onRowClick('today-quick-5')"
         >
-          Seance rapide 5 min
+          Nouvelle seance
         </button>
         <button
           v-if="todaysExercise"

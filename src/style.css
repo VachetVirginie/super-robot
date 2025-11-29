@@ -293,11 +293,11 @@ input:-webkit-autofill:focus {
   background: transparent;
 }
 .calendar-cell.has-session:not(.is-today) {
-  background: #e5e7eb;
+  background: #30e097;
   color: #050505;
 }
 .calendar-cell.is-today {
-  background: #30e097;
+  background: #e5e7eb;
   color: #050505;
 }
 .calendar-date {

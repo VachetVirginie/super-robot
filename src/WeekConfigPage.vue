@@ -106,9 +106,6 @@ function hasSlot(dayIndex: number, slotKey: TimeOfDay) {
             ></span>
           </div>
         </div>
-            <button type="button" class="primary config-button" @click="onOpenWeekPlan">
-      Configurer mes moments
-    </button>
       </div>
     </section>
 

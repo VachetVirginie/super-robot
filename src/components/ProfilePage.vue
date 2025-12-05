@@ -12,6 +12,7 @@ const props = defineProps<{
   notificationsStatus: 'idle' | 'requesting' | 'enabled' | 'error'
   notificationsError: string | null
   profileError: string | null
+  onOpenWeekPlan: () => void
 }>()
 
 const emit = defineEmits<{
@@ -110,6 +111,17 @@ function onInputDisplayName(event: Event) {
           <p v-if="notificationsError" class="error">
             {{ notificationsError }}
           </p>
+        </div>
+
+        <div class="profile-section">
+          <h4 class="profile-section-title">Mes créneaux d’entraînement</h4>
+          <button
+            type="button"
+            class="secondary profile-planning"
+            @click="props.onOpenWeekPlan()"
+          >
+            Configurer ma semaine
+          </button>
         </div>
 
         <div class="profile-section">

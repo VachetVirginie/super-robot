@@ -123,20 +123,20 @@ watch(
   { immediate: true },
 )
 
-function onSelectStress(level: number) {
-  selectedStress.value = level
-}
+// function onSelectStress(level: number) {
+//   selectedStress.value = level
+// }
 
-async function onSubmitCheckin() {
-  if (!selectedStress.value || props.isCheckinSaving) {
-    return
-  }
-  await props.submitCheckin(
-    selectedStress.value,
-    eveningNote.value || undefined,
-    currentEveningQuestion.value,
-  )
-}
+// async function onSubmitCheckin() {
+//   if (!selectedStress.value || props.isCheckinSaving) {
+//     return
+//   }
+//   await props.submitCheckin(
+//     selectedStress.value,
+//     eveningNote.value || undefined,
+//     currentEveningQuestion.value,
+//   )
+// }
 </script>
 
 <template>

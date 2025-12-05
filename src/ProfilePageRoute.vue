@@ -12,6 +12,7 @@ defineProps<{
   notificationsStatus: 'idle' | 'requesting' | 'enabled' | 'error'
   notificationsError: string | null
   profileError: string | null
+  onOpenWeekPlan: () => void
   onUpdateDisplayName: (value: string) => void
   onSaveDisplayName: () => void | Promise<void>
   onEnableNotifications: () => void | Promise<void>
@@ -32,6 +33,7 @@ defineProps<{
     :notifications-status="notificationsStatus"
     :notifications-error="notificationsError"
     :profile-error="profileError"
+    :on-open-week-plan="onOpenWeekPlan"
     @update:displayName="onUpdateDisplayName"
     @save-display-name="onSaveDisplayName"
     @enable-notifications="onEnableNotifications"

@@ -214,7 +214,7 @@ function onConfirm() {
             On prend 1 minute pour poser ton matin, sans pression.
           </p>
 
-          <div class="morning-step-main morning-mood-main">
+          <div class="morning-step-main morning-mood-main morning-section-card">
             <h4 class="morning-section-title">Comment tu te sens ce matin ?</h4>
             <div class="morning-options-row morning-mood-row">
               <button
@@ -248,7 +248,7 @@ function onConfirm() {
         </section>
 
         <section v-else-if="currentStep === 2">
-          <div class="morning-step-main">
+          <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ton niveau d'energie</h4>
             <p class="morning-text">
               Aujourdhui, ton energie est plutot {{ energyLabel }}.
@@ -269,7 +269,7 @@ function onConfirm() {
         </section>
 
         <section v-else-if="currentStep === 3">
-          <div class="morning-step-main">
+          <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ta priorite pour aujourdhui</h4>
             <p class="morning-text">
               Tu peux choisir jusqua 3 priorites, ou passer si tu preferes.
@@ -290,7 +290,7 @@ function onConfirm() {
         </section>
 
         <section v-else-if="currentStep === 4">
-          <div class="morning-step-main">
+          <div class="morning-step-main morning-section-card">
             <p v-if="previousSlotLabel" class="morning-previous-slot">
               Tu avais choisi : {{ previousSlotLabel }}. Tu veux changer ?
             </p>
@@ -317,7 +317,7 @@ function onConfirm() {
         </section>
 
         <section v-else-if="currentStep === 5">
-          <div class="morning-step-main">
+          <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ton intention du jour</h4>
             <p class="morning-text">
               Pour aujourdhui, tu voudrais surtout te sentir...
@@ -339,7 +339,7 @@ function onConfirm() {
         </section>
 
         <section v-else>
-          <div class="morning-step-main">
+          <div class="morning-step-main morning-section-card">
             <p class="morning-text">
               Ce matin, tu as prevu de bouger
               <span v-if="slotLabel">{{ slotLabel.toLowerCase() }}</span>
@@ -409,14 +409,14 @@ function onConfirm() {
   border-radius: 0;
   border: none;
   box-shadow: none;
-  padding: 1.75rem 1.25rem 2.25rem;
-  background: transparent;
+  padding: 1.5rem 1.5rem 2.5rem;
+  background: #050505;
   display: flex;
   flex-direction: column;
 }
 
 .morning-body {
-  margin-top: 1.25rem;
+  margin-top: 0.75rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -427,6 +427,8 @@ function onConfirm() {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
 .morning-step-mood {
@@ -437,6 +439,7 @@ function onConfirm() {
   margin: 0.25rem 0 0;
   font-size: 0.9rem;
   opacity: 0.9;
+  line-height: 1.5;
 }
 
 .morning-section-title {
@@ -453,13 +456,17 @@ function onConfirm() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 1.75rem;
-  margin-bottom: 1.5rem;
+  margin-top: 1.1rem;
+  margin-bottom: 1rem;
 }
 
 .morning-header .dialog-title {
   width: 100%;
   text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .morning-header .dialog-close {
@@ -470,7 +477,7 @@ function onConfirm() {
 
 .morning-intro {
   text-align: left;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .morning-step-main,
@@ -478,8 +485,8 @@ function onConfirm() {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  margin-top: auto;
-  margin-bottom: auto;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
 }
 
 .morning-options-row {
@@ -510,6 +517,23 @@ function onConfirm() {
   margin: 0.5rem 0 0;
   font-size: 0.8rem;
   opacity: 0.85;
+}
+
+.morning-section-card {
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem 1.2rem;
+  background: #111111;
+  border: 1px solid #27272a;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
+}
+
+.morning-section-card .morning-section-title {
+  margin-top: 0;
+  margin-bottom: 1.1rem;
+}
+
+.morning-section-card > .morning-text {
+  margin-top: 0.25rem;
 }
 
 .morning-contract {

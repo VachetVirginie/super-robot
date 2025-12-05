@@ -1189,6 +1189,7 @@ onBeforeUnmount(() => {
         :on-enable-notifications="onEnableNotifications"
         :on-sign-out="signOutAndRedirect"
         :on-close="() => router.push({ name: 'today' })"
+        :on-open-week-plan="openPlanWeekDialog"
       />
       <component
         v-else-if="route.name === 'bilan'"
@@ -1493,11 +1494,11 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', { 'is-active': route.name === 'semaine' }]"
-        @click="router.push({ name: 'semaine' })"
+        :class="['nav-item', 'nav-item-equilibre', { 'is-active': route.name === 'bilan' }]"
+        @click="router.push({ name: 'bilan' })"
       >
-        <i class="pi pi-calendar-plus nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Planifier</span>
+        <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Journal</span>
       </button>
       <button
         type="button"
@@ -1509,14 +1510,14 @@ onBeforeUnmount(() => {
         </span>
         <span class="nav-label nav-label-sos">Pause</span>
       </button>
-      <button
+            <!-- <button
         type="button"
-        :class="['nav-item', 'nav-item-equilibre', { 'is-active': route.name === 'bilan' }]"
-        @click="router.push({ name: 'bilan' })"
+        :class="['nav-item', { 'is-active': route.name === 'semaine' }]"
+        @click="router.push({ name: 'semaine' })"
       >
-        <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Bilan</span>
-      </button>
+        <i class="pi pi-calendar-plus nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Planifier</span>
+      </button> -->
     </nav>
     <div
       v-if="snackbarMessage"

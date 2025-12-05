@@ -116,7 +116,7 @@ function onConfirm() {
             On prend 1 minute pour faire le point avant de fermer la journee.
           </p>
 
-          <div class="evening-step-main">
+          <div class="evening-step-main evening-section-card">
             <h4 class="evening-section-title">Ton niveau de stress ce soir</h4>
             <p class="evening-text">
               De 1 (tres calme) a 5 (au max), ou tu te situes ?
@@ -141,7 +141,7 @@ function onConfirm() {
           v-else
           class="evening-step"
         >
-          <div class="evening-step-main">
+          <div class="evening-step-main evening-section-card">
             <h4 class="evening-section-title">Un petit mot pour clore la journee</h4>
             <p class="evening-question">
               {{ currentEveningQuestion }}
@@ -198,8 +198,8 @@ function onConfirm() {
   border-radius: 0;
   border: none;
   box-shadow: none;
-  padding: 1.75rem 1.25rem 2.25rem;
-  background: transparent;
+  padding: 1.5rem 1.5rem 2.5rem;
+  background: #050505;
   display: flex;
   flex-direction: column;
 }
@@ -210,13 +210,17 @@ function onConfirm() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 1.75rem;
-  margin-bottom: 1.5rem;
+  margin-top: 1.1rem;
+  margin-bottom: 1rem;
 }
 
 .evening-header .dialog-title {
   width: 100%;
   text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .evening-header .dialog-close {
@@ -226,7 +230,7 @@ function onConfirm() {
 }
 
 .evening-body {
-  margin-top: 1.25rem;
+  margin-top: 0.75rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -236,11 +240,13 @@ function onConfirm() {
   flex: 1;
   display: flex;
   flex-direction: column;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
 .evening-step-main {
-  margin-top: auto;
-  margin-bottom: auto;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
   display: flex;
   flex-direction: column;
 }
@@ -249,10 +255,11 @@ function onConfirm() {
   margin: 0.25rem 0 0;
   font-size: 0.9rem;
   opacity: 0.9;
+  line-height: 1.5;
 }
 
 .evening-intro {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .evening-section-title {
@@ -261,6 +268,24 @@ function onConfirm() {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
+}
+
+.evening-section-card {
+  border-radius: 1rem;
+  padding: 1.1rem 1.25rem 1.2rem;
+  background: #111111;
+  border: 1px solid #27272a;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
+}
+
+.evening-section-card .evening-section-title {
+  margin-top: 0;
+  margin-bottom: 1.1rem;
+}
+
+.evening-section-card > .evening-text,
+.evening-section-card > .evening-question {
+  margin-top: 0.25rem;
 }
 
 .evening-scale {

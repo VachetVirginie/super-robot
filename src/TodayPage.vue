@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import type { WellbeingExercise, TodaySection } from './types'
 import type { WeeklySlot } from './composables/useWeeklySlots'
 
@@ -83,37 +83,37 @@ function onRowClick(key: string) {
 // })
 
 const selectedStress = ref<number | null>(null)
-const eveningNote = ref<string>('')
+// const eveningNote = ref<string>('')
 
-const eveningQuestions = [
-  "Qu'est-ce qui t'a aidee a tenir aujourd'hui ?",
-  "Qu'est-ce que tu aimerais laisser de cote apres cette journee ?",
-  "Quel petit moment de ta journee tu aimerais garder en memoire ?",
-  "Qu'est-ce qui etait clairement hors de ton controle aujourd'hui ?",
-  "Qu'as-tu fait aujourd'hui qui allait dans le sens de ce qui compte pour toi ?",
- "Quelle petite chose a été un soutien aujourd’hui ?",
- "Qui t’a fait du bien, même indirectement ?",
- "Quel geste as-tu fait qui mérite d’être reconnu ?",
- "Quel moment t’a fait sourire, même brièvement ?",
- "Une mini-chose que tu as appréciée aujourd’hui ?",
- "Quel confort as-tu eu la chance d’avoir aujourd’hui ?",
- "Qu’est-ce qui a été plus simple que prévu ?",
- "De quoi peux-tu te remercier ce soir ?",
-]
+// const eveningQuestions = [
+//   "Qu'est-ce qui t'a aidee a tenir aujourd'hui ?",
+//   "Qu'est-ce que tu aimerais laisser de cote apres cette journee ?",
+//   "Quel petit moment de ta journee tu aimerais garder en memoire ?",
+//   "Qu'est-ce qui etait clairement hors de ton controle aujourd'hui ?",
+//   "Qu'as-tu fait aujourd'hui qui allait dans le sens de ce qui compte pour toi ?",
+//  "Quelle petite chose a été un soutien aujourd’hui ?",
+//  "Qui t’a fait du bien, même indirectement ?",
+//  "Quel geste as-tu fait qui mérite d’être reconnu ?",
+//  "Quel moment t’a fait sourire, même brièvement ?",
+//  "Une mini-chose que tu as appréciée aujourd’hui ?",
+//  "Quel confort as-tu eu la chance d’avoir aujourd’hui ?",
+//  "Qu’est-ce qui a été plus simple que prévu ?",
+//  "De quoi peux-tu te remercier ce soir ?",
+// ]
 
-const currentEveningQuestion = computed(() => {
-  if (!eveningQuestions.length) {
-    return ''
-  }
+// const currentEveningQuestion = computed(() => {
+//   if (!eveningQuestions.length) {
+//     return ''
+//   }
 
-  const today = new Date()
-  const startOfYear = Date.UTC(today.getFullYear(), 0, 1)
-  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
-  const dayOfYear = Math.floor((todayUtc - startOfYear) / (24 * 60 * 60 * 1000))
+//   const today = new Date()
+//   const startOfYear = Date.UTC(today.getFullYear(), 0, 1)
+//   const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+//   const dayOfYear = Math.floor((todayUtc - startOfYear) / (24 * 60 * 60 * 1000))
 
-  const index = dayOfYear % eveningQuestions.length
-  return eveningQuestions[index] ?? eveningQuestions[0]
-})
+//   const index = dayOfYear % eveningQuestions.length
+//   return eveningQuestions[index] ?? eveningQuestions[0]
+// })
 
 watch(
   () => props.todayCheckinLevel,

@@ -63,23 +63,23 @@ function onRowClick(key: string) {
   props.onTodayRowClick(key)
 }
 
-const planSummary = computed(() => {
-  if (props.isWeeklySlotsLoading) {
-    return 'On charge ton planning...'
-  }
-  if (props.weeklySlotsError) {
-    return props.weeklySlotsError
-  }
-  const count = props.weeklySlots.length
-  if (count === 0) {
-    return "Tu n'as encore rien prevu cette semaine. On peut commencer tres simple."
-  }
-  if (count === 1) {
-    return 'Tu as prevu 1 moment rien que pour toi cette semaine.'
-  }
+// const planSummary = computed(() => {
+//   if (props.isWeeklySlotsLoading) {
+//     return 'On charge ton planning...'
+//   }
+//   if (props.weeklySlotsError) {
+//     return props.weeklySlotsError
+//   }
+//   const count = props.weeklySlots.length
+//   if (count === 0) {
+//     return "Tu n'as encore rien prevu cette semaine. On peut commencer tres simple."
+//   }
+//   if (count === 1) {
+//     return 'Tu as prevu 1 moment rien que pour toi cette semaine.'
+//   }
 
-  return `Tu as prevu ${count} moments rien que pour toi cette semaine. C'est deja tres bien.`
-})
+//   return `Tu as prevu ${count} moments rien que pour toi cette semaine. C'est deja tres bien.`
+// })
 
 const contractSummary = computed(() => {
   const goal = props.perWeekGoal

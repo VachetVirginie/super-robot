@@ -150,6 +150,8 @@ const todayCheckinSummary = computed(() => {
   return `Niveau de stress: ${level}/5 aujourdhui.`
 })
 
+const hasTodayCheckin = computed(() => !!todayCheckin.value)
+
 const todayMorningSummary = computed(() => {
   const row = todayMorningState.value
   if (!row) {
@@ -598,9 +600,9 @@ const isWeeklySessionsDialogOpen = ref(false)
 const isAdjustGoalDialogOpen = ref(false)
 const goalDraft = ref<number | null>(null)
 
-
 const isMorningDialogOpen = ref(false)
 const isEveningDialogOpen = ref(false)
+const isWellbeingDialogOpen = ref(false)
 const isWellbeingPlayerOpen = ref(false)
 const activeExerciseKey = ref<string | null>(null)
 
@@ -1299,6 +1301,7 @@ onBeforeUnmount(() => {
         :is-checkin-saving="isCheckinSaving"
         :checkin-error="checkinError"
         :today-checkin-level="todayCheckinLevel"
+        :has-today-checkin="hasTodayCheckin"
         :on-update-email="(value: string) => { email = value }"
         :on-update-password="(value: string) => { password = value }"
         :submit-auth="submitAuth"

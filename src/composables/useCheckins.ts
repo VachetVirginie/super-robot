@@ -119,19 +119,67 @@ export function useCheckins(session: Ref<Session | null>) {
       return
     }
 
+    const now = new Date()
+    const dayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+      now.getDate(),
+    ).padStart(2, '0')}`
+
     isCheckinSaving.value = true
     checkinError.value = null
 
     try {
       const { error } = await supabase.from('wellbeing_checkins').insert({
         user_id: user.id,
+        day: dayIso,
         stress_level: stressLevel,
         note: note ?? null,
         question: question ?? null,
       })
 
       if (error) {
-        const msg = (error as { message?: string }).message ?? ''
+        const msg = (error as { message?: string; code?: string }).message ?? ''
+        const code = (error as { code?: string }).code ?? ''
+
+        // Contrainte d'unicite : un check-in par jour.
+        // Si on a deja un check-in pour aujourd'hui, on met simplement a jour la ligne existante.
+        if (code === '23505' || msg.includes('wellbeing_checkins_user_day_unique')) {
+          const { data: existingRows, error: selectError } = await supabase
+            .from('wellbeing_checkins')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('day', dayIso)
+            .limit(1)
+
+          if (!selectError && existingRows && existingRows.length) {
+            const existing = existingRows[0] as { id: string }
+            const { error: updateError } = await supabase
+              .from('wellbeing_checkins')
+              .update({
+                stress_level: stressLevel,
+                note: note ?? null,
+                question: question ?? null,
+              })
+              .eq('id', existing.id)
+
+            if (updateError) {
+              // eslint-disable-next-line no-console
+              console.error('Error updating existing checkin', updateError)
+              checkinError.value = "Impossible d'enregistrer ton check-in."
+              return
+            }
+
+            await loadTodayCheckin()
+            await loadRecentCheckins()
+            return
+          }
+
+          // Si on ne retrouve pas la ligne, on logue et on retombe sur le flux derreur standard.
+          if (selectError) {
+            // eslint-disable-next-line no-console
+            console.error('Error selecting existing checkin after duplicate constraint', selectError)
+          }
+        }
+
         if (!msg.includes('NetworkError when attempting to fetch resource')) {
           // eslint-disable-next-line no-console
           console.error('Error inserting checkin', error)

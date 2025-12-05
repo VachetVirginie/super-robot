@@ -18,6 +18,7 @@ const props = defineProps<{
   todaySections: TodaySection[]
   todayCheckinSummary: string
   todayCheckinLevel: number | null
+  hasTodayCheckin: boolean
   perWeekGoal: number | null
   weeklySessions: number | null
   weeklyProgressPercent: number
@@ -264,6 +265,7 @@ async function onSubmitCheckin() {
         {{ todayCheckinSummary }}
       </p>
       <button
+        v-if="!hasTodayCheckin"
         type="button"
         class="primary checkin-submit"
         @click="onRowClick('evening-dialog')"

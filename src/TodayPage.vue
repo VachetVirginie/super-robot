@@ -207,9 +207,9 @@ async function onSubmitCheckin() {
           <p class="planweek-subtitle">
             On prend un instant pour toi avant de te lancer dans la journee.
           </p>
-          <p class="planweek-summary">
+          <!-- <p class="planweek-summary">
             {{ planSummary }}
-          </p>
+          </p> -->
           <p class="planweek-contract">
             {{ contractSummary }}
           </p>
@@ -225,7 +225,7 @@ async function onSubmitCheckin() {
             class="secondary planweek-cta"
             @click="onRowClick('morning-dialog')"
           >
-            Prendre 10 secondes pour moi
+            Préparer ma journée
           </button>
         </div>
       </div>

@@ -86,7 +86,20 @@ const contractProgressLine = computed(() => {
 
 const currentStep = ref(1)
 
+const moodOptions = [
+  { value: 1, label: 'Mal', icon: 'very-sad' },
+  { value: 2, label: 'Plutot mal', icon: 'sad' },
+  { value: 3, label: 'Comme dhabitude', icon: 'neutral' },
+  { value: 4, label: 'Plutot bien', icon: 'happy' },
+  { value: 5, label: 'Super bien', icon: 'very-happy' },
+]
+
 const moodLevel = ref<number | null>(null)
+
+const selectedMood = computed(() => {
+  if (moodLevel.value == null) return null
+  return moodOptions.find((opt) => opt.value === moodLevel.value) ?? null
+})
 const energyLevel = ref(2)
 
 const priorityOptions = [
@@ -125,6 +138,10 @@ const intentionLabel = computed(() => {
 const isLastStep = computed(() => currentStep.value === 6)
 
 const primaryCtaLabel = computed(() => (isLastStep.value ? "C'est parti pour aujourd'hui" : 'Continuer'))
+
+function moodIconUrl(key: string) {
+  return `/icons/mood/${key}.svg`
+}
 
 function togglePriority(value: string) {
   const list = selectedPriorities.value
@@ -175,7 +192,7 @@ function onConfirm() {
 <template>
   <div class="dialog-backdrop" @click.self="emit('close')">
     <div class="dialog-card morning-card">
-      <div class="dialog-header">
+      <div class="dialog-header morning-header">
         <h3 class="dialog-title">
           Bonjour<span v-if="friendlyName">, {{ friendlyName }}</span>
         </h3>
@@ -189,22 +206,44 @@ function onConfirm() {
       </div>
 
       <div class="morning-body">
-        <section v-if="currentStep === 1">
-          <p class="morning-text">
-            On prepare un mini plan realiste pour t'aider a passer une bonne journee.
+        <section
+          v-if="currentStep === 1"
+          class="morning-step-mood"
+        >
+          <p class="morning-text morning-intro">
+            On va preparer un mini plan realiste pour t'aider a passer une bonne journee.
           </p>
-          <h4 class="morning-section-title">Comment tu te sens ce matin ?</h4>
-          <div class="morning-options-row morning-mood-row">
-            <button
-              v-for="level in 5"
-              :key="level"
-              type="button"
-              class="morning-option"
-              :class="{ 'is-selected': moodLevel === level }"
-              @click="moodLevel = level"
+
+          <div class="morning-mood-main">
+            <h4 class="morning-section-title">Comment tu te sens ce matin ?</h4>
+            <div class="morning-options-row morning-mood-row">
+              <button
+                v-for="option in moodOptions"
+                :key="option.value"
+                type="button"
+                class="morning-mood-button"
+                :class="{ 'is-selected': moodLevel === option.value }"
+                @click="moodLevel = option.value"
+              >
+                <img
+                  class="morning-mood-icon"
+                  :src="moodIconUrl(option.icon)"
+                  :alt="option.label"
+                />
+              </button>
+            </div>
+            <div class="morning-mood-labels">
+              <span class="morning-mood-label-left">{{ moodOptions[0]?.label }}</span>
+              <span class="morning-mood-label-right">
+                {{ moodOptions[moodOptions.length - 1]?.label }}
+              </span>
+            </div>
+            <p
+              v-if="selectedMood && moodLevel"
+              class="morning-mood-rating"
             >
-              {{ level }}
-            </button>
+              {{ moodLevel }} / 5 - {{ selectedMood.label }}
+            </p>
           </div>
         </section>
 
@@ -308,49 +347,80 @@ function onConfirm() {
             {{ contractProgressLine }}
           </p>
         </section>
+      </div>
 
-        <div class="morning-footer">
-          <button
-            v-if="currentStep > 1"
-            type="button"
-            class="morning-back"
-            @click="goToPreviousStep"
-          >
-            Retour
-          </button>
-          <button
-            v-if="currentStep < 6"
-            type="button"
-            class="morning-skip"
-            @click="skipStep"
-          >
-            Sauter
-          </button>
-          <button
-            type="button"
-            class="primary morning-cta"
-            :disabled="isSaving || isLoading"
-            @click="goToNextStep"
-          >
-            <span v-if="isSaving && currentStep === 6">Enregistrement...</span>
-            <span v-else>{{ primaryCtaLabel }}</span>
-          </button>
-        </div>
+      <div class="morning-footer">
+        <button
+          v-if="currentStep > 1"
+          type="button"
+          class="morning-back"
+          @click="goToPreviousStep"
+        >
+          Retour
+        </button>
+        <button
+          v-if="currentStep < 6"
+          type="button"
+          class="morning-skip"
+          @click="skipStep"
+        >
+          Sauter
+        </button>
+        <button
+          type="button"
+          class="primary morning-cta"
+          :disabled="isSaving || isLoading"
+          @click="goToNextStep"
+        >
+          <span v-if="isSaving && currentStep === 6">Enregistrement...</span>
+          <span v-else>{{ primaryCtaLabel }}</span>
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: #050505;
+  z-index: 40;
+}
+
 .morning-card {
   max-width: 420px;
+  width: 100%;
+  height: 100vh;
+  margin: 0 auto;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  padding: 1.75rem 1.25rem 2.25rem;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
 }
 
 .morning-body {
-  margin-top: 0.5rem;
+  margin-top: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  flex: 1;
+}
+
+.morning-body > section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.morning-step-mood {
+  justify-content: flex-start;
 }
 
 .morning-text {
@@ -360,11 +430,45 @@ function onConfirm() {
 }
 
 .morning-section-title {
-  margin: 0;
+  margin-bottom: 2rem;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
+}
+
+.morning-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.morning-header .dialog-title {
+  width: 100%;
+  text-align: center;
+}
+
+.morning-header .dialog-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.morning-intro {
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.morning-mood-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .morning-options-row {
@@ -443,6 +547,44 @@ function onConfirm() {
   justify-content: space-between;
 }
 
+.morning-mood-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.morning-mood-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  object-fit: contain;
+  filter: invert(0.9);
+}
+
+.morning-mood-button.is-selected .morning-mood-icon {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.6);
+}
+
+.morning-mood-labels {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.morning-mood-rating {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
 .morning-energy-row {
   margin-top: 0.75rem;
   display: flex;
@@ -457,6 +599,7 @@ function onConfirm() {
 
 .morning-energy-slider {
   flex: 1;
+  accent-color: #22c55e;
 }
 
 .morning-priorities-grid {

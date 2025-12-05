@@ -8,6 +8,7 @@ interface CheckinRow {
   created_at: string
   stress_level: number | null
   note: string | null
+  question: string | null
 }
 
 export function useCheckins(session: Ref<Session | null>) {
@@ -38,7 +39,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, stress_level, note')
+        .select('id, created_at, stress_level, note, question')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString())
@@ -112,7 +113,7 @@ export function useCheckins(session: Ref<Session | null>) {
     }
   }
 
-  async function recordCheckin(stressLevel: number, note?: string) {
+  async function recordCheckin(stressLevel: number, note?: string, question?: string) {
     const user = session.value?.user
     if (!user) {
       return
@@ -126,6 +127,7 @@ export function useCheckins(session: Ref<Session | null>) {
         user_id: user.id,
         stress_level: stressLevel,
         note: note ?? null,
+        question: question ?? null,
       })
 
       if (error) {

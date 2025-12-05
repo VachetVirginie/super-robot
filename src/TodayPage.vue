@@ -32,6 +32,7 @@ const props = defineProps<{
   todaysExercise: WellbeingExercise | null
   isCheckinSaving: boolean
   checkinError: string | null
+  todayMorningSummary: string | null
   onUpdateEmail: (value: string) => void
   onUpdatePassword: (value: string) => void
   submitAuth: () => void | Promise<void>
@@ -41,7 +42,7 @@ const props = defineProps<{
   onEnableNotifications: () => void | Promise<void>
   startWellbeingExercise: () => void
   onOpenWeekPlan: () => void
-  submitCheckin: (stressLevel: number) => void | Promise<void>
+  submitCheckin: (stressLevel: number, note?: string, question?: string) => void | Promise<void>
 }>()
 
 function onEmailInput(event: Event) {
@@ -88,6 +89,37 @@ const contractSummary = computed(() => {
 })
 
 const selectedStress = ref<number | null>(null)
+const eveningNote = ref<string>('')
+
+const eveningQuestions = [
+  "Qu'est-ce qui t'a aidee a tenir aujourd'hui ?",
+  "Qu'est-ce que tu aimerais laisser de cote apres cette journee ?",
+  "Quel petit moment de ta journee tu aimerais garder en memoire ?",
+  "Qu'est-ce qui etait clairement hors de ton controle aujourd'hui ?",
+  "Qu'as-tu fait aujourd'hui qui allait dans le sens de ce qui compte pour toi ?",
+ "Quelle petite chose a été un soutien aujourd’hui ?",
+ "Qui t’a fait du bien, même indirectement ?",
+ "Quel geste as-tu fait qui mérite d’être reconnu ?",
+ "Quel moment t’a fait sourire, même brièvement ?",
+ "Une mini-chose que tu as appréciée aujourd’hui ?",
+ "Quel confort as-tu eu la chance d’avoir aujourd’hui ?",
+ "Qu’est-ce qui a été plus simple que prévu ?",
+ "De quoi peux-tu te remercier ce soir ?",
+]
+
+const currentEveningQuestion = computed(() => {
+  if (!eveningQuestions.length) {
+    return ''
+  }
+
+  const today = new Date()
+  const startOfYear = Date.UTC(today.getFullYear(), 0, 1)
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const dayOfYear = Math.floor((todayUtc - startOfYear) / (24 * 60 * 60 * 1000))
+
+  const index = dayOfYear % eveningQuestions.length
+  return eveningQuestions[index] ?? eveningQuestions[0]
+})
 
 watch(
   () => props.todayCheckinLevel,
@@ -105,7 +137,11 @@ async function onSubmitCheckin() {
   if (!selectedStress.value || props.isCheckinSaving) {
     return
   }
-  await props.submitCheckin(selectedStress.value)
+  await props.submitCheckin(
+    selectedStress.value,
+    eveningNote.value || undefined,
+    currentEveningQuestion.value,
+  )
 }
 </script>
 
@@ -177,7 +213,14 @@ async function onSubmitCheckin() {
           <p class="planweek-contract">
             {{ contractSummary }}
           </p>
+          <p
+            v-if="todayMorningSummary"
+            class="planweek-contract"
+          >
+            {{ todayMorningSummary }}
+          </p>
           <button
+            v-else
             type="button"
             class="secondary planweek-cta"
             @click="onRowClick('morning-dialog')"
@@ -240,6 +283,15 @@ async function onSubmitCheckin() {
         <span v-if="isCheckinSaving">Enregistrement...</span>
         <span v-else>Enregistrer mon check-in</span>
       </button>
+      <p class="checkin-subtitle-title">
+        {{ currentEveningQuestion }} (optionnel)
+      </p>
+      <textarea
+        v-model="eveningNote"
+        class="journal-textarea"
+        rows="3"
+        placeholder="Une ou deux phrases suffisent. C'est juste pour toi."
+      ></textarea>
       <p class="checkin-summary">
         {{ todayCheckinSummary }}
       </p>
@@ -432,6 +484,19 @@ async function onSubmitCheckin() {
   margin: 0.5rem 0 0;
   font-size: 0.8rem;
   opacity: 0.9;
+}
+
+.journal-textarea {
+  margin-top: 0.5rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 72px;
 }
 
 .checkin-actions {

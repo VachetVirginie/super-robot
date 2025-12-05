@@ -20,6 +20,9 @@ const props = defineProps<{
   weeklySlotsError: string | null
   stressReasons: { id: string; created_at: string; reason: string | null; category: string | null }[]
   weeklyStressByDay: Record<string, { avg: number; count: number }>
+  weeklyMorningMood: number | null
+  weeklyMorningEnergy: number | null
+  weeklyMorningPriorities: { key: string; count: number }[]
   onOpenWeekPlan: () => void
   onOpenWeeklySessions: () => void
 }>()
@@ -144,6 +147,47 @@ const stressCoachSuggestion = computed(() => {
     return "Planifie un moment pour utiliser l'espace zen cette semaine et pense a une situation ou tu pourrais dire non ou demander un peu d'aide."
   }
   return "Cette semaine, demande-toi simplement : quel serait le plus petit geste pour te traiter avec un peu plus de douceur ?"
+})
+
+const hasMorningData = computed(() => {
+  const hasMood = typeof props.weeklyMorningMood === 'number'
+  const hasEnergy = typeof props.weeklyMorningEnergy === 'number'
+  const hasPriorities = Array.isArray(props.weeklyMorningPriorities) && props.weeklyMorningPriorities.length > 0
+
+  return hasMood || hasEnergy || hasPriorities
+})
+
+const morningMoodLabel = computed(() => {
+  const mood = props.weeklyMorningMood
+  if (typeof mood !== 'number') {
+    return null as string | null
+  }
+  return `${mood}/5`
+})
+
+const morningEnergyLabel = computed(() => {
+  const energy = props.weeklyMorningEnergy
+  if (typeof energy !== 'number') {
+    return null as string | null
+  }
+  return `${energy}/5`
+})
+
+const morningPriorityLabels = computed(() => {
+  const labels: Record<string, string> = {
+    work: 'Travail',
+    relax: 'Se detendre',
+    family: 'Famille',
+    friends: 'Amites',
+    selfcare: 'Prendre soin de toi',
+    health: 'Condition physique',
+  }
+
+  return (props.weeklyMorningPriorities ?? []).map((item) => ({
+    key: item.key,
+    label: labels[item.key] ?? item.key,
+    count: item.count,
+  }))
 })
 
 const stressWeekSummary = computed(() => {
@@ -535,6 +579,40 @@ const movementStressInsight = computed(() => {
         </div>
 
         <div class="progress-tab-panel">
+          <section class="card progress-card">
+            <h2 class="progress-title">Tes matins cette semaine</h2>
+            <p class="progress-subtitle">
+              Comment tu demarres tes journees (sur les 7 derniers jours).
+            </p>
+
+            <p
+              v-if="!hasMorningData"
+              class="progress-text progress-text--muted"
+            >
+              Des que tu repondras a quelques questions du matin, on pourra te montrer comment tu
+              demarres tes journees (humeur, energie, priorites).
+            </p>
+
+            <div v-else class="progress-summary">
+              <p v-if="morningMoodLabel" class="progress-text progress-text--muted">
+                Humeur moyenne au reveil : <strong>{{ morningMoodLabel }}</strong>
+              </p>
+              <p v-if="morningEnergyLabel" class="progress-text progress-text--muted">
+                Energie moyenne le matin : <strong>{{ morningEnergyLabel }}</strong>
+              </p>
+
+              <div v-if="morningPriorityLabels.length" class="progress-tags">
+                <span
+                  v-for="item in morningPriorityLabels"
+                  :key="item.key"
+                  class="tag tag--blue"
+                >
+                  {{ item.label }} ({{ item.count }})
+                </span>
+              </div>
+            </div>
+          </section>
+
           <section class="card progress-card">
             <h2 class="progress-title">Stress et declencheurs</h2>
             <p class="progress-subtitle">

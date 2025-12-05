@@ -11,6 +11,7 @@ import type { CalendarCell } from './types'
 import { useStressReasons } from './composables/useStressReasons'
 import { useRituals } from './composables/useRituals'
 import { useDailyPlan, type TodaySlot, type DailyIntention } from './composables/useDailyPlan'
+import { useMorningState } from './composables/useMorningState'
 import { pickWorkoutTemplate, type WorkoutKind, WORKOUT_TEMPLATES } from './workoutCatalog'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
@@ -21,7 +22,7 @@ import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
 import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
 import PlanWeekDialog from './components/PlanWeekDialog.vue'
 import WorkoutPlayerDialog from './components/WorkoutPlayerDialog.vue'
-import MorningDialog from './components/MorningDialog.vue'
+import MorningDialog from './components/MorningFlowDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -128,6 +129,14 @@ const {
   saveDailyPlan,
 } = useDailyPlan(session)
 
+const {
+  todayMorningState,
+  saveMorningState,
+  weeklyAverageMorningMood,
+  weeklyAverageMorningEnergy,
+  weeklyMorningPriorities,
+} = useMorningState(session)
+
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
   if (!c) {
@@ -138,6 +147,49 @@ const todayCheckinSummary = computed(() => {
     return 'Check-in enregistre pour aujourdhui.'
   }
   return `Niveau de stress: ${level}/5 aujourdhui.`
+})
+
+const todayMorningSummary = computed(() => {
+  const row = todayMorningState.value
+  if (!row) {
+    return null as string | null
+  }
+
+  const mood = typeof row.mood_level === 'number' ? row.mood_level : null
+  const energy = typeof row.energy_level === 'number' ? row.energy_level : null
+  const priorities = row.priorities ?? []
+
+  const priorityLabels: Record<string, string> = {
+    work: 'Travail',
+    relax: 'Se detendre',
+    family: 'Famille',
+    friends: 'Amites',
+    selfcare: 'Prendre soin de toi',
+    health: 'Condition physique',
+  }
+
+  const firstPriorityKey = priorities[0]
+  const firstPriorityLabel =
+    typeof firstPriorityKey === 'string'
+      ? priorityLabels[firstPriorityKey] ?? firstPriorityKey
+      : null
+
+  const parts: string[] = []
+  if (mood !== null) {
+    parts.push(`humeur ${mood}/5`)
+  }
+  if (energy !== null) {
+    parts.push(`energie ${energy}/5`)
+  }
+  if (firstPriorityLabel) {
+    parts.push(`priorite : ${firstPriorityLabel}`)
+  }
+
+  if (!parts.length) {
+    return 'Tu as deja pris un moment pour poser ton matin aujourdhui.'
+  }
+
+  return `Ce matin, tu as indique ${parts.join(', ')}.`
 })
 
 function updateSelectedDuration(value: 5 | 10 | 15 | 20 | 30) {
@@ -1007,9 +1059,9 @@ async function onSaveDisplayNameFromProfile() {
   }
 }
 
-async function submitCheckin(stressLevel: number) {
+async function submitCheckin(stressLevel: number, note?: string, question?: string) {
   const previousError = checkinError.value
-  await recordCheckin(stressLevel)
+  await recordCheckin(stressLevel, note, question)
 
   if (!checkinError.value) {
     showSnackbar('Check-in bien-etre enregistre', 'success')
@@ -1021,9 +1073,22 @@ async function submitCheckin(stressLevel: number) {
   }
 }
 
-async function onMorningConfirm(payload: { slot: TodaySlot; intention: DailyIntention }) {
+async function onMorningConfirm(payload: {
+  slot: TodaySlot
+  intention: DailyIntention
+  moodLevel: number | null
+  energyLevel: number | null
+  priorities: string[]
+}) {
   const previousError = dailyPlanError.value
-  await saveDailyPlan(payload)
+  await saveDailyPlan({ slot: payload.slot, intention: payload.intention })
+
+  // Enregistrement best-effort de l'etat du matin.
+  void saveMorningState({
+    moodLevel: payload.moodLevel,
+    energyLevel: payload.energyLevel,
+    priorities: payload.priorities,
+  })
 
   if (!dailyPlanError.value) {
     showSnackbar('Ton plan du jour est pret.', 'success')
@@ -1138,6 +1203,9 @@ onBeforeUnmount(() => {
         :weekly-checkins-count="weeklyCheckinsCount"
         :weekly-stress-by-day="weeklyStressByDay"
         :stress-reasons="stressReasons"
+        :weekly-morning-mood="weeklyAverageMorningMood"
+        :weekly-morning-energy="weeklyAverageMorningEnergy"
+        :weekly-morning-priorities="weeklyMorningPriorities"
         :on-open-week-plan="openPlanWeekDialog"
         :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
@@ -1237,6 +1305,7 @@ onBeforeUnmount(() => {
         :start-wellbeing-exercise="startWellbeingExercise"
         :submit-checkin="submitCheckin"
         :on-open-week-plan="openPlanWeekDialog"
+        :today-morning-summary="todayMorningSummary"
       />
     </RouterView>
 

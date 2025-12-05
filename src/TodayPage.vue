@@ -242,7 +242,7 @@ async function onSubmitCheckin() {
           class="secondary checkin-action"
           @click="onRowClick('today-quick-5')"
         >
-          Nouvelle seance
+          Bouger 5 minutes
         </button>
         <button
           v-if="todaysExercise"
@@ -250,7 +250,7 @@ async function onSubmitCheckin() {
           class="secondary checkin-action"
           @click="startWellbeingExercise"
         >
-          Lancer la pause bien-etre du jour
+          Respirer 3 minutes
         </button>
       </div>
     </section>

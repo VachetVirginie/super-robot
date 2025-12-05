@@ -1303,9 +1303,19 @@ onBeforeUnmount(() => {
       <div class="thermo-sheet">
         <div class="thermo-sheet-handle"></div>
 
-        <h2 class="thermo-sheet-title">
-          {{ thermoTitle }}
-        </h2>
+        <div class="thermo-sheet-header">
+          <h2 class="thermo-sheet-title">
+            {{ thermoTitle }}
+          </h2>
+          <button
+            type="button"
+            class="icon-button thermo-sheet-close-button"
+            aria-label="Fermer"
+            @click="closeMentalThermo"
+          >
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </div>
 
         <div class="thermo-sheet-stats">
           <div class="thermo-sheet-stat-row">
@@ -1354,14 +1364,6 @@ onBeforeUnmount(() => {
           @click="onThermoZenClick"
         >
           Faire une session zen
-        </button>
-
-        <button
-          type="button"
-          class="link-small thermo-sheet-close"
-          @click="closeMentalThermo"
-        >
-          Fermer
         </button>
       </div>
     </div>
@@ -1577,8 +1579,8 @@ onBeforeUnmount(() => {
   max-width: 420px;
   border-radius: 1.25rem 1.25rem 0 0;
   padding: 1.25rem 1.3rem 1.4rem;
-  background: #020617;
-  border-top: 1px solid #1f2937;
+  background: #111111;
+  border-top: 1px solid #27272a;
   box-shadow: 0 -18px 45px rgba(0, 0, 0, 0.9);
 }
 .thermo-sheet-handle {
@@ -1588,9 +1590,22 @@ onBeforeUnmount(() => {
   background: rgba(148, 163, 184, 0.65);
   margin: 0 auto 0.9rem;
 }
+.thermo-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
 .thermo-sheet-title {
-  margin: 0 0 0.8rem;
+  margin: 0;
   font-size: 1rem;
+}
+.thermo-sheet-close-button {
+  color: rgba(148, 163, 184, 0.95);
+}
+.thermo-sheet-close-button:hover {
+  color: #e5e7eb;
 }
 .thermo-sheet-stats {
   display: flex;
@@ -1620,15 +1635,14 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   background: #22c55e;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   color: #022c22;
   font-weight: 900;
 }
 .thermo-sheet-spark-label {
-  margin-top: 0.25rem;
   font-size: 0.85rem;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 .thermo-sheet-text {
   margin: 0 0 0.9rem;
@@ -1638,11 +1652,6 @@ onBeforeUnmount(() => {
   width: 100%;
   margin-bottom: 0.4rem;
 }
-.thermo-sheet-close {
-  display: block;
-  margin: 0 auto;
-}
-
 .thermo-sheet-cta-secondary {
   width: 100%;
   margin-bottom: 0.4rem;

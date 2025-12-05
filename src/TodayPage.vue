@@ -146,13 +146,13 @@ async function onSubmitCheckin() {
     <button
       v-if="isLoginMode"
       type="button"
-      class="link"
+      class="link forgot-link"
       :disabled="isAuthLoading"
       @click="onForgotPasswordClick"
     >
       Mot de passe oublie ?
     </button>
-    <button type="button" class="link" @click="toggleAuthMode">
+    <button type="button" class="link forgot-link" @click="toggleAuthMode">
       {{ switchLabel }}
     </button>
     <p v-if="authMessage" class="info">
@@ -292,6 +292,13 @@ async function onSubmitCheckin() {
 }
 .primary {
   width: 100%;
+}
+.forgot-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 .info {
   margin-top: 1rem;

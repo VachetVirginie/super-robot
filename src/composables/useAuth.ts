@@ -21,7 +21,7 @@ export function useAuth() {
   )
   const switchLabel = computed(() =>
     authMode.value === 'login'
-      ? 'Pas encore de compte ? Creer un compte'
+      ? 'Creer un compte'
       : 'Deja un compte ? Se connecter'
   )
 

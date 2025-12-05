@@ -254,6 +254,10 @@ const kindTags = computed(() => {
     strength: 'Renfo',
     mobility: 'Mobilite',
     mixed: 'Mixte',
+    jump: 'Corde a sauter',
+    stretch: 'Flexibilite',
+    yoga: 'Yoga',
+    rowing: 'Rameur',
     other: 'Autre',
   }
 

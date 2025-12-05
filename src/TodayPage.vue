@@ -258,43 +258,18 @@ async function onSubmitCheckin() {
     <section class="card checkin-card">
       <h2 class="checkin-title">Terminer ma journee</h2>
       <p class="checkin-subtitle">
-        Avant de fermer ton ordi, note ton stress de 1 (tres calme) a 5 (au max).
+        Avant de te déconnecter, prends un instant pour respirer et faire le point sur ta journée.
       </p>
-
-      <div class="checkin-scale">
-        <button
-          v-for="level in 5"
-          :key="level"
-          type="button"
-          class="checkin-dot"
-          :class="{ 'is-active': selectedStress === level }"
-          :disabled="isCheckinSaving"
-          @click="onSelectStress(level)"
-        >
-          {{ level }}
-        </button>
-      </div>
-      <button
-        type="button"
-        class="primary checkin-submit"
-        :disabled="!selectedStress || isCheckinSaving"
-        @click="onSubmitCheckin"
-      >
-        <span v-if="isCheckinSaving">Enregistrement...</span>
-        <span v-else>Enregistrer mon check-in</span>
-      </button>
-      <p class="checkin-subtitle-title">
-        {{ currentEveningQuestion }} (optionnel)
-      </p>
-      <textarea
-        v-model="eveningNote"
-        class="journal-textarea"
-        rows="3"
-        placeholder="Une ou deux phrases suffisent. C'est juste pour toi."
-      ></textarea>
       <p class="checkin-summary">
         {{ todayCheckinSummary }}
       </p>
+      <button
+        type="button"
+        class="primary checkin-submit"
+        @click="onRowClick('evening-dialog')"
+      >
+        Terminer ma journee
+      </button>
       <p v-if="checkinError" class="error">
         {{ checkinError }}
       </p>
@@ -478,6 +453,9 @@ async function onSubmitCheckin() {
 
 .checkin-submit {
   margin-top: 0.75rem;
+    border-color: #22c55e;
+  background: #22c55e;
+  color: #020617;
 }
 
 .checkin-summary {

@@ -210,6 +210,10 @@ onBeforeUnmount(() => {
               <span v-if="template.kind === 'cardio'">Cardio leger</span>
               <span v-else-if="template.kind === 'strength'">Renfo</span>
               <span v-else-if="template.kind === 'mobility'">Mobilite</span>
+              <span v-else-if="template.kind === 'jump'">Corde à sauter</span>
+              <span v-else-if="template.kind === 'stretch'">Flexibilite</span>
+              <span v-else-if="template.kind === 'yoga'">Yoga</span>
+              <span v-else-if="template.kind === 'rowing'">Rameur</span>
               <span v-else-if="template.kind === 'mixed'">Mix cardio + renfo</span>
               · ~{{ totalDurationMinutes }} min
             </span>

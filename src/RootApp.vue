@@ -23,6 +23,7 @@ import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
 import PlanWeekDialog from './components/PlanWeekDialog.vue'
 import WorkoutPlayerDialog from './components/WorkoutPlayerDialog.vue'
 import MorningDialog from './components/MorningFlowDialog.vue'
+import EveningDialog from './components/EveningFlowDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -201,20 +202,7 @@ type DialogWorkoutKindForHandler =
   | 'auto'
 
 function updateSelectedKind(value: DialogWorkoutKindForHandler) {
-  // Map extended dialog kinds back to a WorkoutKind used by the catalog
-  let mapped: WorkoutKind | 'auto'
-
-  if (value === 'auto') {
-    mapped = 'auto'
-  } else if (value === 'jump' || value === 'rowing') {
-    mapped = 'cardio'
-  } else if (value === 'stretch' || value === 'yoga') {
-    mapped = 'mobility'
-  } else {
-    mapped = value
-  }
-
-  selectedKind.value = mapped
+  selectedKind.value = value
 }
 
 const calendarMonthStressSummary = computed(() => {
@@ -610,9 +598,9 @@ const isWeeklySessionsDialogOpen = ref(false)
 const isAdjustGoalDialogOpen = ref(false)
 const goalDraft = ref<number | null>(null)
 
-const isMorningDialogOpen = ref(false)
 
-const isWellbeingDialogOpen = ref(false)
+const isMorningDialogOpen = ref(false)
+const isEveningDialogOpen = ref(false)
 const isWellbeingPlayerOpen = ref(false)
 const activeExerciseKey = ref<string | null>(null)
 
@@ -845,6 +833,14 @@ async function onEnableNotifications() {
   }
 }
 
+async function onEveningConfirm(payload: { level: number; note?: string; question?: string }) {
+  await submitCheckin(payload.level, payload.note, payload.question)
+
+  if (!checkinError.value) {
+    isEveningDialogOpen.value = false
+  }
+}
+
 async function signOutAndRedirect() {
   await signOut()
   router.push({ name: 'today' })
@@ -858,6 +854,12 @@ function onTodayRowClick(key: string) {
   if (key === 'morning-dialog') {
     if (!isAuthenticated) return
     isMorningDialogOpen.value = true
+    return
+  }
+
+  if (key === 'evening-dialog') {
+    if (!isAuthenticated) return
+    isEveningDialogOpen.value = true
     return
   }
 
@@ -1111,6 +1113,7 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingPlayerOpen.value ||
       isMonthCalendarOpen.value ||
       isMorningDialogOpen.value ||
+      isEveningDialogOpen.value ||
       isProfileOpen.value
     ) {
       isAddSessionDialogOpen.value = false
@@ -1120,6 +1123,7 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingPlayerOpen.value = false
       isMonthCalendarOpen.value = false
       isMorningDialogOpen.value = false
+      isEveningDialogOpen.value = false
       if (isProfileOpen.value) {
         router.push({ name: 'today' })
       }
@@ -1349,6 +1353,14 @@ onBeforeUnmount(() => {
       :is-saving="isDailyPlanSaving"
       @close="isMorningDialogOpen = false"
       @confirm="onMorningConfirm"
+    />
+
+    <EveningDialog
+      v-if="isEveningDialogOpen"
+      :display-name="displayName"
+      :is-saving="isCheckinSaving"
+      @close="isEveningDialogOpen = false"
+      @confirm="onEveningConfirm"
     />
 
     <MonthCalendarDialog

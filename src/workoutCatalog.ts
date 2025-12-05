@@ -5,7 +5,7 @@
 
 export type WorkoutKind = 'cardio' | 'strength' | 'mobility' | 'mixed' | 'jump' | 'stretch' | 'yoga' | 'rowing'
 
-export type ExerciseCategory = 'cardio' | 'strength' | 'mobility'
+export type ExerciseCategory = 'cardio' | 'strength' | 'mobility' | 'jump' | 'stretch' | 'yoga' | 'rowing'
 
 export interface Exercise {
   id: string
@@ -234,6 +234,26 @@ export const EXERCISES: Exercise[] = [
     cues: ['Pose complète du pied'],
   },
 
+  // --- Cardio corde a sauter / rameur ---
+  {
+    id: 'EXO_CARDIO_JUMP_ROPE_EASY',
+    name: 'Corde a sauter douce',
+    category: 'cardio',
+    targets: ['jambes', 'cardio'],
+    level: 2,
+    description: 'Petits sauts sur place comme a la corde, impact controle.',
+    cues: ['Reste pres du sol', 'Garde les epaules detendues'],
+  },
+  {
+    id: 'EXO_CARDIO_ROWING_EASY',
+    name: 'Rameur rythme doux',
+    category: 'cardio',
+    targets: ['dos', 'bras', 'cardio'],
+    level: 2,
+    description: 'Tirages fluides sur le rameur a intensite moderee.',
+    cues: ['Pousse avec les jambes', 'Ramene les coudes pres du corps'],
+  },
+
   // --- Renforcement nouveaux ---
   {
     id: 'EXO_SQUAT_DEMI',
@@ -353,6 +373,26 @@ export const EXERCISES: Exercise[] = [
     level: 1,
     description: "Tourne doucement droite/gauche.",
     cues: ['Hanches fixes'],
+  },
+
+  // --- Yoga et stretching dedies ---
+  {
+    id: 'EXO_YOGA_FLOW_DOUX',
+    name: 'Mini flow yoga debout',
+    category: 'mobility',
+    targets: ['dos', 'hanches', 'epaules'],
+    level: 1,
+    description: 'Enchainement tres doux de postures debout, inspire du yoga.',
+    cues: ['Respire tranquillement', 'Ne force aucune amplitude'],
+  },
+  {
+    id: 'EXO_STRETCH_FULLBODY_DOUX',
+    name: 'Etirements tout le corps',
+    category: 'mobility',
+    targets: ['dos', 'jambes', 'epaules'],
+    level: 1,
+    description: 'Suite de petits etirements debout pour detendre tout le corps.',
+    cues: ['Reste dans le confort', 'Relache les epaules et la machoire'],
   },
 ]
 
@@ -568,6 +608,128 @@ export const WORKOUT_TEMPLATES: WorkoutTemplate[] = [
       { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_FENTE_STATIQUE','EXO_CHAIR_SIT_HOLD'] },
       { type: 'main', durationSeconds: 240, exerciseIds: ['EXO_PUSH_UP_TABLE','EXO_GAINAGE_GENOUX'] },
       { type: 'cooldown', durationSeconds: 120, exerciseIds: ['EXO_ETIREMENT_QUADRICEPS'] },
+    ],
+  },
+
+  // Seances specifiques 10 min — jump / rowing / yoga / stretch
+
+  {
+    key: 'WT_10_MIN_JUMP_EASY',
+    name: 'Corde a sauter douce 10 min',
+    kind: 'jump',
+    level: 2,
+    targetDurationMinutes: 10,
+    blocks: [
+      {
+        type: 'warmup',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_CARDIO_MARCHE_PLACE'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_CARDIO_JUMP_ROPE_EASY'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_CARDIO_JUMP_ROPE_EASY'],
+      },
+      {
+        type: 'cooldown',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_MOB_TWIST_DEBOUT'],
+      },
+    ],
+  },
+
+  {
+    key: 'WT_10_MIN_ROWING_EASY',
+    name: 'Rameur doux 10 min',
+    kind: 'rowing',
+    level: 2,
+    targetDurationMinutes: 10,
+    blocks: [
+      {
+        type: 'warmup',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_MOB_COUP_DEBOUT', 'EXO_MOB_HANCHES'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_CARDIO_ROWING_EASY'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_CARDIO_ROWING_EASY'],
+      },
+      {
+        type: 'cooldown',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_ETIREMENT_TRICEPS'],
+      },
+    ],
+  },
+
+  {
+    key: 'WT_10_MIN_YOGA_SOFT',
+    name: 'Yoga debout doux 10 min',
+    kind: 'yoga',
+    level: 1,
+    targetDurationMinutes: 10,
+    blocks: [
+      {
+        type: 'warmup',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_MOB_COUP_DEBOUT'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_YOGA_FLOW_DOUX'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_YOGA_FLOW_DOUX'],
+      },
+      {
+        type: 'cooldown',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_ETIREMENT_ISCHIOS_MUR'],
+      },
+    ],
+  },
+
+  {
+    key: 'WT_10_MIN_STRETCH_SOFT',
+    name: 'Etirements doux 10 min',
+    kind: 'stretch',
+    level: 1,
+    targetDurationMinutes: 10,
+    blocks: [
+      {
+        type: 'warmup',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_MOB_COUP_DEBOUT'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_STRETCH_FULLBODY_DOUX'],
+      },
+      {
+        type: 'main',
+        durationSeconds: 240,
+        exerciseIds: ['EXO_STRETCH_FULLBODY_DOUX'],
+      },
+      {
+        type: 'cooldown',
+        durationSeconds: 120,
+        exerciseIds: ['EXO_ETIREMENT_QUADRICEPS'],
+      },
     ],
   },
 

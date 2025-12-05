@@ -72,6 +72,10 @@ export function useTodayStats(session: Ref<Session | null>) {
       strength: 'Renfo',
       mobility: 'Mobilite',
       mixed: 'Mixte',
+      jump: 'Corde à sauter',
+      stretch: 'Flexibilite',
+      yoga: 'Yoga',
+      rowing: 'Rameur',
       other: 'Autre',
     }
 

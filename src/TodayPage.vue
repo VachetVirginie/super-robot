@@ -82,13 +82,6 @@ function onRowClick(key: string) {
 //   return `Tu as prevu ${count} moments rien que pour toi cette semaine. C'est deja tres bien.`
 // })
 
-const contractSummary = computed(() => {
-  const goal = props.perWeekGoal
-  if (goal == null) {
-    return "Pas d'objectif fixe pour l'instant, et c'est ok. Tu pourras en choisir un tres doux dans 'Ma semaine'."
-  }
-})
-
 const selectedStress = ref<number | null>(null)
 const eveningNote = ref<string>('')
 
@@ -204,28 +197,26 @@ async function onSubmitCheckin() {
     <section class="card planweek-section">
       <div class="planweek-header">
         <div>
-          <h2 class="planweek-title">Commencer ma journee</h2>
-          <p class="planweek-subtitle">
-            On prend un instant pour toi avant de te lancer dans la journee.
+          <div class="planweek-label-row">
+            <span class="planweek-label">Matin</span>
+          </div>
+          <h2 class="planweek-title">Poser ton matin en 1 minute</h2>
+          <p v-if="!todayMorningSummary" class="planweek-subtitle">
+            On clarifie ce qui compte aujourd'hui, sans to-do interminable.
+          </p>
+          <p v-else class="planweek-subtitle">
+            Ton matin est pose. Tu peux juste suivre le fil.
           </p>
           <!-- <p class="planweek-summary">
             {{ planSummary }}
           </p> -->
-          <p class="planweek-contract">
-            {{ contractSummary }}
-          </p>
           <p
             v-if="todayMorningSummary"
             class="planweek-contract"
           >
             {{ todayMorningSummary }}
           </p>
-          <button
-            v-else
-            type="button"
-            class="secondary planweek-cta"
-            @click="onRowClick('morning-dialog')"
-          >
+          <button v-else type="button" class="secondary planweek-cta" @click="onRowClick('morning-dialog')">
             Préparer ma journée
           </button>
         </div>
@@ -233,6 +224,9 @@ async function onSubmitCheckin() {
     </section>
 
     <section class="card checkin-card mini-action-card">
+      <div class="planweek-label-row">
+        <span class="planweek-label">Midi</span>
+      </div>
       <h2 class="checkin-title">Ma pause du milieu de journee</h2>
       <p class="checkin-subtitle">
         Choisis ce qui t'aiderait le plus : bouger un peu ou faire une pause zen.
@@ -257,6 +251,9 @@ async function onSubmitCheckin() {
     </section>
 
     <section class="card checkin-card">
+      <div class="planweek-label-row">
+        <span class="planweek-label">Soir</span>
+      </div>
       <h2 class="checkin-title">Terminer ma journee</h2>
       <p class="checkin-subtitle">
         Avant de te déconnecter, prends un instant pour respirer et faire le point sur ta journée.
@@ -348,6 +345,26 @@ async function onSubmitCheckin() {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.planweek-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.planweek-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.planweek-date {
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
 .planweek-title {

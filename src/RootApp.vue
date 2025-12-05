@@ -141,7 +141,7 @@ const {
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
   if (!c) {
-    return "Pas encore de check-in aujourd'hui."
+    return 
   }
   const level = typeof c.stress_level === 'number' ? c.stress_level : null
   if (level === null) {

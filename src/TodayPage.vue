@@ -35,6 +35,7 @@ const props = defineProps<{
   onUpdateEmail: (value: string) => void
   onUpdatePassword: (value: string) => void
   submitAuth: () => void | Promise<void>
+  onForgotPassword: () => void | Promise<void>
   toggleAuthMode: () => void
   onTodayRowClick: (key: string) => void
   onEnableNotifications: () => void | Promise<void>
@@ -51,6 +52,10 @@ function onEmailInput(event: Event) {
 function onPasswordInput(event: Event) {
   const target = event.target as HTMLInputElement | null
   props.onUpdatePassword(target?.value ?? '')
+}
+
+async function onForgotPasswordClick() {
+  await props.onForgotPassword()
 }
 
 function onRowClick(key: string) {
@@ -138,6 +143,15 @@ async function onSubmitCheckin() {
         <span v-else>{{ submitLabel }}</span>
       </button>
     </form>
+    <button
+      v-if="isLoginMode"
+      type="button"
+      class="link"
+      :disabled="isAuthLoading"
+      @click="onForgotPasswordClick"
+    >
+      Mot de passe oublie ?
+    </button>
     <button type="button" class="link" @click="toggleAuthMode">
       {{ switchLabel }}
     </button>

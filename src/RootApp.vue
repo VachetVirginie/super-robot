@@ -45,6 +45,7 @@ const {
   switchLabel,
   submitAuth,
   toggleAuthMode,
+  requestPasswordReset,
   signOut,
 } = useAuth()
 
@@ -1229,6 +1230,7 @@ onBeforeUnmount(() => {
         :on-update-email="(value: string) => { email = value }"
         :on-update-password="(value: string) => { password = value }"
         :submit-auth="submitAuth"
+        :on-forgot-password="requestPasswordReset"
         :toggle-auth-mode="toggleAuthMode"
         :on-today-row-click="onTodayRowClick"
         :on-enable-notifications="onEnableNotifications"

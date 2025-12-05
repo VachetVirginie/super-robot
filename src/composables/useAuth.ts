@@ -66,6 +66,35 @@ export function useAuth() {
     }
   }
 
+  async function requestPasswordReset() {
+    if (!email.value) {
+      authError.value = 'Merci de saisir ton email pour recevoir un lien.'
+      return
+    }
+
+    authError.value = null
+    authMessage.value = null
+    isAuthLoading.value = true
+
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
+        redirectTo,
+      })
+
+      if (error) {
+        authError.value = "Impossible d'envoyer le lien de reinitialisation."
+        return
+      }
+
+      authMessage.value =
+        "Si cet email est connu, un lien de reinitialisation vient de t'etre envoye."
+    } finally {
+      isAuthLoading.value = false
+    }
+  }
+
   function toggleAuthMode() {
     authError.value = null
     authMessage.value = null
@@ -111,6 +140,7 @@ export function useAuth() {
     submitLoadingLabel,
     switchLabel,
     submitAuth,
+    requestPasswordReset,
     toggleAuthMode,
     signOut,
   }

@@ -137,7 +137,7 @@ const intentionLabel = computed(() => {
 
 const isLastStep = computed(() => currentStep.value === 6)
 
-const primaryCtaLabel = computed(() => (isLastStep.value ? "C'est parti pour aujourd'hui" : 'Continuer'))
+const primaryCtaLabel = computed(() => (isLastStep.value ? 'Poser mon matin' : 'Continuer'))
 
 function moodIconUrl(key: string) {
   return `/icons/mood/${key}.svg`
@@ -211,7 +211,7 @@ function onConfirm() {
           class="morning-step-mood"
         >
           <p class="morning-text morning-intro">
-            On va preparer un mini plan realiste pour t'aider a passer une bonne journee.
+            On prend 1 minute pour poser ton matin, sans pression.
           </p>
 
           <div class="morning-step-main morning-mood-main">
@@ -251,7 +251,7 @@ function onConfirm() {
           <div class="morning-step-main">
             <h4 class="morning-section-title">Ton niveau d'energie</h4>
             <p class="morning-text">
-              Aujourdhui, tu te sens {{ energyLabel }}.
+              Aujourdhui, ton energie est plutot {{ energyLabel }}.
             </p>
             <div class="morning-energy-row">
               <span class="morning-energy-label">Pas du tout</span>
@@ -272,7 +272,7 @@ function onConfirm() {
           <div class="morning-step-main">
             <h4 class="morning-section-title">Ta priorite pour aujourdhui</h4>
             <p class="morning-text">
-              Tu peux en choisir jusqua 3, ou passer cette etape.
+              Tu peux choisir jusqua 3 priorites, ou passer si tu preferes.
             </p>
             <div class="morning-options-row morning-priorities-grid">
               <button
@@ -295,7 +295,7 @@ function onConfirm() {
               Tu avais choisi : {{ previousSlotLabel }}. Tu veux changer ?
             </p>
             <h4 class="morning-section-title">Choisir ton moment pour bouger</h4>
-            <p class="morning-text">Tu preferes bouger quand aujourdhui ?</p>
+            <p class="morning-text">On place un petit moment pour bouger : tu preferes quand aujourdhui ?</p>
 
             <div class="morning-options-row">
               <button
@@ -320,7 +320,7 @@ function onConfirm() {
           <div class="morning-step-main">
             <h4 class="morning-section-title">Ton intention du jour</h4>
             <p class="morning-text">
-              Et aujourdhui, tu voudrais plutot te sentir...
+              Pour aujourdhui, tu voudrais surtout te sentir...
             </p>
 
             <div class="morning-options-row">
@@ -341,7 +341,7 @@ function onConfirm() {
         <section v-else>
           <div class="morning-step-main">
             <p class="morning-text">
-              Pour aujourdhui, tu as choisi de bouger
+              Ce matin, tu as prevu de bouger
               <span v-if="slotLabel">{{ slotLabel.toLowerCase() }}</span>
               <span v-else>au moment qui te conviendra le mieux</span>
               et de viser

@@ -106,7 +106,7 @@ const priorityOptions = [
   { value: 'work', label: 'Travail' },
   { value: 'relax', label: 'Se detendre' },
   { value: 'family', label: 'Famille' },
-  { value: 'friends', label: 'Amites' },
+  { value: 'friends', label: 'Amis' },
   { value: 'selfcare', label: 'Prendre soin de toi' },
   { value: 'health', label: 'Condition physique' },
 ]
@@ -214,7 +214,7 @@ function onConfirm() {
             On va preparer un mini plan realiste pour t'aider a passer une bonne journee.
           </p>
 
-          <div class="morning-mood-main">
+          <div class="morning-step-main morning-mood-main">
             <h4 class="morning-section-title">Comment tu te sens ce matin ?</h4>
             <div class="morning-options-row morning-mood-row">
               <button
@@ -248,104 +248,114 @@ function onConfirm() {
         </section>
 
         <section v-else-if="currentStep === 2">
-          <h4 class="morning-section-title">Ton niveau d'energie</h4>
-          <p class="morning-text">
-            Aujourdhui, tu te sens {{ energyLabel }}.
-          </p>
-          <div class="morning-energy-row">
-            <span class="morning-energy-label">Pas du tout</span>
-            <input
-              v-model="energyLevel"
-              type="range"
-              min="0"
-              max="4"
-              step="1"
-              class="morning-energy-slider"
-            />
-            <span class="morning-energy-label">Au max</span>
+          <div class="morning-step-main">
+            <h4 class="morning-section-title">Ton niveau d'energie</h4>
+            <p class="morning-text">
+              Aujourdhui, tu te sens {{ energyLabel }}.
+            </p>
+            <div class="morning-energy-row">
+              <span class="morning-energy-label">Pas du tout</span>
+              <input
+                v-model="energyLevel"
+                type="range"
+                min="0"
+                max="4"
+                step="1"
+                class="morning-energy-slider"
+              />
+              <span class="morning-energy-label">Au max</span>
+            </div>
           </div>
         </section>
 
         <section v-else-if="currentStep === 3">
-          <h4 class="morning-section-title">Ta priorite pour aujourdhui</h4>
-          <p class="morning-text">
-            Tu peux en choisir jusqua 3, ou passer cette etape.
-          </p>
-          <div class="morning-options-row morning-priorities-grid">
-            <button
-              v-for="option in priorityOptions"
-              :key="option.value"
-              type="button"
-              class="morning-intention-option"
-              :class="{ 'is-selected': selectedPriorities.includes(option.value) }"
-              @click="togglePriority(option.value)"
-            >
-              {{ option.label }}
-            </button>
+          <div class="morning-step-main">
+            <h4 class="morning-section-title">Ta priorite pour aujourdhui</h4>
+            <p class="morning-text">
+              Tu peux en choisir jusqua 3, ou passer cette etape.
+            </p>
+            <div class="morning-options-row morning-priorities-grid">
+              <button
+                v-for="option in priorityOptions"
+                :key="option.value"
+                type="button"
+                class="morning-intention-option"
+                :class="{ 'is-selected': selectedPriorities.includes(option.value) }"
+                @click="togglePriority(option.value)"
+              >
+                {{ option.label }}
+              </button>
+            </div>
           </div>
         </section>
 
         <section v-else-if="currentStep === 4">
-          <p v-if="previousSlotLabel" class="morning-previous-slot">
-            Tu avais choisi : {{ previousSlotLabel }}. Tu veux changer ?
-          </p>
-          <h4 class="morning-section-title">Choisir ton moment pour bouger</h4>
-          <p class="morning-text">Tu preferes bouger quand aujourdhui ?</p>
+          <div class="morning-step-main">
+            <p v-if="previousSlotLabel" class="morning-previous-slot">
+              Tu avais choisi : {{ previousSlotLabel }}. Tu veux changer ?
+            </p>
+            <h4 class="morning-section-title">Choisir ton moment pour bouger</h4>
+            <p class="morning-text">Tu preferes bouger quand aujourdhui ?</p>
 
-          <div class="morning-options-row">
-            <button
-              v-for="option in slotOptions"
-              :key="option.value"
-              type="button"
-              class="morning-option"
-              :class="{ 'is-selected': selectedSlot === option.value }"
-              @click="selectedSlot = option.value"
-            >
-              {{ option.label }}
-            </button>
+            <div class="morning-options-row">
+              <button
+                v-for="option in slotOptions"
+                :key="option.value"
+                type="button"
+                class="morning-option"
+                :class="{ 'is-selected': selectedSlot === option.value }"
+                @click="selectedSlot = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+
+            <p class="morning-microcopy">
+              Ce n'est pas un engagement strict : juste une direction.
+            </p>
           </div>
-
-          <p class="morning-microcopy">
-            Ce n'est pas un engagement strict : juste une direction.
-          </p>
         </section>
 
         <section v-else-if="currentStep === 5">
-          <h4 class="morning-section-title">Ton intention du jour</h4>
-          <p class="morning-text">
-            Et aujourdhui, tu voudrais plutot te sentir...
-          </p>
+          <div class="morning-step-main">
+            <h4 class="morning-section-title">Ton intention du jour</h4>
+            <p class="morning-text">
+              Et aujourdhui, tu voudrais plutot te sentir...
+            </p>
 
-          <div class="morning-options-row">
-            <button
-              v-for="option in intentionOptions"
-              :key="option.value"
-              type="button"
-              class="morning-intention-option"
-              :class="{ 'is-selected': selectedIntention === option.value }"
-              @click="selectedIntention = option.value"
-            >
-              {{ option.label }}
-            </button>
+            <div class="morning-options-row">
+              <button
+                v-for="option in intentionOptions"
+                :key="option.value"
+                type="button"
+                class="morning-intention-option"
+                :class="{ 'is-selected': selectedIntention === option.value }"
+                @click="selectedIntention = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
           </div>
         </section>
 
         <section v-else>
-          <p class="morning-text">
-            Pour aujourdhui, tu as choisi de bouger
-            <span v-if="slotLabel">{{ slotLabel.toLowerCase() }}</span>
-            <span v-else>au moment qui te conviendra le mieux</span>
-            et de viser
-            <span v-if="intentionLabel">"{{ intentionLabel.toLowerCase() }}"</span>
-            <span v-else>ce qui te semble possible</span>
-            .
-          </p>
-          <p class="morning-contract">
-            {{ contractMainLine }}
-          </p>
-          <p v-if="contractProgressLine" class="morning-contract">
-            {{ contractProgressLine }}
-          </p>
+          <div class="morning-step-main">
+            <p class="morning-text">
+              Pour aujourdhui, tu as choisi de bouger
+              <span v-if="slotLabel">{{ slotLabel.toLowerCase() }}</span>
+              <span v-else>au moment qui te conviendra le mieux</span>
+              et de viser
+              <span v-if="intentionLabel">"{{ intentionLabel.toLowerCase() }}"</span>
+              <span v-else>ce qui te semble possible</span>
+              .
+            </p>
+            <p class="morning-contract">
+              {{ contractMainLine }}
+            </p>
+            <p v-if="contractProgressLine" class="morning-contract">
+              {{ contractProgressLine }}
+            </p>
+          </div>
         </section>
       </div>
 
@@ -463,6 +473,7 @@ function onConfirm() {
   margin-bottom: 2rem;
 }
 
+.morning-step-main,
 .morning-mood-main {
   display: flex;
   flex-direction: column;

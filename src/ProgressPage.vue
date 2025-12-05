@@ -178,7 +178,7 @@ const morningPriorityLabels = computed(() => {
     work: 'Travail',
     relax: 'Se detendre',
     family: 'Famille',
-    friends: 'Amites',
+    friends: 'Amis',
     selfcare: 'Prendre soin de toi',
     health: 'Condition physique',
   }

@@ -319,9 +319,49 @@ watch(
 .hero-image {
   margin-top: 0.85rem;
   border-radius: 0.9rem;
-  height: 130px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
   background:
-    linear-gradient(135deg, #101010 0%, #222222 35%, #000000 100%);
+    radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
+    radial-gradient(circle at 80% 100%, rgba(34, 197, 94, 0.22), transparent 55%),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0.9)),
+    url('/shapes/shape.svg');
+  background-size: 140% 140%, 140% 140%, cover, cover;
+  background-position:
+    0% 0%,
+    100% 100%,
+    center,
+    center;
+  animation: hero-wave 22s ease-in-out infinite;
+}
+
+@keyframes hero-wave {
+  0%,
+  100% {
+    background-position:
+      0% 0%,
+      100% 100%,
+      center,
+      center;
+  }
+  50% {
+    background-position:
+      8% 4%,
+      92% 96%,
+      center,
+      center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image {
+    animation: none;
+    background-position:
+      0% 0%,
+      100% 100%,
+      center,
+      center;
+  }
 }
 .auth-form {
   margin-top: 1rem;

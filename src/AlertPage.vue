@@ -101,7 +101,7 @@ function formatTime(value: number) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
+// const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
 const elapsedSeconds = computed(() => SESSION_DURATION - remainingSeconds.value)
 const formattedElapsedTime = computed(() => formatTime(elapsedSeconds.value))
 const formattedSessionDuration = computed(() => formatTime(SESSION_DURATION))

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import NotificationSchedule from './NotificationSchedule.vue'
 
 const props = defineProps<{
   displayName: string
@@ -28,6 +29,38 @@ const heroName = computed(() => {
   if (props.profileEmail?.trim()) return props.profileEmail
   return 'Athlete'
 })
+
+type NotificationSlot = {
+  id: string
+  label: string
+  description: string
+  time: string
+  enabled: boolean
+}
+
+const notificationSlots = ref<NotificationSlot[]>([
+  {
+    id: 'morning',
+    label: 'Matin',
+    description: 'Un rappel pour preparer calmement ta journee.',
+    time: '08:00',
+    enabled: true,
+  },
+  {
+    id: 'midday',
+    label: 'Milieu de journee',
+    description: 'Un rappel pour faire une pause ou bouger un peu.',
+    time: '12:30',
+    enabled: true,
+  },
+  {
+    id: 'evening',
+    label: 'Soir',
+    description: 'Un rappel pour faire ton check-in de fin de journee.',
+    time: '21:30',
+    enabled: true,
+  },
+])
 
 function onInputDisplayName(event: Event) {
   const target = event.target as HTMLInputElement | null
@@ -111,6 +144,11 @@ function onInputDisplayName(event: Event) {
           <p v-if="notificationsError" class="error">
             {{ notificationsError }}
           </p>
+
+          <NotificationSchedule
+            v-if="isPushSupported"
+            v-model="notificationSlots"
+          />
         </div>
 
         <div class="profile-section">

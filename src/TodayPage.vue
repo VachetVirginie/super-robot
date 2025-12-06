@@ -462,12 +462,16 @@ watch(
   color: #e5e7eb;
   padding: 0.35rem 0;
   font-size: 0.85rem;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out,
+    transform 0.12s ease-out, box-shadow 0.12s ease-out;
 }
 
 .checkin-dot.is-active {
   border-color: #22c55e;
   background: #22c55e;
   color: #020617;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
 }
 
 .checkin-submit {

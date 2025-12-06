@@ -62,12 +62,23 @@ const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer mon chec
 
 const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
 
+function vibrateLight() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(10)
+  }
+}
+
 function goToPreviousStep() {
   if (currentStep.value === 1) {
     emit('close')
     return
   }
   currentStep.value = 1
+}
+
+function selectStress(level: number) {
+  selectedStress.value = level
+  vibrateLight()
 }
 
 function goToNextStep() {
@@ -132,7 +143,7 @@ function onConfirm() {
                 class="evening-dot"
                 :class="{ 'is-active': selectedStress === level }"
                 :disabled="isSaving"
-                @click="selectedStress = level"
+                @click="selectStress(level)"
               >
                 {{ level }}
               </button>
@@ -306,12 +317,16 @@ function onConfirm() {
   color: #e5e7eb;
   padding: 0.4rem 0;
   font-size: 0.85rem;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out,
+    transform 0.12s ease-out, box-shadow 0.12s ease-out;
 }
 
 .evening-dot.is-active {
   border-color: #22c55e;
   background: #22c55e;
   color: #020617;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
 }
 
 .evening-question {

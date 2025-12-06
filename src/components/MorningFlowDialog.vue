@@ -146,6 +146,27 @@ function moodIconUrl(key: string) {
   return `/icons/mood/${key}.svg`
 }
 
+function vibrateLight() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(10)
+  }
+}
+
+function selectMood(value: number) {
+  moodLevel.value = value
+  vibrateLight()
+}
+
+function onSelectSlot(value: TodaySlot) {
+  selectedSlot.value = value
+  vibrateLight()
+}
+
+function onSelectIntention(value: DailyIntention) {
+  selectedIntention.value = value
+  vibrateLight()
+}
+
 function togglePriority(value: string) {
   const list = selectedPriorities.value
   const index = list.indexOf(value)
@@ -157,6 +178,7 @@ function togglePriority(value: string) {
     return
   }
   selectedPriorities.value = [...list, value]
+  vibrateLight()
 }
 
 function goToPreviousStep() {
@@ -227,7 +249,7 @@ function onConfirm() {
                 type="button"
                 class="morning-mood-button"
                 :class="{ 'is-selected': moodLevel === option.value }"
-                @click="moodLevel = option.value"
+                @click="selectMood(option.value)"
               >
                 <img
                   class="morning-mood-icon"
@@ -308,7 +330,7 @@ function onConfirm() {
                 type="button"
                 class="morning-option"
                 :class="{ 'is-selected': selectedSlot === option.value }"
-                @click="selectedSlot = option.value"
+                @click="onSelectSlot(option.value)"
               >
                 {{ option.label }}
               </button>
@@ -334,7 +356,7 @@ function onConfirm() {
                 type="button"
                 class="morning-intention-option"
                 :class="{ 'is-selected': selectedIntention === option.value }"
-                @click="selectedIntention = option.value"
+                @click="onSelectIntention(option.value)"
               >
                 {{ option.label }}
               </button>
@@ -508,6 +530,8 @@ function onConfirm() {
   color: #e5e7eb;
   padding: 0.4rem 0.9rem;
   font-size: 0.85rem;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out,
+    transform 0.12s ease-out, box-shadow 0.12s ease-out;
 }
 
 .morning-option.is-selected,
@@ -515,6 +539,8 @@ function onConfirm() {
   border-color: #22c55e;
   background: #22c55e;
   color: #022c22;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
 }
 
 .morning-microcopy {
@@ -593,6 +619,11 @@ function onConfirm() {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.12s ease-out;
+}
+
+.morning-mood-button.is-selected {
+  transform: scale(1.05);
 }
 
 .morning-mood-icon {
@@ -603,11 +634,14 @@ function onConfirm() {
   border: 1px solid rgba(148, 163, 184, 0.6);
   object-fit: contain;
   filter: invert(0.9);
+  transition: border-color 0.12s ease-out, box-shadow 0.12s ease-out,
+    background-color 0.12s ease-out;
 }
 
 .morning-mood-button.is-selected .morning-mood-icon {
   border-color: #22c55e;
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.6);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.6), 0 8px 20px rgba(22, 163, 74, 0.45);
+  /* background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), #020617); */
 }
 
 .morning-mood-labels {

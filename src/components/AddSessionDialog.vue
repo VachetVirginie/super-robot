@@ -54,6 +54,22 @@ const selectedKindLabel = computed(() => {
   return option?.label ?? "Auto (laisse l'app choisir)"
 })
 
+function vibrateLight() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(10)
+  }
+}
+
+function updateDuration(value: 5 | 10 | 15 | 20 | 30) {
+  emit('update:selected-duration', value)
+  vibrateLight()
+}
+
+function updateKind(value: DialogWorkoutKind) {
+  emit('update:selected-kind', value)
+  vibrateLight()
+}
+
 function goToNextStep() {
   if (!isLastStep.value) {
     currentStep.value = 2
@@ -105,7 +121,7 @@ function goToPreviousStep() {
                 class="session-chip"
                 :class="{ 'is-active': selectedDuration === value }"
                 :disabled="isSavingSession"
-                @click="emit('update:selected-duration', value)"
+                @click="updateDuration(value)"
               >
                 {{ value }} min
               </button>
@@ -133,7 +149,7 @@ function goToPreviousStep() {
                 class="session-chip"
                 :class="{ 'is-active': selectedKind === option.key }"
                 :disabled="isSavingSession"
-                @click="emit('update:selected-kind', option.key)"
+                @click="updateKind(option.key)"
               >
                 {{ option.label }}
               </button>
@@ -269,12 +285,16 @@ function goToPreviousStep() {
   color: #e5e7eb;
   padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out,
+    transform 0.12s ease-out, box-shadow 0.12s ease-out;
 }
 
 .session-chip.is-active {
   border-color: #22c55e;
   background: #22c55e;
   color: #022c22;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
 }
 
 .session-hint {

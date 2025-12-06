@@ -24,6 +24,7 @@ import PlanWeekDialog from './components/PlanWeekDialog.vue'
 import WorkoutPlayerDialog from './components/WorkoutPlayerDialog.vue'
 import MorningDialog from './components/MorningFlowDialog.vue'
 import EveningDialog from './components/EveningFlowDialog.vue'
+import MiddayDialog from './components/MiddayFlowDialog.vue'
 
 const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
 const errorMessage = ref<string | null>(null)
@@ -100,6 +101,8 @@ const {
   weeklyAverageStress,
   weeklyCheckinsCount,
   weeklyStressByDay,
+  weeklyAverageStressMidday,
+  weeklyAverageStressEvening,
   getMonthStressByDay,
 } = useCheckins(session)
 
@@ -150,7 +153,10 @@ const todayCheckinSummary = computed(() => {
   return `Niveau de stress: ${level}/5 aujourdhui.`
 })
 
-const hasTodayCheckin = computed(() => !!todayCheckin.value)
+const hasTodayCheckin = computed(() => {
+  const c = todayCheckin.value as { moment?: string } | null
+  return !!c && c.moment === 'evening'
+})
 
 const todayMorningSummary = computed(() => {
   const row = todayMorningState.value
@@ -601,6 +607,7 @@ const isAdjustGoalDialogOpen = ref(false)
 const goalDraft = ref<number | null>(null)
 
 const isMorningDialogOpen = ref(false)
+const isMiddayDialogOpen = ref(false)
 const isEveningDialogOpen = ref(false)
 const isWellbeingDialogOpen = ref(false)
 const isWellbeingPlayerOpen = ref(false)
@@ -893,6 +900,33 @@ async function onEveningConfirm(payload: { level: number; note?: string; questio
   }
 }
 
+function onMiddayChooseMove(payload: { moodLevel: number | null }) {
+  if (!isAuthenticated) {
+    isMiddayDialogOpen.value = false
+    return
+  }
+
+  if (typeof payload.moodLevel === 'number') {
+    const stressLevel = 6 - payload.moodLevel
+    void recordCheckin(stressLevel, undefined, 'Etat de milieu de journee', 'midday')
+  }
+
+  selectedDuration.value = 5
+  selectedKind.value = 'auto'
+  isMiddayDialogOpen.value = false
+  isAddSessionDialogOpen.value = true
+}
+
+function onMiddayChooseBreathe(payload: { moodLevel: number | null }) {
+  if (typeof payload.moodLevel === 'number' && isAuthenticated) {
+    const stressLevel = 6 - payload.moodLevel
+    void recordCheckin(stressLevel, undefined, 'Etat de milieu de journee', 'midday')
+  }
+
+  isMiddayDialogOpen.value = false
+  startWellbeingExercise()
+}
+
 async function signOutAndRedirect() {
   await signOut()
   router.push({ name: 'today' })
@@ -906,6 +940,12 @@ function onTodayRowClick(key: string) {
   if (key === 'morning-dialog') {
     if (!isAuthenticated) return
     isMorningDialogOpen.value = true
+    return
+  }
+
+  if (key === 'midday-dialog') {
+    if (!isAuthenticated) return
+    isMiddayDialogOpen.value = true
     return
   }
 
@@ -1165,6 +1205,7 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingPlayerOpen.value ||
       isMonthCalendarOpen.value ||
       isMorningDialogOpen.value ||
+      isMiddayDialogOpen.value ||
       isEveningDialogOpen.value ||
       isProfileOpen.value
     ) {
@@ -1175,6 +1216,7 @@ function handleKeydown(event: KeyboardEvent) {
       isWellbeingPlayerOpen.value = false
       isMonthCalendarOpen.value = false
       isMorningDialogOpen.value = false
+      isMiddayDialogOpen.value = false
       isEveningDialogOpen.value = false
       if (isProfileOpen.value) {
         router.push({ name: 'today' })
@@ -1263,6 +1305,8 @@ onBeforeUnmount(() => {
         :weekly-morning-mood="weeklyAverageMorningMood"
         :weekly-morning-energy="weeklyAverageMorningEnergy"
         :weekly-morning-priorities="weeklyMorningPriorities"
+        :weekly-average-stress-midday="weeklyAverageStressMidday"
+        :weekly-average-stress-evening="weeklyAverageStressEvening"
         :on-open-week-plan="openPlanWeekDialog"
         :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
@@ -1407,6 +1451,15 @@ onBeforeUnmount(() => {
       :is-saving="isDailyPlanSaving"
       @close="isMorningDialogOpen = false"
       @confirm="onMorningConfirm"
+    />
+
+    <MiddayDialog
+      v-if="isMiddayDialogOpen"
+      :display-name="displayName"
+      :has-breathing-option="!!todaysExercise"
+      @close="isMiddayDialogOpen = false"
+      @choose-move="onMiddayChooseMove"
+      @choose-breathe="onMiddayChooseBreathe"
     />
 
     <EveningDialog

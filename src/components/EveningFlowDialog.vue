@@ -62,10 +62,32 @@ const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer' : 'Cont
 
 const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
 
+const moodOptions = [
+  { value: 1, label: 'Tres tendue', icon: 'very-sad' },
+  { value: 2, label: 'Plutot tendue', icon: 'sad' },
+  { value: 3, label: 'Comme dhabitude', icon: 'neutral' },
+  { value: 4, label: 'Plutot apaisee', icon: 'happy' },
+  { value: 5, label: 'Tres apaisee', icon: 'very-happy' },
+]
+
+const selectedMood = computed(() => {
+  if (selectedStress.value == null) return null
+  return moodOptions.find((opt) => opt.value === selectedStress.value) ?? null
+})
+
+function moodIconUrl(key: string) {
+  return `/icons/mood/${key}.svg`
+}
+
 function vibrateLight() {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     navigator.vibrate(10)
   }
+}
+
+function selectStress(value: number) {
+  selectedStress.value = value
+  vibrateLight()
 }
 
 function goToPreviousStep() {
@@ -74,11 +96,6 @@ function goToPreviousStep() {
     return
   }
   currentStep.value = 1
-}
-
-function onStressSliderInput() {
-  if (!selectedStress.value) return
-  vibrateLight()
 }
 
 function goToNextStep() {
@@ -133,24 +150,37 @@ function onConfirm() {
           <div class="evening-step-main evening-section-card">
             <h4 class="evening-section-title">Ton niveau de stress ce soir</h4>
             <p class="evening-text">
-              De 1 (tres calme) a 5 (au max), ou tu te situes ?
+              En un coup d'oeil, ou tu te situes ce soir ?
             </p>
-            <div class="evening-scale-row">
-              <span class="evening-scale-label">Calme</span>
-              <input
-                v-model.number="selectedStress"
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                class="evening-stress-slider"
-                :disabled="isSaving"
-                @input="onStressSliderInput"
-              />
-              <span class="evening-scale-label">Eleve</span>
+            <div class="evening-mood-row">
+              <button
+                v-for="option in moodOptions"
+                :key="option.value"
+                type="button"
+                class="evening-mood-button"
+                :class="{ 'is-selected': selectedStress === option.value }"
+                @click="selectStress(option.value)"
+              >
+                <img
+                  class="evening-mood-icon"
+                  :src="moodIconUrl(option.icon)"
+                  :alt="option.label"
+                />
+              </button>
             </div>
-            <p v-if="selectedStress" class="evening-scale-value">
-              Niveau : {{ selectedStress }}/5
+            <div class="evening-mood-labels">
+              <span class="evening-mood-label-left">
+                {{ moodOptions[0]?.label }}
+              </span>
+              <span class="evening-mood-label-right">
+                {{ moodOptions[moodOptions.length - 1]?.label }}
+              </span>
+            </div>
+            <p
+              v-if="selectedMood && selectedStress"
+              class="evening-mood-rating"
+            >
+              {{ selectedStress }} / 5 - {{ selectedMood.label }}
             </p>
           </div>
         </section>
@@ -379,4 +409,69 @@ function onConfirm() {
 .evening-cta {
   margin-left: auto;
 }
+
+.evening-mood-row {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.evening-mood-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease-out;
+  animation: evening-mood-pop 0.25s ease-out;
+}
+
+.evening-mood-button.is-selected {
+  transform: scale(1.05);
+}
+
+.evening-mood-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  object-fit: contain;
+  filter: invert(0.9);
+  transition: border-color 0.12s ease-out, box-shadow 0.12s ease-out,
+    background-color 0.12s ease-out;
+}
+
+.evening-mood-button.is-selected .evening-mood-icon {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.6), 0 8px 20px rgba(22, 163, 74, 0.45);
+}
+
+@keyframes evening-mood-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.evening-mood-labels {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.evening-mood-rating {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
 </style>

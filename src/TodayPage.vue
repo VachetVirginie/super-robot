@@ -146,6 +146,7 @@ watch(
       {{ todaysMotivation.body }}
     </p>
     <div class="hero-image"></div>
+    <!-- <img src="/images/dd.jpg" alt="Hero" /> -->
   </section>
 
   <section v-if="!isAuthenticated" class="card">
@@ -234,18 +235,10 @@ watch(
       <div class="checkin-actions">
         <button
           type="button"
-          class="secondary checkin-action"
-          @click="onRowClick('today-quick-5')"
+          class="primary checkin-submit"
+          @click="onRowClick('midday-dialog')"
         >
-          Bouger 5 minutes
-        </button>
-        <button
-          v-if="todaysExercise"
-          type="button"
-          class="secondary checkin-action"
-          @click="startWellbeingExercise"
-        >
-          Respirer 3 minutes
+          Faire ma pause
         </button>
       </div>
     </section>
@@ -262,7 +255,6 @@ watch(
         {{ todayCheckinSummary }}
       </p>
       <button
-        v-if="!hasTodayCheckin"
         type="button"
         class="primary checkin-submit"
         @click="onRowClick('evening-dialog')"

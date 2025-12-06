@@ -9,6 +9,7 @@ interface CheckinRow {
   stress_level: number | null
   note: string | null
   question: string | null
+  moment: 'midday' | 'evening'
 }
 
 export function useCheckins(session: Ref<Session | null>) {
@@ -39,8 +40,9 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, stress_level, note, question')
+        .select('id, created_at, stress_level, note, question, moment')
         .eq('user_id', user.id)
+        .eq('moment', 'evening')
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString())
         .order('created_at', { ascending: false })
@@ -84,7 +86,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, stress_level, note')
+        .select('id, created_at, stress_level, note, moment')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', now.toISOString())
@@ -113,7 +115,12 @@ export function useCheckins(session: Ref<Session | null>) {
     }
   }
 
-  async function recordCheckin(stressLevel: number, note?: string, question?: string) {
+  async function recordCheckin(
+    stressLevel: number,
+    note?: string,
+    question?: string,
+    moment: 'midday' | 'evening' = 'evening',
+  ) {
     const user = session.value?.user
     if (!user) {
       return
@@ -134,6 +141,7 @@ export function useCheckins(session: Ref<Session | null>) {
         stress_level: stressLevel,
         note: note ?? null,
         question: question ?? null,
+        moment,
       })
 
       if (error) {
@@ -142,12 +150,13 @@ export function useCheckins(session: Ref<Session | null>) {
 
         // Contrainte d'unicite : un check-in par jour.
         // Si on a deja un check-in pour aujourd'hui, on met simplement a jour la ligne existante.
-        if (code === '23505' || msg.includes('wellbeing_checkins_user_day_unique')) {
+        if (code === '23505') {
           const { data: existingRows, error: selectError } = await supabase
             .from('wellbeing_checkins')
             .select('id')
             .eq('user_id', user.id)
             .eq('day', dayIso)
+            .eq('moment', moment)
             .limit(1)
 
           if (!selectError && existingRows && existingRows.length) {
@@ -302,6 +311,36 @@ export function useCheckins(session: Ref<Session | null>) {
     return result
   })
 
+  const weeklyAverageStressMidday = computed(() => {
+    const levels = recentCheckins.value
+      .filter((c) => c.moment === 'midday')
+      .map((c) => c.stress_level)
+      .filter((v): v is number => typeof v === 'number')
+
+    if (!levels.length) {
+      return null
+    }
+
+    const sum = levels.reduce((acc, value) => acc + value, 0)
+    const avg = sum / levels.length
+    return Math.round(avg * 10) / 10
+  })
+
+  const weeklyAverageStressEvening = computed(() => {
+    const levels = recentCheckins.value
+      .filter((c) => c.moment === 'evening')
+      .map((c) => c.stress_level)
+      .filter((v): v is number => typeof v === 'number')
+
+    if (!levels.length) {
+      return null
+    }
+
+    const sum = levels.reduce((acc, value) => acc + value, 0)
+    const avg = sum / levels.length
+    return Math.round(avg * 10) / 10
+  })
+
   return {
     todayCheckin,
     isCheckinLoading,
@@ -311,6 +350,8 @@ export function useCheckins(session: Ref<Session | null>) {
     weeklyAverageStress,
     weeklyCheckinsCount,
     weeklyStressByDay,
+    weeklyAverageStressMidday,
+    weeklyAverageStressEvening,
     getMonthStressByDay,
   }
 }

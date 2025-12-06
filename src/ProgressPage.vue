@@ -23,6 +23,8 @@ const props = defineProps<{
   weeklyMorningMood: number | null
   weeklyMorningEnergy: number | null
   weeklyMorningPriorities: { key: string; count: number }[]
+  weeklyAverageStressMidday: number | null
+  weeklyAverageStressEvening: number | null
   onOpenWeekPlan: () => void
   onOpenWeeklySessions: () => void
 }>()
@@ -188,6 +190,44 @@ const morningPriorityLabels = computed(() => {
     label: labels[item.key] ?? item.key,
     count: item.count,
   }))
+})
+
+const middayMoodLabel = computed(() => {
+  const avgStress = props.weeklyAverageStressMidday
+  if (typeof avgStress !== 'number') {
+    return null as string | null
+  }
+  const mood = 6 - avgStress
+  const rounded = Math.round(mood * 10) / 10
+  return `${rounded}/5`
+})
+
+const eveningMoodLabel = computed(() => {
+  const avgStress = props.weeklyAverageStressEvening
+  if (typeof avgStress !== 'number') {
+    return null as string | null
+  }
+  const mood = 6 - avgStress
+  const rounded = Math.round(mood * 10) / 10
+  return `${rounded}/5`
+})
+
+const threeMomentsAverage = computed(() => {
+  const hasMorning = typeof props.weeklyMorningMood === 'number'
+  const hasMidday = typeof props.weeklyAverageStressMidday === 'number'
+  const hasEvening = typeof props.weeklyAverageStressEvening === 'number'
+
+  // On ne calcule la moyenne des 3 moments que si les 3 notes existent.
+  if (!hasMorning || !hasMidday || !hasEvening) {
+    return null as number | null
+  }
+
+  const morning = props.weeklyMorningMood as number
+  const midday = 6 - (props.weeklyAverageStressMidday as number)
+  const evening = 6 - (props.weeklyAverageStressEvening as number)
+
+  const avg = (morning + midday + evening) / 3
+  return Math.round(avg * 10) / 10
 })
 
 const stressWeekSummary = computed(() => {
@@ -390,6 +430,34 @@ const movementStressInsight = computed(() => {
   }
 
   return "Tu peux continuer a explorer ce qui taide le plus, a ton rythme." 
+})
+
+const moodHistorySeries = computed(() => {
+  const stressByDay = props.weeklyStressByDay ?? {}
+
+  const today = new Date()
+  const result: { iso: string; label: string; value: number | null }[] = []
+
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - offset)
+
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const dayNum = String(d.getDate()).padStart(2, '0')
+    const iso = `${year}-${month}-${dayNum}`
+
+    const weekday = d
+      .toLocaleDateString('fr-FR', { weekday: 'short' })
+      .replace('.', '')
+
+    const info = (stressByDay as Record<string, { avg: number; count: number }>)[iso]
+    const value = typeof info?.avg === 'number' ? info.avg : null
+
+    result.push({ iso, label: weekday, value })
+  }
+
+  return result
 })
 </script>
 
@@ -605,6 +673,20 @@ const movementStressInsight = computed(() => {
                 Energie moyenne le matin : <strong>{{ morningEnergyLabel }}</strong>
               </p>
 
+              <p v-if="middayMoodLabel" class="progress-text progress-text--muted">
+                Humeur moyenne en milieu de journee : <strong>{{ middayMoodLabel }}</strong>
+              </p>
+              <p v-if="eveningMoodLabel" class="progress-text progress-text--muted">
+                Humeur moyenne en fin de journee : <strong>{{ eveningMoodLabel }}</strong>
+              </p>
+
+              <p
+                v-if="threeMomentsAverage !== null"
+                class="progress-text progress-text--muted"
+              >
+                Humeur moyenne des 3 moments : <strong>{{ threeMomentsAverage }}/5</strong>
+              </p>
+
               <div v-if="morningPriorityLabels.length" class="progress-tags">
                 <span
                   v-for="item in morningPriorityLabels"
@@ -674,6 +756,37 @@ const movementStressInsight = computed(() => {
               >
                 Explorer ce qui declenche ton stress
               </button>
+            </section>
+
+            <section
+              v-if="moodHistorySeries.length"
+              class="mood-history-section"
+            >
+              <h3 class="mood-history-title">Historique de ton humeur</h3>
+              <p class="mood-history-text">
+                Un coup d'oeil sur tes derniers check-ins (midi / soir) sur 7 jours.
+              </p>
+
+              <div class="mood-history-grid">
+                <div
+                  v-for="day in moodHistorySeries"
+                  :key="day.iso"
+                  class="mood-history-item"
+                >
+                  <span class="mood-history-label">{{ day.label }}</span>
+                  <div
+                    class="mood-history-dot"
+                    :class="{
+                      'is-low': day.value !== null && day.value <= 2,
+                      'is-medium': day.value !== null && day.value > 2 && day.value < 3.5,
+                      'is-high': day.value !== null && day.value >= 3.5,
+                    }"
+                  ></div>
+                  <span class="mood-history-value">
+                    {{ day.value !== null ? day.value.toFixed(1) + '/5' : '—' }}
+                  </span>
+                </div>
+              </div>
             </section>
 
             <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
@@ -1128,6 +1241,68 @@ const movementStressInsight = computed(() => {
 
 .stress-category-count {
   font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.mood-history-section {
+  margin-top: 1.25rem;
+}
+
+.mood-history-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.mood-history-text {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.mood-history-grid {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.mood-history-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.mood-history-label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.mood-history-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.mood-history-dot.is-low {
+  background: #22c55e;
+}
+
+.mood-history-dot.is-medium {
+  background: #facc15;
+}
+
+.mood-history-dot.is-high {
+  background: #f97316;
+}
+
+.mood-history-value {
+  font-size: 0.75rem;
   opacity: 0.85;
 }
 </style>

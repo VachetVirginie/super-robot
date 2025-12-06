@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import NotificationSchedule from './NotificationSchedule.vue'
+import { saveNotificationPreferences } from '../notificationPreferences'
 
 const props = defineProps<{
   displayName: string
@@ -62,9 +63,31 @@ const notificationSlots = ref<NotificationSlot[]>([
   },
 ])
 
+const isSavingNotificationPrefs = ref(false)
+const notificationPrefsError = ref<string | null>(null)
+
 function onInputDisplayName(event: Event) {
   const target = event.target as HTMLInputElement | null
   emit('update:displayName', target?.value ?? '')
+}
+
+async function onSaveNotificationSlots() {
+  if (!props.isPushSupported) {
+    return
+  }
+
+  isSavingNotificationPrefs.value = true
+  notificationPrefsError.value = null
+
+  try {
+    await saveNotificationPreferences(notificationSlots.value)
+  } catch (error) {
+    notificationPrefsError.value = "Impossible d'enregistrer tes horaires de notification."
+    // eslint-disable-next-line no-console
+    console.error('Error in onSaveNotificationSlots', error)
+  } finally {
+    isSavingNotificationPrefs.value = false
+  }
 }
 </script>
 
@@ -149,6 +172,21 @@ function onInputDisplayName(event: Event) {
             v-if="isPushSupported"
             v-model="notificationSlots"
           />
+
+          <button
+            v-if="isPushSupported"
+            type="button"
+            class="primary profile-save-notif"
+            :disabled="isSavingNotificationPrefs"
+            @click="onSaveNotificationSlots"
+          >
+            <span v-if="isSavingNotificationPrefs">Enregistrement...</span>
+            <span v-else>Enregistrer ces horaires</span>
+          </button>
+
+          <p v-if="notificationPrefsError" class="error">
+            {{ notificationPrefsError }}
+          </p>
         </div>
 
         <div class="profile-section">
@@ -273,7 +311,8 @@ function onInputDisplayName(event: Event) {
 }
 .profile-save,
 .profile-notif,
-.profile-signout {
+.profile-signout,
+.profile-save-notif {
   margin-top: 0.25rem;
 }
 </style>

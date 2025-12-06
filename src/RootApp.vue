@@ -794,18 +794,63 @@ const calendarCells = computed(() => {
 const motivationMessages = [
   {
     key: 'focus',
-    title: 'Petit mot pour toi',
-    body: 'Ton corps est capable de beaucoup plus que tu ne le penses. C\'est ton esprit qu\'il faut convaincre.',
+    title: 'Pensee du jour',
+    body: "Tu ne controles pas tout ce qui arrive aujourd'hui, mais tu peux choisir ce petit moment pour toi.",
   },
   {
-    key: 'consistency',
-    title: 'Petit mot pour toi',
-    body: 'Une seance aujourd\'hui vaut mieux qu\'un objectif parfait demain. Avance d\'un petit pas.',
+    key: 'control',
+    title: 'Pensee du jour',
+    body: "Concentre-toi sur ce qui depend de toi: ton prochain geste, pas le resultat parfait.",
+  },
+  {
+    key: 'small-step',
+    title: 'Pensee du jour',
+    body: "Une petite action coherente aujourd'hui vaut mieux qu'un grand projet remis a plus tard.",
+  },
+  {
+    key: 'present',
+    title: 'Pensee du jour',
+    body: "Ce moment est deja la. Tu peux le subir ou l'habiter. Bouger un peu, c'est l'habiter.",
   },
   {
     key: 'identity',
-    title: 'Petit mot pour toi',
-    body: 'Tu n\'as pas besoin d\'etre parfait. Tu as juste besoin d\'etre quelqu\'un qui se presente pour lui-meme.',
+    title: 'Pensee du jour',
+    body: "Tu n'as pas besoin d'etre parfaite. Tu as juste besoin d'etre quelqu'un qui se presente pour lui-meme.",
+  },
+  {
+    key: 'acceptance',
+    title: 'Pensee du jour',
+    body: "Accepte la journee telle qu'elle est, mais choisis au moins un geste en ta faveur.",
+  },
+  {
+    key: 'obstacle',
+    title: 'Pensee du jour',
+    body: "La fatigue, le stress, les imprevus: tout cela peut devenir le terrain de ton courage, pas un frein absolu.",
+  },
+  {
+    key: 'direction',
+    title: 'Pensee du jour',
+    body: "Le plus important n'est pas de tout faire, mais de continuer a aller dans la direction qui compte pour toi.",
+  },
+  {
+    key: 'compassion',
+    title: 'Pensee du jour',
+    body: "Parle-toi comme a une amie: encourage-toi a faire un petit pas, pas a tout rattraper.",
+  },
+  {
+    key: 'body-mind',
+    title: 'Pensee du jour',
+    body: "Ton corps n'est pas ton ennemi. Il fait de son mieux avec ce que tu lui donnes. Offre-lui un peu de mouvement.",
+  },
+  {
+    key: 'tempo',
+    title: 'Pensee du jour',
+    body: "Tu peux avancer lentement, mais tu peux choisir de ne pas t'arreter pour toi aujourd'hui.",
+  },
+  {
+    key: 'renewal',
+    title: 'Pensee du jour',
+    body: "Chaque journee est une nouvelle chance d'ajouter un geste coherent avec la personne que tu veux devenir.",
   },
 ]
 
@@ -813,9 +858,14 @@ const todaysMotivation = computed(() => {
   if (!motivationMessages.length) {
     return null
   }
+
   const today = new Date()
-  const index = today.getDate() % motivationMessages.length
-  return motivationMessages[index]
+  const startOfYear = Date.UTC(today.getFullYear(), 0, 1)
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const dayOfYear = Math.floor((todayUtc - startOfYear) / (24 * 60 * 60 * 1000))
+
+  const index = dayOfYear % motivationMessages.length
+  return motivationMessages[index] ?? null
 })
 
 async function onEnableNotifications() {

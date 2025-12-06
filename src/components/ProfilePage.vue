@@ -50,7 +50,7 @@ const notificationSlots = ref<NotificationSlot[]>([
     id: 'midday',
     label: 'Milieu de journee',
     description: 'Un rappel pour faire une pause ou bouger un peu.',
-    time: '12:30',
+    time: '12:00',
     enabled: true,
   },
   {

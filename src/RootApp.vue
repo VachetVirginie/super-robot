@@ -2202,6 +2202,7 @@ onBeforeUnmount(() => {
 .nav-item.is-active {
   background: #05d970;
   color: #0b0f19;
+  padding: 0.25rem 2.5rem;
 }
 .nav-item-sos.is-active,
 .nav-item-sos.is-active:hover {

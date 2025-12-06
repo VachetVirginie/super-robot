@@ -214,7 +214,7 @@ async function saveCurrentRitual() {
             </button>
             <button
               type="button"
-              class="rituals-primary-button"
+              class="primary rituals-primary-button"
               :disabled="!canSave"
               @click="saveCurrentRitual"
             >
@@ -365,18 +365,15 @@ async function saveCurrentRitual() {
 .rituals-secondary-button,
 .rituals-primary-button {
   flex: 1;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background: transparent;
-  color: #e5e7eb;
   padding: 0.35rem 0.75rem;
   font-size: 0.85rem;
 }
 
-.rituals-primary-button {
-  border-color: #22c55e;
-  background: linear-gradient(90deg, #22c55e, #4ade80);
-  color: #022c22;
+.rituals-secondary-button {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: #e5e7eb;
 }
 
 .rituals-primary-button:disabled {

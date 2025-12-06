@@ -542,7 +542,7 @@ const moodHistorySeries = computed(() => {
 
             <button
               type="button"
-              class="stress-link-button"
+              class="secondary stress-link-button"
               @click="router.push({ name: 'seances' })"
             >
               Voir toutes tes seances
@@ -646,7 +646,7 @@ const moodHistorySeries = computed(() => {
 
             <button
               type="button"
-              class="stress-link-button"
+              class="primary stress-link-button"
               @click="props.onOpenWeekPlan()"
             >
               Planifier ma semaine
@@ -757,7 +757,7 @@ const moodHistorySeries = computed(() => {
 
               <button
                 type="button"
-                class="stress-link-button stress-link-button--highlight"
+                class="primary stress-link-button stress-link-button--highlight"
                 @click="router.push({ name: 'stress' })"
               >
                 Explorer ce qui declenche ton stress
@@ -1198,20 +1198,16 @@ const moodHistorySeries = computed(() => {
 
 .stress-link-button {
   margin-top: 0.75rem;
+  margin-bottom: 12px;
   width: 100%;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background: #22c55e;
-  color: #022c22;
   padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
-  margin-bottom: 12px;
 }
 
 .stress-link-button--highlight {
-  border-color: #22c55e;
-  background: linear-gradient(90deg, #22c55e, #4ade80);
-  color: #022c22;
+  box-shadow:
+    0 -1px 0 rgba(255, 255, 255, 0.16),
+    0 0 26px rgba(16, 255, 127, 0.35);
 }
 
 .stress-categories-section {

@@ -220,7 +220,7 @@ watch(
           >
             {{ todayMorningSummary }}
           </p>
-          <button v-else type="button" class="secondary planweek-cta" @click="onRowClick('morning-dialog')">
+          <button v-else type="button" class="primary planweek-cta" @click="onRowClick('morning-dialog')">
             Préparer ma journée
           </button>
         </div>
@@ -451,13 +451,12 @@ watch(
   padding-inline: 0.9rem;
   white-space: nowrap;
   flex-shrink: 0;
-  background-color: #22c55e;
-  color: #022c22;
   border-radius: 999px;
   font-weight: 600;
   margin-top: 0.9rem;
   width: 100%;
   text-align: center;
+  padding: 0.45rem 0.75rem;
 }
 
 .planweek-summary {
@@ -542,9 +541,7 @@ watch(
 
 .checkin-submit {
   margin-top: 0.75rem;
-    border-color: #22c55e;
-  background: #22c55e;
-  color: #020617;
+  padding: 0.45rem 0.75rem;
 }
 
 .checkin-summary {

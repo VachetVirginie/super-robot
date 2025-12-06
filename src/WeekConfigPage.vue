@@ -127,7 +127,7 @@ function hasSlot(dayIndex: number, slotKey: TimeOfDay) {
         <div class="config-week-actions">
           <button
             type="button"
-            class="secondary see"
+            class="primary see"
             @click="router.push({ name: 'seances' })"
           >
             Voir toutes tes seances
@@ -251,7 +251,6 @@ function hasSlot(dayIndex: number, slotKey: TimeOfDay) {
 }
 
 .see {
-  background-color: #22c55e;
-  color: #020617;
+  width: 100%;
 }
 </style>

@@ -23,7 +23,9 @@ const currentStep = ref<1 | 2>(1)
 const moodLevel = ref<number | null>(null)
 
 const totalSteps = 2
-const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / ${totalSteps}`)
+const stepIndicatorLabel = computed(
+  () => `Pause du midi · Etape ${currentStep.value} / ${totalSteps}`,
+)
 
 const moodOptions = [
   { value: 1, label: 'Mal', icon: 'very-sad' },
@@ -273,8 +275,8 @@ function onChooseBreathe() {
 
 .midday-section-title {
   margin: 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
+  font-size: 1rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 700;
 }

@@ -87,7 +87,9 @@ const contractProgressLine = computed(() => {
 const currentStep = ref(1)
 const totalSteps = 6
 
-const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / ${totalSteps}`)
+const stepIndicatorLabel = computed(
+  () => `Routine du matin · Etape ${currentStep.value} / ${totalSteps}`,
+)
 
 const moodOptions = [
   { value: 1, label: 'Mal', icon: 'very-sad' },
@@ -470,8 +472,8 @@ function onConfirm() {
 
 .morning-section-title {
   margin-bottom: 2rem;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
+  font-size: 1rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 700;
 }

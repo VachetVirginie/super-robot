@@ -202,6 +202,7 @@ watch(
         <div>
           <div class="planweek-label-row">
             <span class="planweek-label">Matin</span>
+            <span class="planweek-kicker">Routine du matin</span>
           </div>
           <h2 class="planweek-title">Poser ton matin en 1 minute</h2>
           <p v-if="!todayMorningSummary" class="planweek-subtitle">
@@ -229,6 +230,7 @@ watch(
     <section class="card checkin-card mini-action-card">
       <div class="planweek-label-row">
         <span class="planweek-label">Midi</span>
+        <span class="planweek-kicker">Pause du milieu de journee</span>
       </div>
       <h2 class="checkin-title">Ma pause du milieu de journee</h2>
       <p
@@ -264,6 +266,7 @@ watch(
     <section class="card checkin-card">
       <div class="planweek-label-row">
         <span class="planweek-label">Soir</span>
+        <span class="planweek-kicker">Bilan du soir</span>
       </div>
       <h2 class="checkin-title">Terminer ma journee</h2>
       <p class="checkin-subtitle">
@@ -376,6 +379,13 @@ watch(
   opacity: 0.75;
 }
 
+.planweek-kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
 .planweek-date {
   font-size: 0.75rem;
   opacity: 0.75;
@@ -383,8 +393,8 @@ watch(
 
 .planweek-title {
   margin: 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -449,8 +459,8 @@ watch(
 
 .checkin-title {
   margin: 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 600;
 }

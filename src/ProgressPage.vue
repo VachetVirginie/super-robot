@@ -463,6 +463,7 @@ const moodHistorySeries = computed(() => {
 
 <template>
   <section v-if="!isAuthenticated" class="card progress-card">
+    <p class="progress-kicker">Bilan</p>
     <h2 class="progress-title">Mon equilibre</h2>
     <p class="progress-text">
       Connecte-toi pour suivre ta progression hebdomadaire et tes objectifs.
@@ -496,6 +497,7 @@ const moodHistorySeries = computed(() => {
       >
         <div class="progress-tab-panel">
           <section class="card progress-card">
+            <p class="progress-kicker">Mouvement</p>
             <h2 class="progress-title">Bouger cette semaine</h2>
             <p class="progress-subtitle">
               Ton bilan hebdo sans culte de la perf.
@@ -566,6 +568,7 @@ const moodHistorySeries = computed(() => {
           </section>
 
           <section class="card progress-card">
+            <p class="progress-kicker">Planning</p>
             <h2 class="progress-title">Tes moments pour bouger cette semaine</h2>
             <p class="progress-subtitle">
               Un coup d'oeil rapide sur les moments que tu as bloques pour toi.
@@ -615,6 +618,7 @@ const moodHistorySeries = computed(() => {
           </section>
 
           <section class="card progress-card">
+            <p class="progress-kicker">Mouvement x stress</p>
             <h2 class="progress-title">Lien mouvement et stress</h2>
             <p class="progress-subtitle">
               Ce que montre ta semaine entre seances et stress.
@@ -652,6 +656,7 @@ const moodHistorySeries = computed(() => {
 
         <div class="progress-tab-panel">
           <section class="card progress-card">
+            <p class="progress-kicker">Routines du jour</p>
             <h2 class="progress-title">Tes matins cette semaine</h2>
             <p class="progress-subtitle">
               Comment tu demarres tes journees (sur les 7 derniers jours).
@@ -700,6 +705,7 @@ const moodHistorySeries = computed(() => {
           </section>
 
           <section class="card progress-card">
+            <p class="progress-kicker">Stress</p>
             <h2 class="progress-title">Stress et declencheurs</h2>
             <p class="progress-subtitle">
               Comment tu as vecu la semaine du point de vue du stress.
@@ -813,6 +819,7 @@ const moodHistorySeries = computed(() => {
           </section>
 
           <section class="card progress-card">
+            <p class="progress-kicker">Mouvement x stress</p>
             <h2 class="progress-title">Lien mouvement et stress</h2>
             <p class="progress-subtitle">
               Une vue simple du lien entre mouvement et stress cette semaine.
@@ -855,11 +862,19 @@ const moodHistorySeries = computed(() => {
 <style scoped>
 .progress-title {
   margin: 0 0 0.9rem;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #e5e7eb;
   font-weight: 600;
+}
+
+.progress-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.65;
 }
 
 .progress-tabs {

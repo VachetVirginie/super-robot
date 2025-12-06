@@ -60,7 +60,9 @@ const isLastStep = computed(() => currentStep.value === 2)
 
 const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer' : 'Continuer'))
 
-const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
+const stepIndicatorLabel = computed(
+  () => `Bilan du soir · Etape ${currentStep.value} / 2`,
+)
 
 const moodOptions = [
   { value: 1, label: 'Tres tendue', icon: 'very-sad' },
@@ -316,8 +318,8 @@ function onConfirm() {
 
 .evening-section-title {
   margin: 0;
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
+  font-size: 1rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 700;
 }

@@ -93,7 +93,7 @@ const trackTitle = computed(() => currentTrack.value.title)
 const trackSubtitle = computed(() => currentTrack.value.subtitle)
 
 function formatTime(value: number) {
-  if (!Number.isFinite(value) || value <= 0) {
+  if (!Number.isFinite(value) || value < 0) {
     return '0:00'
   }
   const minutes = Math.floor(value / 60)
@@ -102,9 +102,43 @@ function formatTime(value: number) {
 }
 
 const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
+const elapsedSeconds = computed(() => SESSION_DURATION - remainingSeconds.value)
+const formattedElapsedTime = computed(() => formatTime(elapsedSeconds.value))
+const formattedSessionDuration = computed(() => formatTime(SESSION_DURATION))
+const sessionProgressPercent = computed(() => {
+  if (SESSION_DURATION <= 0) return 0
+  const ratio = elapsedSeconds.value / SESSION_DURATION
+  return Math.max(0, Math.min(100, ratio * 100))
+})
 
 const route = useRoute()
 const isQuickPause = computed(() => route.query.auto === '1')
+
+function toggleSession() {
+  if (isPlaying.value) {
+    stopAudio()
+    stopTimer()
+    return
+  }
+  startAudio()
+  startTimer()
+}
+
+function seekSeconds(delta: number) {
+  const next = remainingSeconds.value - delta
+  const clamped = Math.max(0, Math.min(SESSION_DURATION, next))
+  remainingSeconds.value = clamped
+}
+
+function onFinishClick() {
+  isOverlayOpen.value = false
+  stopTimer()
+  stopAudio()
+
+  if (!isQuickPause.value) {
+    showReflection.value = true
+  }
+}
 
 const canSaveReflection = computed(() => {
   if (!props.isAuthenticated || props.isSavingStressReason) {
@@ -132,9 +166,11 @@ function stopAudio() {
   isPlaying.value = false
 }
 
-function startTimer() {
+function startTimer(reset = false) {
   stopTimer()
-  remainingSeconds.value = SESSION_DURATION
+  if (reset) {
+    remainingSeconds.value = SESSION_DURATION
+  }
   timerId.value = window.setInterval(() => {
     if (remainingSeconds.value > 0) {
       remainingSeconds.value -= 1
@@ -157,6 +193,12 @@ function stopTimer() {
 function onTimerComplete() {
   isOverlayOpen.value = false
   stopAudio()
+  stopTimer()
+
+  if (!isQuickPause.value) {
+    showReflection.value = true
+  }
+
   showCongrats.value = true
 
   if (congratsTimeoutId.value !== null) {
@@ -169,7 +211,8 @@ function onTimerComplete() {
   }, 4000)
 }
 
-function openOverlay() {
+function openOverlay(autoStart?: boolean | Event) {
+  const shouldAutoStart = typeof autoStart === 'boolean' ? autoStart : false
   showCongrats.value = false
   showReflection.value = false
   reflectionSaved.value = false
@@ -177,8 +220,14 @@ function openOverlay() {
   reflectionCategory.value = 'other'
   isOverlayOpen.value = true
   remainingSeconds.value = SESSION_DURATION
-  startAudio()
-  startTimer()
+  stopTimer()
+  stopAudio()
+  isPlaying.value = false
+
+  if (shouldAutoStart) {
+    startAudio()
+    startTimer()
+  }
 }
 
 function openRandomOverlayIfNeeded() {
@@ -191,7 +240,7 @@ function openRandomOverlayIfNeeded() {
         selectedTrackId.value = randomTrack.id
       }
     }
-    openOverlay()
+    openOverlay(true)
   }
 }
 
@@ -209,9 +258,7 @@ function closeOverlay() {
 
 function onVisualClick() {
   // Permet de (re)lancer l'audio par un vrai geste utilisateur
-  if (!isPlaying.value) {
-    startAudio()
-  }
+  toggleSession()
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -233,6 +280,10 @@ watch(selectedTrackId, () => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   openRandomOverlayIfNeeded()
+
+  if (!isQuickPause.value) {
+    openOverlay()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -269,7 +320,7 @@ async function onSaveReflection() {
       respirer et laisser ton corps se detendre quelques minutes.
     </p>
 
-    <div class="player-track-select">
+    <div v-if="!isOverlayOpen" class="player-track-select">
       <label class="player-track-label" for="zen-track-select">Choisir une ambiance</label>
       <select
         id="zen-track-select"
@@ -297,20 +348,31 @@ async function onSaveReflection() {
     <div v-if="isOverlayOpen" class="zen-overlay">
       <div class="zen-overlay-inner">
         <header class="zen-overlay-header">
-          <div class="zen-overlay-timer">
-            {{ formattedRemainingTime }}
-          </div>
-          <button type="button" class="zen-overlay-close" @click="closeOverlay">
-            <i class="pi pi-times" aria-hidden="true"></i>
+          <button
+            type="button"
+            class="zen-overlay-header-icon"
+            @click="closeOverlay"
+          >
+            <i class="pi pi-arrow-left" aria-hidden="true"></i>
           </button>
+          <!-- <div class="zen-overlay-header-title">{{ formattedRemainingTime }}</div> -->
+          <span class="zen-overlay-timer">{{ formattedSessionDuration }}</span>
         </header>
 
         <div class="zen-overlay-body">
-          <div class="zen-overlay-text">
-            <h3 class="zen-overlay-title">{{ trackTitle }}</h3>
-            <p class="zen-overlay-subtitle">
-              {{ trackSubtitle }}
-            </p>
+          <div class="player-track-select zen-overlay-track-select">
+            <label class="player-track-label" for="zen-track-select-overlay">
+              Choisir une ambiance
+            </label>
+            <select
+              id="zen-track-select-overlay"
+              v-model="selectedTrackId"
+              class="player-track-select-input"
+            >
+              <option v-for="track in tracks" :key="track.id" :value="track.id">
+                {{ track.label }}
+              </option>
+            </select>
           </div>
 
           <div
@@ -321,6 +383,68 @@ async function onSaveReflection() {
             <div class="circle middle"></div>
             <div class="circle inner"></div>
           </div>
+
+          <div class="zen-overlay-text">
+            <h3 class="zen-overlay-title">{{ trackTitle }}</h3>
+            <p class="zen-overlay-subtitle">
+              {{ trackSubtitle }}
+            </p>
+          </div>
+
+          <div class="zen-overlay-progress">
+            <div class="zen-progress-bar">
+              <div
+                class="zen-progress-fill"
+                :style="{ width: sessionProgressPercent + '%' }"
+              ></div>
+            </div>
+            <div class="zen-progress-times">
+              <span>{{ formattedElapsedTime }}</span>              
+            </div>
+          </div>
+
+          <div class="zen-overlay-controls">
+            <button
+              type="button"
+              class="zen-control-button"
+              @click="seekSeconds(-10)"
+            >
+              <span class="zen-control-icon">
+                <i class="pi pi-step-backward-alt" aria-hidden="true"></i>
+                <span class="zen-control-label">10</span>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              class="zen-control-button zen-control-button-main"
+              @click="toggleSession"
+            >
+              <i
+                :class="['pi', isPlaying ? 'pi-pause' : 'pi-play']"
+                aria-hidden="true"
+              ></i>
+            </button>
+
+            <button
+              type="button"
+              class="zen-control-button"
+              @click="seekSeconds(10)"
+            >
+              <span class="zen-control-icon">
+                <span class="zen-control-label">10</span>
+                <i class="pi pi-step-forward-alt" aria-hidden="true"></i>
+              </span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="primary zen-finish-button"
+            @click="onFinishClick"
+          >
+            Terminer ma pause
+          </button>
         </div>
       </div>
     </div>
@@ -441,11 +565,10 @@ async function onSaveReflection() {
   padding: 1.1rem 1rem 1.1rem;
   min-height: 17rem;
   background:
-    radial-gradient(circle at top left, rgba(248, 113, 113, 0.3), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.35), transparent 55%),
-    #020617;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.95);
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 55%),
+    #111111;
+  border: 1px solid #27272a;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -503,8 +626,11 @@ async function onSaveReflection() {
 
 .circle.inner {
   inset: 18px;
-  background: radial-gradient(circle at top left, #f97316, #ef4444);
-  box-shadow: 0 16px 38px rgba(248, 113, 113, 0.9);
+  background:
+    radial-gradient(circle at 30% 20%, #bbf7d0 0, #4ade80 40%, #15803d 85%);
+  box-shadow:
+    0 20px 55px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(34, 197, 94, 0.35);
 }
 
 .player-info {
@@ -534,12 +660,12 @@ async function onSaveReflection() {
   height: 3rem;
   border-radius: 999px;
   border: none;
-  background: #f97316;
+  background: linear-gradient(135deg, #22c55e, #4ade80);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #020617;
-  box-shadow: 0 16px 32px rgba(248, 113, 113, 0.95);
+  color: #022c22;
+  box-shadow: 0 16px 32px rgba(34, 197, 94, 0.6);
 }
 
 .player-play i {
@@ -555,7 +681,7 @@ async function onSaveReflection() {
   appearance: none;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(to right, #f97316, #22c55e);
+  background: linear-gradient(to right, #22c55e, #4ade80);
   outline: none;
 }
 
@@ -600,6 +726,13 @@ async function onSaveReflection() {
   align-items: center;
   justify-content: center;
   z-index: 50;
+}
+
+.zen-overlay-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .zen-overlay-inner {
@@ -714,11 +847,15 @@ async function onSaveReflection() {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 16px 38px rgba(248, 113, 113, 0.9);
+    box-shadow:
+      0 20px 55px rgba(0, 0, 0, 0.9),
+      0 0 40px rgba(34, 197, 94, 0.35);
   }
   50% {
-    transform: scale(1.15);
-    box-shadow: 0 22px 48px rgba(248, 113, 113, 1);
+    transform: scale(1.14);
+    box-shadow:
+      0 26px 65px rgba(0, 0, 0, 1),
+      0 0 80px rgba(34, 197, 94, 0.6);
   }
 }
 

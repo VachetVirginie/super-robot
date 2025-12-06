@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient'
 interface CheckinRow {
   id: string
   created_at: string
+  day?: string
   stress_level: number | null
   note: string | null
   question: string | null
@@ -86,7 +87,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, stress_level, note, moment')
+        .select('id, created_at, day, stress_level, note, moment')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', now.toISOString())
@@ -291,7 +292,8 @@ export function useCheckins(session: Ref<Session | null>) {
     const todayIso = `${year}-${month}-${dayNum}`
 
     for (const row of recentCheckins.value) {
-      if (row.moment === 'midday' && row.created_at.slice(0, 10) === todayIso) {
+      const rowDay = (row.day as string | undefined) ?? row.created_at.slice(0, 10)
+      if (row.moment === 'midday' && rowDay === todayIso) {
         return row
       }
     }

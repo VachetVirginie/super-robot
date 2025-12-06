@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { enablePushNotifications, isPushSupported } from './pushNotifications'
 import { useAuth } from './composables/useAuth'
@@ -141,6 +141,9 @@ const {
   weeklyAverageMorningEnergy,
   weeklyMorningPriorities,
 } = useMorningState(session)
+
+const pendingMiddayMoodLevel = ref<number | null>(null)
+const pendingMiddayPath = ref<'move' | 'breathe' | null>(null)
 
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
@@ -925,8 +928,8 @@ function onMiddayChooseMove(payload: { moodLevel: number | null }) {
   }
 
   if (typeof payload.moodLevel === 'number') {
-    const stressLevel = 6 - payload.moodLevel
-    void recordCheckin(stressLevel, undefined, 'Etat de milieu de journee', 'midday')
+    pendingMiddayMoodLevel.value = payload.moodLevel
+    pendingMiddayPath.value = 'move'
   }
 
   selectedDuration.value = 5
@@ -937,12 +940,34 @@ function onMiddayChooseMove(payload: { moodLevel: number | null }) {
 
 function onMiddayChooseBreathe(payload: { moodLevel: number | null }) {
   if (typeof payload.moodLevel === 'number' && isAuthenticated) {
-    const stressLevel = 6 - payload.moodLevel
-    void recordCheckin(stressLevel, undefined, 'Etat de milieu de journee', 'midday')
+    pendingMiddayMoodLevel.value = payload.moodLevel
+    pendingMiddayPath.value = 'breathe'
   }
 
   isMiddayDialogOpen.value = false
   startWellbeingExercise()
+}
+
+async function recordPendingMiddayCheckin() {
+  const mood = pendingMiddayMoodLevel.value
+  const path = pendingMiddayPath.value
+
+  if (!isAuthenticated || typeof mood !== 'number' || !path) {
+    return
+  }
+
+  const stressLevel = 6 - mood
+  const question =
+    path === 'move'
+      ? 'Etat de milieu de journee apres mouvement'
+      : 'Etat de milieu de journee apres pause zen'
+
+  try {
+    await recordCheckin(stressLevel, undefined, question, 'midday')
+  } finally {
+    pendingMiddayMoodLevel.value = null
+    pendingMiddayPath.value = null
+  }
 }
 
 async function signOutAndRedirect() {
@@ -1015,6 +1040,7 @@ async function confirmAddSessionFromDialog() {
 
   if (!template) {
     await recordSession()
+    await recordPendingMiddayCheckin()
     isAddSessionDialogOpen.value = false
     return
   }
@@ -1080,6 +1106,7 @@ async function onWorkoutPlayerFinish() {
     }
 
     await recordSession(options)
+    await recordPendingMiddayCheckin()
   }
 
   isWorkoutPlayerOpen.value = false
@@ -1090,6 +1117,15 @@ function closeWorkoutPlayer() {
   isWorkoutPlayerOpen.value = false
   activeWorkoutTemplateKey.value = null
 }
+
+watch(
+  () => route.name,
+  (newName, oldName) => {
+    if (oldName === 'pause' && newName !== 'pause') {
+      void recordPendingMiddayCheckin()
+    }
+  },
+)
 
 async function openMonthCalendar() {
   const now = new Date()

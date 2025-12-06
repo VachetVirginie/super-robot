@@ -453,7 +453,7 @@ function onConfirm() {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  max-width: 360px;
+  max-width: 380px;
   margin: 0 auto;
 }
 
@@ -620,6 +620,7 @@ function onConfirm() {
   align-items: center;
   justify-content: center;
   transition: transform 0.12s ease-out;
+  animation: morning-mood-pop 0.25s ease-out;
 }
 
 .morning-mood-button.is-selected {
@@ -642,6 +643,17 @@ function onConfirm() {
   border-color: #22c55e;
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.6), 0 8px 20px rgba(22, 163, 74, 0.45);
   /* background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), #020617); */
+}
+
+@keyframes morning-mood-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .morning-mood-labels {

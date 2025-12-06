@@ -76,8 +76,8 @@ function goToPreviousStep() {
   currentStep.value = 1
 }
 
-function selectStress(level: number) {
-  selectedStress.value = level
+function onStressSliderInput() {
+  if (!selectedStress.value) return
   vibrateLight()
 }
 
@@ -135,19 +135,23 @@ function onConfirm() {
             <p class="evening-text">
               De 1 (tres calme) a 5 (au max), ou tu te situes ?
             </p>
-            <div class="evening-scale">
-              <button
-                v-for="level in 5"
-                :key="level"
-                type="button"
-                class="evening-dot"
-                :class="{ 'is-active': selectedStress === level }"
+            <div class="evening-scale-row">
+              <span class="evening-scale-label">Calme</span>
+              <input
+                v-model.number="selectedStress"
+                type="range"
+                min="1"
+                max="5"
+                step="1"
+                class="evening-stress-slider"
                 :disabled="isSaving"
-                @click="selectStress(level)"
-              >
-                {{ level }}
-              </button>
+                @input="onStressSliderInput"
+              />
+              <span class="evening-scale-label">Eleve</span>
             </div>
+            <p v-if="selectedStress" class="evening-scale-value">
+              Niveau : {{ selectedStress }}/5
+            </p>
           </div>
         </section>
 
@@ -163,9 +167,13 @@ function onConfirm() {
             <textarea
               v-model="eveningNote"
               class="evening-textarea"
-              rows="4"
+              rows="5"
+              maxlength="280"
               placeholder="Une ou deux phrases suffisent. C'est juste pour toi."
             ></textarea>
+            <p class="evening-note-counter">
+              {{ eveningNote.length }}/280
+            </p>
           </div>
         </section>
       </div>
@@ -302,50 +310,53 @@ function onConfirm() {
   margin-top: 0.25rem;
 }
 
-.evening-scale {
-  margin-top: 0.75rem;
+.evening-scale-row {
+  margin-top: 0.85rem;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.evening-dot {
-  flex: 1;
-  border-radius: 999px;
-  border: 1px solid rgba(75, 85, 99, 0.9);
-  background: #020617;
-  color: #e5e7eb;
-  padding: 0.4rem 0;
-  font-size: 0.85rem;
-  transition: background-color 0.12s ease-out, border-color 0.12s ease-out,
-    transform 0.12s ease-out, box-shadow 0.12s ease-out;
+.evening-scale-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
-.evening-dot.is-active {
-  border-color: #22c55e;
-  background: #22c55e;
-  color: #020617;
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.4);
+.evening-stress-slider {
+  flex: 1;
+  accent-color: #22c55e;
+}
+
+.evening-scale-value {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 .evening-question {
-  margin: 0.75rem 0 0.5rem;
+  margin: 0.5rem 0 0.4rem;
   font-size: 0.9rem;
   opacity: 0.95;
 }
 
 .evening-textarea {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   width: 100%;
   border-radius: 0.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.85);
   background: #020617;
   color: #e5e7eb;
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
   resize: vertical;
   min-height: 96px;
+}
+
+.evening-note-counter {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  text-align: right;
 }
 
 .evening-footer {

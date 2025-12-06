@@ -41,6 +41,8 @@ const kindOptions: { key: DialogWorkoutKind; label: string }[] = [
   { key: 'auto', label: "Auto (laisse l'app choisir)" },
 ]
 
+const explicitKindOptions = computed(() => kindOptions.filter((opt) => opt.key !== 'auto'))
+
 const currentStep = ref<1 | 2>(1)
 
 const isLastStep = computed(() => currentStep.value === 2)
@@ -53,6 +55,16 @@ const selectedKindLabel = computed(() => {
   const option = kindOptions.find((opt) => opt.key === props.selectedKind)
   return option?.label ?? "Auto (laisse l'app choisir)"
 })
+
+const durationMessages: Record<5 | 10 | 15 | 20 | 30, string> = {
+  5: '5 minutes pour te poser sans pression.',
+  10: '10 minutes pour relancer ton energie en douceur.',
+  15: '15 minutes pour une vraie parenthese pour toi.',
+  20: '20 minutes pour decompresser un peu plus en profondeur.',
+  30: '30 minutes rien que pour toi, a ton rythme.',
+}
+
+const durationMoodMessage = computed(() => durationMessages[props.selectedDuration])
 
 function vibrateLight() {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -126,8 +138,8 @@ function goToPreviousStep() {
                 {{ value }} min
               </button>
             </div>
-            <p class="session-hint">
-              Tu peux rester sur 5 minutes, c'est deja tres bien.
+            <p v-if="durationMoodMessage" class="session-hint session-hint--emotional">
+              {{ durationMoodMessage }}
             </p>
           </div>
         </section>
@@ -139,11 +151,29 @@ function goToPreviousStep() {
           <div class="session-step-main">
             <h4 class="session-section-title">Quel type de seance te ferait du bien ?</h4>
             <p class="session-text">
-              Tu peux choisir un type precis ou laisser sur "Auto" et je choisis pour toi.
+              Tu peux laisser sur "Auto" et je choisis pour toi, ou choisir un type precis.
             </p>
+
+            <div class="session-auto-block">
+              <button
+                type="button"
+                class="session-chip session-chip--auto"
+                :class="{ 'is-active': selectedKind === 'auto' }"
+                :disabled="isSavingSession"
+                @click="updateKind('auto')"
+              >
+                <span class="session-auto-title">Auto</span>
+                <span class="session-auto-subtitle">Laisse l'app choisir pour toi</span>
+              </button>
+            </div>
+
+            <p class="session-text session-text--muted">
+              Ou choisis un type precis :
+            </p>
+
             <div class="session-choices-row">
               <button
-                v-for="option in kindOptions"
+                v-for="option in explicitKindOptions"
                 :key="option.key"
                 type="button"
                 class="session-chip"
@@ -262,6 +292,11 @@ function goToPreviousStep() {
   margin-bottom: 2rem;
 }
 
+.session-text--muted {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
 .session-section-title {
   margin: 0;
   font-size: 0.95rem;
@@ -302,10 +337,42 @@ function goToPreviousStep() {
   opacity: 0.85;
 }
 
+.session-hint--emotional {
+  margin-top: 0.35rem;
+  opacity: 0.9;
+}
+
 .session-summary {
   margin: 1rem 0 0;
   font-size: 0.8rem;
   opacity: 0.85;
+}
+
+.session-auto-block {
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.session-chip--auto {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.55rem 0.9rem;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  border-color: #22c55e;
+  color: #022c22;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.session-auto-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.session-auto-subtitle {
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
 .session-footer {

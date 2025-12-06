@@ -60,6 +60,8 @@ const isLastStep = computed(() => currentStep.value === 2)
 
 const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer mon check-in' : 'Continuer'))
 
+const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
+
 function goToPreviousStep() {
   if (currentStep.value === 1) {
     emit('close')
@@ -98,6 +100,7 @@ function onConfirm() {
         <h3 class="dialog-title">
           Bonsoir<span v-if="friendlyName">, {{ friendlyName }}</span>
         </h3>
+        <p class="dialog-step-indicator">{{ stepIndicatorLabel }}</p>
         <button
           type="button"
           class="dialog-close"
@@ -217,10 +220,10 @@ function onConfirm() {
 .evening-header .dialog-title {
   width: 100%;
   text-align: center;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .evening-header .dialog-close {
@@ -253,7 +256,7 @@ function onConfirm() {
 
 .evening-text {
   margin: 0.25rem 0 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   opacity: 0.9;
   line-height: 1.5;
 }
@@ -264,10 +267,10 @@ function onConfirm() {
 
 .evening-section-title {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .evening-section-card {
@@ -280,7 +283,7 @@ function onConfirm() {
 
 .evening-section-card .evening-section-title {
   margin-top: 0;
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.2rem;
 }
 
 .evening-section-card > .evening-text,
@@ -340,9 +343,9 @@ function onConfirm() {
 
 .evening-back {
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
+  border: none;
   background: transparent;
-  color: #e5e7eb;
+  color: #9ca3af;
   padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
 }

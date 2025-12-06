@@ -1624,7 +1624,7 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   background: #111111;
   border: 1px solid #27272a;
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
 }
 .week-strip {
   display: flex;
@@ -1634,7 +1634,7 @@ onBeforeUnmount(() => {
   border-radius: 1.75rem;
   background: #111111;
   border: 1px solid #27272a;
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
 }
 .week-strip-header {
   display: flex;

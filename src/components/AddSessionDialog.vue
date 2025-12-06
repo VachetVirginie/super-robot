@@ -47,6 +47,8 @@ const isLastStep = computed(() => currentStep.value === 2)
 
 const primaryCtaLabel = computed(() => (isLastStep.value ? "C'est parti" : 'Continuer'))
 
+const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
+
 const selectedKindLabel = computed(() => {
   const option = kindOptions.find((opt) => opt.key === props.selectedKind)
   return option?.label ?? "Auto (laisse l'app choisir)"
@@ -74,6 +76,7 @@ function goToPreviousStep() {
     <div class="dialog-card session-card">
       <div class="dialog-header session-header">
         <h3 class="dialog-title">Nouvelle seance</h3>
+        <p class="dialog-step-indicator">{{ stepIndicatorLabel }}</p>
         <button
           type="button"
           class="dialog-close"
@@ -203,6 +206,9 @@ function goToPreviousStep() {
 .session-header .dialog-title {
   width: 100%;
   text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .session-header .dialog-close {
@@ -233,7 +239,7 @@ function goToPreviousStep() {
 
 .session-text {
   margin: 0.25rem 0 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   opacity: 0.9;
 }
 
@@ -243,10 +249,10 @@ function goToPreviousStep() {
 
 .session-section-title {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .session-choices-row {
@@ -293,9 +299,9 @@ function goToPreviousStep() {
 
 .session-back {
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
+  border: none;
   background: transparent;
-  color: #e5e7eb;
+  color: #9ca3af;
   padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
 }

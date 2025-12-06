@@ -169,7 +169,7 @@ function onConfirm() {
           @click="onConfirm"
         >
           <span v-if="isSaving">Enregistrement...</span>
-          <span v-else>C'est parti pour aujourd'hui</span>
+          <span v-else>Enregistrer</span>
         </button>
       </div>
     </div>

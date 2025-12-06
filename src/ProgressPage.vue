@@ -798,7 +798,7 @@ const movementStressInsight = computed(() => {
 }
 
 .progress-card + .progress-card {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 .progress-subtitle {

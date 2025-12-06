@@ -140,7 +140,7 @@ const intentionLabel = computed(() => {
 
 const isLastStep = computed(() => currentStep.value === 6)
 
-const primaryCtaLabel = computed(() => (isLastStep.value ? 'Poser mon matin' : 'Continuer'))
+const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer' : 'Continuer'))
 
 function moodIconUrl(key: string) {
   return `/icons/mood/${key}.svg`

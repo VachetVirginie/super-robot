@@ -45,7 +45,7 @@ const currentStep = ref<1 | 2>(1)
 
 const isLastStep = computed(() => currentStep.value === 2)
 
-const primaryCtaLabel = computed(() => (isLastStep.value ? "C'est parti" : 'Continuer'))
+const primaryCtaLabel = computed(() => (isLastStep.value ? 'Commencer' : 'Continuer'))
 
 const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
 
@@ -247,7 +247,6 @@ function goToPreviousStep() {
 }
 
 .session-step-main {
-  margin-top: auto;
   margin-bottom: auto;
   display: flex;
   flex-direction: column;

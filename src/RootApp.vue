@@ -1539,7 +1539,7 @@ onBeforeUnmount(() => {
   width: 100%;
   margin: 0 auto;
   min-height: 100vh;
-  padding-bottom: 4.5rem;
+  padding-bottom: 4rem;
 }
 .topbar {
   display: flex;

@@ -58,7 +58,7 @@ const currentEveningQuestion = computed(() => {
 
 const isLastStep = computed(() => currentStep.value === 2)
 
-const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer mon check-in' : 'Continuer'))
+const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer' : 'Continuer'))
 
 const stepIndicatorLabel = computed(() => `Etape ${currentStep.value} / 2`)
 

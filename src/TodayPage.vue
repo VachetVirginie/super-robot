@@ -337,7 +337,7 @@ watch(
 }
 
 .planweek-section {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 .planweek-header {
@@ -420,7 +420,7 @@ watch(
 }
 
 .checkin-card {
-  margin-top: 0.75rem;
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

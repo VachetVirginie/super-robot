@@ -95,6 +95,7 @@ const {
 
 const {
   todayCheckin,
+  todayMiddayCheckin,
   isCheckinSaving,
   checkinError,
   recordCheckin,
@@ -156,6 +157,23 @@ const todayCheckinSummary = computed(() => {
 const hasTodayCheckin = computed(() => {
   const c = todayCheckin.value as { moment?: string } | null
   return !!c && c.moment === 'evening'
+})
+
+const hasTodayMiddayCheckin = computed(() => !!todayMiddayCheckin.value)
+
+const todayMiddaySummary = computed(() => {
+  const row = todayMiddayCheckin.value
+  if (!row) {
+    return null as string | null
+  }
+
+  const level = typeof row.stress_level === 'number' ? row.stress_level : null
+
+  if (level === null) {
+    return 'Tu as deja pris ta pause de milieu de journee.'
+  }
+
+  return `Niveau de stress a ta pause : ${level}/5.`
 })
 
 const todayMorningSummary = computed(() => {
@@ -1408,6 +1426,8 @@ onBeforeUnmount(() => {
         :submit-checkin="submitCheckin"
         :on-open-week-plan="openPlanWeekDialog"
         :today-morning-summary="todayMorningSummary"
+        :today-midday-summary="todayMiddaySummary"
+        :has-today-midday-checkin="hasTodayMiddayCheckin"
       />
     </RouterView>
 

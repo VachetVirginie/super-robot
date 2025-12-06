@@ -283,6 +283,22 @@ export function useCheckins(session: Ref<Session | null>) {
     return Math.round(avg * 10) / 10
   })
 
+  const todayMiddayCheckin = computed<CheckinRow | null>(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const dayNum = String(now.getDate()).padStart(2, '0')
+    const todayIso = `${year}-${month}-${dayNum}`
+
+    for (const row of recentCheckins.value) {
+      if (row.moment === 'midday' && row.created_at.slice(0, 10) === todayIso) {
+        return row
+      }
+    }
+
+    return null
+  })
+
   const weeklyCheckinsCount = computed(() => recentCheckins.value.length)
 
   const weeklyStressByDay = computed(() => {
@@ -343,6 +359,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
   return {
     todayCheckin,
+    todayMiddayCheckin,
     isCheckinLoading,
     isCheckinSaving,
     checkinError,

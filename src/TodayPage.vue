@@ -34,6 +34,8 @@ const props = defineProps<{
   isCheckinSaving: boolean
   checkinError: string | null
   todayMorningSummary: string | null
+  todayMiddaySummary: string | null
+  hasTodayMiddayCheckin: boolean
   onUpdateEmail: (value: string) => void
   onUpdatePassword: (value: string) => void
   submitAuth: () => void | Promise<void>
@@ -229,11 +231,27 @@ watch(
         <span class="planweek-label">Midi</span>
       </div>
       <h2 class="checkin-title">Ma pause du milieu de journee</h2>
-      <p class="checkin-subtitle">
+      <p
+        v-if="!todayMiddaySummary"
+        class="checkin-subtitle"
+      >
         Choisis ce qui t'aiderait le plus : bouger un peu ou faire une pause zen.
+      </p>
+      <p
+        v-else
+        class="checkin-subtitle"
+      >
+        Ta pause est posee. Tu peux juste suivre le fil.
+      </p>
+      <p
+        v-if="todayMiddaySummary"
+        class="checkin-summary"
+      >
+        {{ todayMiddaySummary }}
       </p>
       <div class="checkin-actions">
         <button
+          v-if="!hasTodayMiddayCheckin"
           type="button"
           class="primary checkin-submit"
           @click="onRowClick('midday-dialog')"
@@ -251,10 +269,14 @@ watch(
       <p class="checkin-subtitle">
         Avant de te déconnecter, prends un instant pour respirer et faire le point sur ta journée.
       </p>
-      <p class="checkin-summary">
+      <p
+        v-if="todayCheckinSummary"
+        class="checkin-summary"
+      >
         {{ todayCheckinSummary }}
       </p>
       <button
+        v-if="!hasTodayCheckin"
         type="button"
         class="primary checkin-submit"
         @click="onRowClick('evening-dialog')"

@@ -301,8 +301,10 @@ watch(
   border-radius: 1rem;
   margin: 0 auto;
   background: #111111;
-  border: 1px solid #27272a;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 -1px 4px rgba(255, 255, 255, 0.03),
+    0 6px 20px rgba(0, 0, 0, 0.4);
 }
 .hero {
   display: flex;

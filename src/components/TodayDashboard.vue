@@ -58,8 +58,10 @@ function onRowClick(key: string) {
   border-radius: 1rem;
   margin: 0 auto;
   background: #111111;
-  border: 1px solid #27272a;
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 -1px 4px rgba(255, 255, 255, 0.03),
+    0 6px 20px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -87,7 +89,7 @@ function onRowClick(key: string) {
   width: 100%;
   padding: 0.7rem 0.85rem;
   border-radius: 0.85rem;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: #0b0b0b;
   cursor: pointer;
   transition:

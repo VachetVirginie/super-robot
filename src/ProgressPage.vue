@@ -1148,7 +1148,7 @@ const moodHistorySeries = computed(() => {
   padding: 0.7rem 0.8rem;
   border-radius: 0.75rem;
   background: #0b0b0b;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -1212,7 +1212,6 @@ const moodHistorySeries = computed(() => {
   border-color: #22c55e;
   background: linear-gradient(90deg, #22c55e, #4ade80);
   color: #022c22;
-  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.55);
 }
 
 .stress-categories-section {

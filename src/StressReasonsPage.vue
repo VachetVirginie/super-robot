@@ -517,7 +517,7 @@ async function confirmDelete() {
   padding: 0.7rem 0.8rem;
   border-radius: 0.75rem;
   background: #0b0b0b;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;

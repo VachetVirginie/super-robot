@@ -63,8 +63,10 @@ h3 {
   border-radius: 1rem;
   margin: 0 auto;
   background: #111111;
-  border: 1px solid #27272a;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 -1px 4px rgba(255, 255, 255, 0.03),
+    0 6px 20px rgba(0, 0, 0, 0.4);
   animation: card-enter 0.32s ease-out both;
 }
 
@@ -147,7 +149,7 @@ input:-webkit-autofill:focus {
   border-radius: 1rem;
   padding: 1.5rem 1.5rem 1.25rem;
   background: #111111;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.95);
    animation: dialog-enter 0.28s ease-out both;
 }
@@ -174,7 +176,7 @@ input:-webkit-autofill:focus {
 }
 .dialog-close {
   border-radius: 999px;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: transparent;
   padding: 0.2rem 0.35rem;
   display: flex;
@@ -217,7 +219,7 @@ input:-webkit-autofill:focus {
   min-width: 0;
   padding-inline: 1.1rem;
   border-radius: 999px;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: transparent;
   width: 100%;
 }
@@ -235,7 +237,7 @@ input:-webkit-autofill:focus {
   text-align: left;
   padding: 0.75rem 0.9rem;
   border-radius: 0.85rem;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: #0b0b0b;
 }
 .wellbeing-option-title {
@@ -284,7 +286,7 @@ input:-webkit-autofill:focus {
 }
 .calendar-nav-btn {
   border-radius: 999px;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: transparent;
   padding: 0.2rem 0.45rem;
   display: flex;
@@ -312,7 +314,7 @@ input:-webkit-autofill:focus {
 .calendar-cell {
   min-height: 32px;
   border-radius: 999px;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: transparent;
   display: flex;
   flex-direction: column;

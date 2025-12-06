@@ -298,7 +298,7 @@ const hasDetailedSessions = computed(
   padding: 0.6rem 0.75rem;
   border-radius: 0.75rem;
   background: #0b0b0b;
-  border: 1px solid #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.9rem;
 }
 

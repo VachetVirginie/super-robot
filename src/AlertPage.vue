@@ -547,7 +547,8 @@ async function onSaveReflection() {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 0.8;
+  color: var(--accent-soft);
+  opacity: 0.95;
 }
 
 .player-track-select-input {
@@ -756,6 +757,7 @@ async function onSaveReflection() {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   letter-spacing: 0.08em;
+  color: var(--accent-soft);
 }
 
 .zen-overlay-close {
@@ -792,6 +794,7 @@ async function onSaveReflection() {
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 0.06em;
+  color: var(--accent-soft);
 }
 
 .zen-overlay-subtitle {

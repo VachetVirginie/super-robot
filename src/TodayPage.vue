@@ -332,6 +332,7 @@ watch(
     100% 100%,
     center,
     center;
+  transform-origin: center center;
   animation: hero-wave 22s ease-in-out infinite;
 }
 
@@ -343,13 +344,15 @@ watch(
       100% 100%,
       center,
       center;
+    transform: scale(1);
   }
   50% {
     background-position:
-      8% 4%,
-      92% 96%,
+      12% 6%,
+      88% 94%,
       center,
       center;
+    transform: scale(1.03);
   }
 }
 
@@ -418,7 +421,8 @@ watch(
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  opacity: 0.75;
+  color: var(--accent-soft);
+  opacity: 0.9;
 }
 
 .planweek-kicker {

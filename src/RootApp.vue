@@ -2135,7 +2135,7 @@ onBeforeUnmount(() => {
   padding: 0.45rem 0.75rem 0.5rem;
   border-radius: 999px;
   background: rgba(17, 17, 17, 0.96);
-  border: 1px solid #262626;
+  border: 1px solid var(--accent-soft-weak);
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
@@ -2182,11 +2182,11 @@ onBeforeUnmount(() => {
   justify-content: center;
   box-shadow:
     0 10px 24px rgba(0, 0, 0, 0.85),
-    0 0 0 1px rgba(34, 197, 94, 0.5);
+    0 0 0 1px var(--accent-soft-strong);
 }
 .nav-item-sos .nav-icon {
   font-size: 1.2rem;
-  color: #22c55e;
+  color: var(--accent-soft);
 }
 .nav-label-sos {
   font-weight: 600;

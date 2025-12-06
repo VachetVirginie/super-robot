@@ -874,7 +874,8 @@ const moodHistorySeries = computed(() => {
   font-size: 0.75rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  opacity: 0.65;
+  color: var(--accent-soft);
+  opacity: 0.9;
 }
 
 .progress-tabs {

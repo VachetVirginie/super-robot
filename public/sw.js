@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Olvius-cache-v1'
+const CACHE_NAME = 'OLVIUS-cache-v1'
 const URLS_TO_CACHE = ['/', '/index.html', '/logo.png']
 
 self.addEventListener('install', (event) => {

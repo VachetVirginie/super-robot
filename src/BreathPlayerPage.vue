@@ -78,10 +78,24 @@ const PATTERNS: Record<string, BreathPattern> = {
 }
 
 const patternId = computed(() => (route.params.id as string) || 'coherence-5-5')
-const pattern = computed<BreathPattern>(() => PATTERNS[patternId.value] ?? PATTERNS['coherence-5-5'])
+const pattern = computed((): BreathPattern => {
+  const maybe = PATTERNS[patternId.value]
+  if (maybe) {
+    return maybe
+  }
+  return PATTERNS['coherence-5-5'] as BreathPattern
+})
 
 const phases = computed(() => pattern.value.phases)
-const currentPhase = computed(() => phases.value[currentPhaseIndex.value])
+const DEFAULT_PHASE: BreathPhase = { key: 'inhale', durationSeconds: 4 }
+
+const currentPhase = computed<BreathPhase>(() => {
+  const list = phases.value
+  if (!list.length) {
+    return DEFAULT_PHASE
+  }
+  return list[currentPhaseIndex.value] ?? list[0]!
+})
 
 const phaseLabel = computed(() => {
   const key = currentPhase.value.key
@@ -130,7 +144,7 @@ function playGong() {
   }
 }
 
-function scheduleNextPhase(prevPhase: BreathPhase | null) {
+function scheduleNextPhase() {
   const phase = currentPhase.value
   setBubblePositionForPhase(phase)
 
@@ -143,10 +157,17 @@ function scheduleNextPhase(prevPhase: BreathPhase | null) {
     if (!isRunning.value) return
 
     const list = phases.value
+    if (!list.length) {
+      return
+    }
+
     const current = currentPhase.value
     const index = list.indexOf(current)
     const nextIndex = index === -1 ? 0 : (index + 1) % list.length
-    const nextPhase = list[nextIndex]
+    let nextPhase = list[nextIndex]
+    if (!nextPhase) {
+      nextPhase = list[0]!
+    }
 
     // Dong uniquement quand on bascule inspire <-> expire
     if (
@@ -157,7 +178,7 @@ function scheduleNextPhase(prevPhase: BreathPhase | null) {
     }
 
     currentPhaseIndex.value = nextIndex
-    scheduleNextPhase(current)
+    scheduleNextPhase()
   }, durationMs)
 }
 
@@ -166,7 +187,7 @@ function startSession() {
   isRunning.value = true
   currentPhaseIndex.value = 0
   measure()
-  scheduleNextPhase(null)
+  scheduleNextPhase()
 }
 
 function stopSession() {

@@ -1230,6 +1230,23 @@ const moodHistorySeries = computed(() => {
   font-size: 0.85rem;
 }
 
+.card .secondary,
+.secondary.stress-link-button {
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s ease-out;
+}
+
+.card .secondary:hover,
+.secondary.stress-link-button:hover {
+  border-color: rgba(20, 244, 209, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.45),
+    0 14px 32px rgba(20, 244, 209, 0.22);
+  transform: translateY(-1px);
+}
+
 .stress-link-button--highlight {
   box-shadow:
     0 -1px 0 rgba(255, 255, 255, 0.16),

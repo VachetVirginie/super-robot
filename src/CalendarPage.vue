@@ -38,9 +38,10 @@ function onCellClick(cell: CalendarCell) {
     </button>
 
     <section class="card calendar-page-card">
-      <h2 class="calendar-page-title">Calendrier</h2>
-      <p class="calendar-page-text">
-        Un coup d'oeil sur tes seances et ton stress du mois.
+      <p class="calendar-page-kicker">Journal</p>
+      <h2 class="calendar-page-title">Ton calendrier</h2>
+      <p class="calendar-page-subtitle">
+        Un coup d'oeil sur tes seances et ton stress ce mois-ci.
       </p>
 
       <div class="calendar-nav">
@@ -141,16 +142,26 @@ function onCellClick(cell: CalendarCell) {
   margin-top: 0.75rem;
 }
 
+.calendar-page-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  opacity: 0.9;
+}
+
 .calendar-page-title {
   margin: 0 0 0.6rem;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.calendar-page-text {
+.calendar-page-subtitle {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 .calendar-mode-toggle {

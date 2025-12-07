@@ -359,8 +359,9 @@ watch(
     </button>
 
     <section class="card day-card">
+      <p class="day-kicker">Journal</p>
       <h2 class="day-title">Ta journee du {{ dayLabel }}</h2>
-      <p class="day-text">
+      <p class="day-subtitle">
         Un coup d'oeil sur ce que tu as note ou fait ce jour-la.
       </p>
 
@@ -475,16 +476,31 @@ watch(
   margin-top: 0.75rem;
 }
 
+.day-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  opacity: 0.9;
+}
+
 .day-title {
   margin: 0 0 0.6rem;
-  font-size: 1rem;
-  letter-spacing: 0.08em;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .day-text {
   margin: 0;
   font-size: 0.9rem;
+}
+
+.day-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
 }
 
 .day-text--muted {

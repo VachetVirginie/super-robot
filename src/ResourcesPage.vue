@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 defineProps<{
@@ -50,10 +51,10 @@ const expressPresets = [
 ]
 
 const movementPresets = [
-  { key: 'back', title: 'Etirement du dos', context: '2 min pour defroisser le dos.' },
-  { key: 'neck', title: 'Mobilite de la nuque', context: 'Pour relacher les tensions du cou.' },
+  { key: 'back', title: 'Etirement du dos', context: '2 min pour ouvrir le haut du dos.' },
+  { key: 'neck', title: 'Mobilite de la nuque', context: 'Relache les tensions cervicales.' },
   { key: 'chest', title: 'Ouverture du thorax', context: 'Respirer un peu plus large.' },
-  { key: 'wrists', title: 'Mobilite des poignets', context: 'Pour les journees clavier / souris.' },
+  { key: 'wrists', title: 'Mobilite des poignets', context: 'Ideal si tu travailles beaucoup assise.' },
 ]
 
 const ritualShortcuts = [
@@ -69,11 +70,40 @@ function openBreathingFlow(id: string) {
 function openSound(id: string) {
   router.push({ name: 'pause', query: { sound: id } })
 }
+
+const showMindsetDetails = ref(false)
+
+let sectionObserver: IntersectionObserver | null = null
+
+onMounted(() => {
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const el = entry.target as HTMLElement
+        if (entry.isIntersecting) {
+          el.classList.add('is-visible')
+        }
+      }
+    },
+    { threshold: 0.15 },
+  )
+
+  document.querySelectorAll<HTMLElement>('.resources-section').forEach((el) => {
+    sectionObserver?.observe(el)
+  })
+})
+
+onBeforeUnmount(() => {
+  if (sectionObserver) {
+    sectionObserver.disconnect()
+    sectionObserver = null
+  }
+})
 </script>
 
 <template>
   <div class="resources-root">
-    <section class="card resources-section">
+    <section class="card resources-section resources-section--highlight">
       <div class="resources-section-header">
         <p class="resources-kicker">Ressources</p>
         <h2 class="resources-title">Sons et ambiances</h2>
@@ -174,7 +204,7 @@ function openSound(id: string) {
       </div>
     </section>
 
-    <section class="card resources-section resources-mindset">
+    <section class="card resources-section resources-mindset resources-section--highlight">
       <div class="resources-section-header">
         <p class="resources-kicker">Mindset</p>
         <h2 class="resources-title">Changer de regard</h2>
@@ -197,7 +227,17 @@ function openSound(id: string) {
             maintenant.
           </p>
         </div>
-        <div class="resources-mindset-field">
+        <button
+          type="button"
+          class="resources-mindset-more"
+          @click="showMindsetDetails = !showMindsetDetails"
+        >
+          {{ showMindsetDetails ? 'Masquer' : 'Voir plus' }}
+        </button>
+        <div
+          v-if="showMindsetDetails"
+          class="resources-mindset-field"
+        >
           <label class="resources-mindset-label">
             Deposer une pensee
             <textarea
@@ -248,18 +288,49 @@ function openSound(id: string) {
   max-width: 420px;
   width: 100%;
   margin: 0 auto;
-  padding: 0.5rem 0.25rem 0.75rem;
+  padding: 0.5rem 0.25rem 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1.1rem;
 }
 
 .resources-section {
   padding: 0.9rem 0.9rem 0.9rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+.resources-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.resources-section--highlight {
+  background:
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.16), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 60%),
+    #111111;
+  border-color: rgba(255, 255, 255, 0.09);
 }
 
 .resources-section-header {
   margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.resources-section-header::before {
+  content: '';
+  position: absolute;
+  inset: -16px -12px auto -12px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(20, 244, 209, 0.15), transparent 55%);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .resources-kicker {
@@ -290,6 +361,12 @@ function openSound(id: string) {
   gap: 0.75rem;
   overflow-x: auto;
   padding-bottom: 0.25rem;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.resources-sounds-strip::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .resources-sound-card {
@@ -331,6 +408,10 @@ function openSound(id: string) {
   padding: 0.7rem 0.8rem;
   background: #111111;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s ease-out;
 }
 
 .resources-breathing-title {
@@ -367,11 +448,49 @@ function openSound(id: string) {
 .resources-chip {
   width: 100%;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(20, 244, 209, 0.16), transparent 55%),
+    #020617;
   color: #e5e7eb;
   padding: 0.45rem 0.5rem;
   font-size: 0.8rem;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 10px 24px rgba(20, 244, 209, 0.18);
+  transition:
+    background-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s ease-out,
+    border-color 0.12s ease-out;
+}
+
+.resources-chip:hover {
+  border-color: rgba(20, 244, 209, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.5),
+    0 16px 32px rgba(20, 244, 209, 0.28);
+  transform: translateY(-1px);
+}
+
+.resources-chip:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.45),
+    0 10px 20px rgba(20, 244, 209, 0.2);
+  animation: resources-chip-tap 0.12s ease-out;
+}
+
+@keyframes resources-chip-tap {
+  0% {
+    transform: scale(0.97);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .resources-move-card {
@@ -379,9 +498,13 @@ function openSound(id: string) {
   align-items: center;
   gap: 0.7rem;
   border-radius: 0.9rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.7rem 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: #111111;
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s ease-out;
 }
 
 .resources-move-icon-circle {
@@ -418,6 +541,10 @@ function openSound(id: string) {
   padding: 0.7rem 0.8rem;
   background: #111111;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s ease-out;
 }
 
 .resources-mindset-title {
@@ -439,6 +566,28 @@ function openSound(id: string) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.resources-breathing-card:hover,
+.resources-move-card:hover,
+.resources-mindset-block:hover,
+.resources-mindset-field:hover {
+  border-color: rgba(20, 244, 209, 0.6);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.25),
+    0 14px 32px rgba(20, 244, 209, 0.22);
+  transform: translateY(-1px);
+}
+
+.resources-mindset-more {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
 }
 
 .resources-mindset-label {

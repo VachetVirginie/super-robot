@@ -43,7 +43,7 @@ async function onSubmit() {
     }
 
     message.value =
-      'Ton mot de passe a ete mis a jour. Tu peux maintenant continuer dans Mouvea.'
+      'Ton mot de passe a ete mis a jour. Tu peux maintenant continuer dans Olvius.'
   } finally {
     isSubmitting.value = false
   }

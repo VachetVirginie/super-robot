@@ -1300,7 +1300,7 @@ onBeforeUnmount(() => {
 <template>
   <main class="app">
     <header class="topbar">
-      <h1 class="brand">Mouvea</h1>
+      <h1 class="brand">Olvius</h1>
       <div v-if="isAuthenticated" class="topbar-right">
         <button
           type="button"

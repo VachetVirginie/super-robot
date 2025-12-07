@@ -1178,28 +1178,28 @@ function onCalendarSelectDay(iso: string) {
   router.push({ name: 'jour', params: { iso } })
 }
 
-function onCalendarTouchStart(event: TouchEvent) {
-  if (!event.touches.length) return
-  const touch = event.touches.item(0)
-  if (!touch) return
-  calendarTouchStartX.value = touch.clientX
-}
+// function onCalendarTouchStart(event: TouchEvent) {
+//   if (!event.touches.length) return
+//   const touch = event.touches.item(0)
+//   if (!touch) return
+//   calendarTouchStartX.value = touch.clientX
+// }
 
-function onCalendarTouchEnd(event: TouchEvent) {
-  if (calendarTouchStartX.value === null || !event.changedTouches.length) {
-    return
-  }
-  const touch = event.changedTouches.item(0)
-  if (!touch) return
-  const deltaX = touch.clientX - calendarTouchStartX.value
-  const threshold = 40
-  if (deltaX > threshold) {
-    void changeCalendarMonth(-1)
-  } else if (deltaX < -threshold) {
-    void changeCalendarMonth(1)
-  }
-  calendarTouchStartX.value = null
-}
+// function onCalendarTouchEnd(event: TouchEvent) {
+//   if (calendarTouchStartX.value === null || !event.changedTouches.length) {
+//     return
+//   }
+//   const touch = event.changedTouches.item(0)
+//   if (!touch) return
+//   const deltaX = touch.clientX - calendarTouchStartX.value
+//   const threshold = 40
+//   if (deltaX > threshold) {
+//     void changeCalendarMonth(-1)
+//   } else if (deltaX < -threshold) {
+//     void changeCalendarMonth(1)
+//   }
+//   calendarTouchStartX.value = null
+// }
 
 async function onSaveDisplayNameFromProfile() {
   const previousError = profileError.value

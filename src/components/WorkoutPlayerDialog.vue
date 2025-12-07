@@ -401,6 +401,7 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 0.85rem;
   opacity: 0.85;
+  color: var(--accent-soft);
 }
 
 .workout-player-block {

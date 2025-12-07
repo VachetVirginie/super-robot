@@ -640,7 +640,7 @@ const calendarYear = ref(new Date().getFullYear())
 const calendarMonth = ref(new Date().getMonth())
 const calendarSessionDates = ref<string[]>([])
 const calendarStressByDay = ref<Record<string, { avg: number; count: number }>>({})
-const calendarTouchStartX = ref<number | null>(null)
+// const calendarTouchStartX = ref<number | null>(null)
 
 const snackbarMessage = ref<string | null>(null)
 const snackbarType = ref<'success' | 'error' | null>(null)

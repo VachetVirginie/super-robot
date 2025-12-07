@@ -177,6 +177,17 @@ const energyLabel = computed(() => {
   return labels[index] ?? labels[2]
 })
 
+const energyPercent = computed(() => {
+  const value = energyLevel.value
+  const clamped = Math.min(Math.max(value, 0), 4)
+  return (clamped / 4) * 100
+})
+
+function selectEnergy(value: number) {
+  energyLevel.value = value
+  vibrateLight()
+}
+
 const slotLabel = computed(() => {
   const option = slotOptions.find((opt) => opt.value === selectedSlot.value)
   return option?.label ?? ''
@@ -446,14 +457,22 @@ function onConfirm() {
             </p>
             <div class="morning-energy-row">
               <span class="morning-energy-label">Pas du tout</span>
-              <input
-                v-model="energyLevel"
-                type="range"
-                min="0"
-                max="4"
-                step="1"
-                class="morning-energy-slider"
-              />
+              <div class="energy-gauge">
+                <div class="energy-gauge-track">
+                  <div
+                    class="energy-gauge-fill"
+                    :style="{ width: energyPercent + '%' }"
+                  ></div>
+                  <button
+                    v-for="level in 5"
+                    :key="level"
+                    type="button"
+                    class="energy-gauge-step"
+                    :class="{ 'is-active': energyLevel >= level - 1 }"
+                    @click="selectEnergy(level - 1)"
+                  ></button>
+                </div>
+              </div>
               <span class="morning-energy-label">Au max</span>
             </div>
           </div>
@@ -991,6 +1010,61 @@ function onConfirm() {
 .morning-energy-slider {
   flex: 1;
   accent-color: #22c55e;
+}
+
+.energy-gauge {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.energy-gauge-track {
+  position: relative;
+  width: 100%;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #111827, #020617);
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+.energy-gauge-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #a3e635);
+  transition: width 0.18s ease-out;
+}
+
+.energy-gauge-step {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.energy-gauge-step::after {
+  content: '';
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  left: 50%;
+  width: 2px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 0.18s ease-out, transform 0.18s ease-out;
+}
+
+.energy-gauge-step.is-active::after {
+  background: rgba(248, 250, 252, 0.8);
+  transform: scaleY(1.1);
 }
 
 .morning-priorities-grid {

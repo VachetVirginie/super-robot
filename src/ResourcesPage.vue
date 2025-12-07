@@ -57,12 +57,6 @@ const movementPresets = [
   { key: 'wrists', title: 'Mobilite des poignets', context: 'Ideal si tu travailles beaucoup assise.' },
 ]
 
-const ritualShortcuts = [
-  { key: 'morning', title: 'Rituel du matin', hint: 'Commencer la journee du bon pied.' },
-  { key: 'midday', title: 'Pause du midi', hint: 'Souffler au milieu de la journee.' },
-  { key: 'evening', title: 'Bilan du soir', hint: 'Fermer la journee en douceur.' },
-]
-
 function openBreathingFlow(id: string) {
   router.push({ name: 'breath', params: { id } })
 }
@@ -72,6 +66,8 @@ function openSound(id: string) {
 }
 
 const showMindsetDetails = ref(false)
+
+const showGratitudeDetails = ref(false)
 
 let sectionObserver: IntersectionObserver | null = null
 
@@ -253,31 +249,45 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <section class="card resources-section">
+    <section class="card resources-section resources-section">
       <div class="resources-section-header">
-        <p class="resources-kicker">Rituels</p>
-        <h2 class="resources-title">Guides et rituels</h2>
+        <p class="resources-kicker">Gratitude</p>
+        <h2 class="resources-title">Changer de regard par la gratitude</h2>
         <p class="resources-text">
-          Des raccourcis vers tes routines matin, midi et soir.
+          Prendre une minute pour remarquer ce qui te soutient deja aujourd'hui.
         </p>
       </div>
 
-      <div class="resources-rituals-list">
-        <article
-          v-for="item in ritualShortcuts"
-          :key="item.key"
-          class="resources-ritual-row"
+      <div class="resources-mindset-body">
+        <div class="resources-mindset-block">
+          <h3 class="resources-mindset-title">Gratitude du jour</h3>
+          <p class="resources-mindset-text">
+            Note 3 petites choses pour lesquelles tu peux dire merci aujourd'hui.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="resources-mindset-more"
+          @click="showGratitudeDetails = !showGratitudeDetails"
         >
-          <div class="resources-ritual-main">
-            <h3 class="resources-ritual-title">{{ item.title }}</h3>
-            <p class="resources-ritual-hint">
-              {{ item.hint }}
-            </p>
-          </div>
-          <button type="button" class="resources-ritual-cta">
-            Ouvrir
+          {{ showGratitudeDetails ? 'Masquer' : 'Ecrire' }}
+        </button>
+        <div
+          v-if="showGratitudeDetails"
+          class="resources-mindset-field"
+        >
+          <label class="resources-mindset-label">
+            Tes 3 gratitudes
+            <textarea
+              rows="3"
+              class="resources-mindset-textarea"
+              placeholder="Ex : un message d'une amie, un rayon de soleil, un cafe chaud..."
+            ></textarea>
+          </label>
+          <button type="button" class="primary resources-mindset-cta">
+            Garder en tete pour aujourd'hui
           </button>
-        </article>
+        </div>
       </div>
     </section>
   </div>

@@ -104,7 +104,7 @@ function formatTime(value: number) {
 // const formattedRemainingTime = computed(() => formatTime(remainingSeconds.value))
 const elapsedSeconds = computed(() => SESSION_DURATION - remainingSeconds.value)
 const formattedElapsedTime = computed(() => formatTime(elapsedSeconds.value))
-const formattedSessionDuration = computed(() => formatTime(SESSION_DURATION))
+// const formattedSessionDuration = computed(() => formatTime(SESSION_DURATION))
 const sessionProgressPercent = computed(() => {
   if (SESSION_DURATION <= 0) return 0
   const ratio = elapsedSeconds.value / SESSION_DURATION
@@ -320,7 +320,7 @@ async function onSaveReflection() {
       respirer et laisser ton corps se detendre quelques minutes.
     </p>
 
-    <div v-if="!isOverlayOpen" class="player-track-select">
+    <div v-if="!isOverlayOpen && !showReflection" class="player-track-select">
       <label class="player-track-label" for="zen-track-select">Choisir une ambiance</label>
       <select
         id="zen-track-select"
@@ -333,7 +333,7 @@ async function onSaveReflection() {
       </select>
     </div>
 
-    <div class="player-card">
+    <div v-if="!showReflection" class="player-card">
       <div class="player-header">
         <div class="player-badge">Anti-stress</div>
       </div>
@@ -345,7 +345,7 @@ async function onSaveReflection() {
       </div>
     </div>
 
-    <div v-if="isOverlayOpen" class="zen-overlay">
+    <div v-if="isOverlayOpen && !showReflection" class="zen-overlay">
       <div class="zen-overlay-inner">
         <header class="zen-overlay-header">
           <button
@@ -356,10 +356,27 @@ async function onSaveReflection() {
             <i class="pi pi-arrow-left" aria-hidden="true"></i>
           </button>
           <!-- <div class="zen-overlay-header-title">{{ formattedRemainingTime }}</div> -->
-          <span class="zen-overlay-timer">{{ formattedSessionDuration }}</span>
         </header>
 
         <div class="zen-overlay-body">
+          <div
+            :class="['zen-overlay-visual', { 'is-playing': isPlaying }]"
+            @click="onVisualClick"
+          >
+            <div class="circle outer"></div>
+            <div class="circle middle"></div>
+            <div class="circle inner"></div>
+            <div class="zen-overlay-timer">
+            </div>
+          </div>
+
+          <div class="zen-overlay-text">
+            <h3 class="zen-overlay-title">{{ trackTitle }}</h3>
+            <p class="zen-overlay-subtitle">
+              {{ trackSubtitle }}
+            </p>
+          </div>
+
           <div class="player-track-select zen-overlay-track-select">
             <label class="player-track-label" for="zen-track-select-overlay">
               Choisir une ambiance
@@ -373,22 +390,6 @@ async function onSaveReflection() {
                 {{ track.label }}
               </option>
             </select>
-          </div>
-
-          <div
-            :class="['zen-overlay-visual', { 'is-playing': isPlaying }]"
-            @click="onVisualClick"
-          >
-            <div class="circle outer"></div>
-            <div class="circle middle"></div>
-            <div class="circle inner"></div>
-          </div>
-
-          <div class="zen-overlay-text">
-            <h3 class="zen-overlay-title">{{ trackTitle }}</h3>
-            <p class="zen-overlay-subtitle">
-              {{ trackSubtitle }}
-            </p>
           </div>
 
           <div class="zen-overlay-progress">
@@ -459,11 +460,8 @@ async function onSaveReflection() {
       </div>
     </div>
 
-    <div
-      v-if="showReflection"
-      class="dialog-backdrop"
-      @click.self="showReflection = false"
-    >
+    <div v-if="showReflection" class="reflection-page">
+      <p class="step-indicator">Etape 2 / 2</p>
       <div class="dialog-card reflection-card">
         <h3 class="reflection-title">Prendre un petit recul</h3>
         <p class="reflection-subtitle">
@@ -524,10 +522,11 @@ async function onSaveReflection() {
 
 .alert-title {
   margin: 0;
-  font-size: 1.15rem;
-  letter-spacing: 0.08em;
+  font-size: 1.3rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 600;
+  opacity: 0.8;
 }
 
 .alert-subtitle {
@@ -544,20 +543,42 @@ async function onSaveReflection() {
 }
 
 .player-track-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent-soft);
-  opacity: 0.95;
+  letter-spacing: 0.12em;
+  color: rgba(148, 163, 184, 0.9);
+  opacity: 0.9;
 }
 
 .player-track-select-input {
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
-  padding: 0.4rem 0.75rem;
+  padding: 0.45rem 2.4rem 0.45rem 0.9rem;
   font-size: 0.85rem;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='7' viewBox='0 0 10 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L5 5.5L9 1.5' stroke='%2314F4D1' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 10px 7px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.player-track-select-input:hover {
+  border-color: rgba(20, 244, 209, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.4),
+    0 0 18px rgba(20, 244, 209, 0.25);
+}
+
+.player-track-select-input:focus-visible {
+  outline: none;
+  border-color: rgba(20, 244, 209, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.7),
+    0 0 22px rgba(20, 244, 209, 0.4);
 }
 
 .player-card {
@@ -613,25 +634,51 @@ async function onSaveReflection() {
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  border: 1px solid rgba(248, 250, 252, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(148, 255, 194, 0.12), transparent 55%);
 }
 
 .circle.outer {
-  opacity: 0.25;
+  opacity: 0.45;
+  backdrop-filter: blur(2px);
 }
 
 .circle.middle {
-  inset: 8px;
-  opacity: 0.45;
+  inset: 10px;
+  opacity: 0.65;
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
 .circle.inner {
-  inset: 18px;
+  inset: 26px;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 30% 20%, #bbf7d0 0, #4ade80 40%, #15803d 85%);
+    radial-gradient(circle at 30% 20%, #bbf7d0 0, #4ade80 40%, #15803d 82%);
   box-shadow:
     0 20px 55px rgba(0, 0, 0, 0.9),
-    0 0 40px rgba(34, 197, 94, 0.35);
+    0 0 40px rgba(34, 197, 94, 0.5);
+}
+
+.circle.inner::before {
+  content: '';
+  position: absolute;
+  inset: 20% 16% 52% 10%;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 30% 10%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.08) 45%,
+      transparent 70%);
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.circle.inner::after {
+  content: '';
+  position: absolute;
+  inset: 10%;
+  border-radius: inherit;
+  border: 1px solid rgba(226, 232, 240, 0.25);
+  opacity: 0.7;
 }
 
 .player-info {
@@ -753,11 +800,16 @@ async function onSaveReflection() {
 }
 
 .zen-overlay-timer {
-  font-size: 1rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--accent-soft);
+  letter-spacing: 0.12em;
+  color: #f9fafb;
 }
 
 .zen-overlay-close {
@@ -805,60 +857,192 @@ async function onSaveReflection() {
 
 .zen-overlay-visual {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 220px;
+  height: 220px;
   margin-top: 4.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(20, 244, 209, 0.24), transparent 55%),
+    radial-gradient(circle at 80% 110%, rgba(56, 189, 248, 0.2), transparent 55%),
+    radial-gradient(circle at 50% 60%, rgba(15, 23, 42, 0.95), #020617);
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.18),
+    0 26px 80px rgba(15, 23, 42, 0.95);
+  overflow: hidden;
+}
+
+.zen-overlay-visual::before {
+  content: '';
+  position: absolute;
+  inset: -18%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(20, 244, 209, 0.2), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.18), transparent 55%);
+  filter: blur(18px);
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.zen-overlay-visual::after {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 60% 45% 55% 40% / 55% 60% 45% 50%;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 100%, rgba(20, 244, 209, 0.45), transparent 55%),
+    radial-gradient(circle at 50% 60%, rgba(15, 118, 110, 0.95), #020617);
+  opacity: 0.45;
+  filter: blur(6px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* Sphère fluide abstraite dans l’overlay */
+.zen-overlay-visual .circle {
+  border: none;
+  background: transparent;
+}
+
+.zen-overlay-visual .circle.outer {
+  width: 115%;
+  height: 115%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(20, 244, 209, 0.6), transparent 55%),
+    radial-gradient(circle at 80% 120%, rgba(56, 189, 248, 0.4), transparent 55%),
+    radial-gradient(circle at 50% 60%, rgba(15, 118, 110, 0.9), #020617);
+  opacity: 0.95;
+  filter: blur(2px);
+}
+
+.zen-overlay-visual .circle.middle {
+  width: 82%;
+  height: 82%;
+  border-radius: 58% 42% 60% 40% / 52% 62% 38% 48%;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.3), transparent 45%),
+    radial-gradient(circle at 80% 80%, rgba(20, 244, 209, 0.55), transparent 55%),
+    radial-gradient(circle at 50% 60%, #22c55e, #0f766e 65%, #020617 100%);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.95),
+    0 0 80px rgba(20, 244, 209, 0.7);
+}
+
+.zen-overlay-visual .circle.inner {
+  width: 64%;
+  height: 64%;
+  border-radius: 60% 40% 55% 45% / 45% 60% 40% 55%;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.35), transparent 40%),
+    radial-gradient(circle at 0% 80%, rgba(56, 189, 248, 0.36), transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(190, 242, 100, 0.32), transparent 55%),
+    radial-gradient(circle at 50% 60%, #22c55e, #15803d 60%, #022c22 100%);
+  overflow: hidden;
+}
+
+.zen-overlay-visual .circle.inner::before {
+  content: '';
+  position: absolute;
+  inset: 18% 8% 52% 18%;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(255, 255, 255, 0.9), transparent 55%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 60%);
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+.zen-overlay-visual .circle.inner::after {
+  content: '';
+  position: absolute;
+  inset: 55% -10% 5% -25%;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 0% 50%, rgba(20, 244, 209, 0.8), transparent 60%);
+  opacity: 0.7;
+  filter: blur(12px);
+  mix-blend-mode: screen;
 }
 
 .zen-overlay-visual.is-playing .circle.outer {
-  animation: breatheOuter 8s ease-in-out infinite;
+  animation: breatheOuter 10s ease-in-out infinite;
 }
 
 .zen-overlay-visual.is-playing .circle.middle {
-  animation: breatheMiddle 8s ease-in-out infinite;
+  animation: breatheMiddle 10s ease-in-out infinite;
 }
 
 .zen-overlay-visual.is-playing .circle.inner {
-  animation: breatheInner 8s ease-in-out infinite;
+  animation: breatheInner 10s ease-in-out infinite;
+}
+
+.zen-overlay-visual.is-playing::before {
+  animation: breatheHalo 10s ease-in-out infinite;
+}
+
+.zen-overlay-visual.is-playing .circle.inner::before {
+  animation: breatheHighlight 10s ease-in-out infinite;
 }
 
 @keyframes breatheOuter {
   0%,
   100% {
-    transform: scale(1);
-    opacity: 0.25;
+    transform: scale(0.95) translate3d(0, 0, 0);
+    opacity: 0.7;
   }
   50% {
-    transform: scale(1.08);
-    opacity: 0.4;
+    transform: scale(1.08) translate3d(0, -2px, 0);
+    opacity: 1;
   }
 }
 
 @keyframes breatheMiddle {
   0%,
   100% {
-    transform: scale(1);
-    opacity: 0.45;
+    transform: scale(0.96);
   }
   50% {
-    transform: scale(1.12);
-    opacity: 0.6;
+    transform: scale(1.1);
   }
 }
 
 @keyframes breatheInner {
   0%,
   100% {
-    transform: scale(1);
-    box-shadow:
-      0 20px 55px rgba(0, 0, 0, 0.9),
-      0 0 40px rgba(34, 197, 94, 0.35);
+    transform: translate3d(0, 0, 0) scale(0.9);
   }
   50% {
-    transform: scale(1.14);
-    box-shadow:
-      0 26px 65px rgba(0, 0, 0, 1),
-      0 0 80px rgba(34, 197, 94, 0.6);
+    transform: translate3d(0, -4px, 0) scale(1.16);
+  }
+}
+
+@keyframes breatheHalo {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+@keyframes breatheHighlight {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(0, -4px, 0);
+    opacity: 1;
   }
 }
 
@@ -897,6 +1081,10 @@ async function onSaveReflection() {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.reflection-page {
+  margin-top: 1rem;
 }
 
 .reflection-card {

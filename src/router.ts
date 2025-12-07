@@ -10,6 +10,7 @@ import RituelsPage from './RituelsPage.vue'
 import WeekConfigPage from './WeekConfigPage.vue'
 import ResetPasswordPage from './ResetPasswordPage.vue'
 import DayDetailsPage from './DayDetailsPage.vue'
+import CalendarPage from './CalendarPage.vue'
 
 const routes = [
   {
@@ -64,6 +65,11 @@ const routes = [
         path: 'pause',
         name: 'pause',
         component: AlertPage,
+      },
+      {
+        path: 'calendrier',
+        name: 'calendrier',
+        component: CalendarPage,
       },
       {
         path: 'jour/:iso',

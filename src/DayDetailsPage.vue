@@ -408,7 +408,7 @@ watch(
       <div class="day-block" v-if="eveningCheckin">
         <h4 class="day-block-title">Soir</h4>
         <p class="day-text day-text--muted">
-          Niveau de stress : {{ eveningCheckin.stress_level ?? '' }}/5
+          Niveau de stress : {{ eveningCheckin.stress_level ?? '—' }}/5
           <span v-if="eveningCheckin.note">· {{ eveningCheckin.note }}</span>
         </p>
         <p v-if="eveningCheckin.question" class="day-text day-text--muted">

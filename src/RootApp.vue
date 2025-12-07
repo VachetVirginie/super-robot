@@ -16,7 +16,6 @@ import { pickWorkoutTemplate, type WorkoutKind, WORKOUT_TEMPLATES } from './work
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
 import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
-import MonthCalendarDialog from './components/MonthCalendarDialog.vue'
 import WellbeingDialog from './components/WellbeingDialog.vue'
 import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
 import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
@@ -1131,7 +1130,6 @@ async function openMonthCalendar() {
   const now = new Date()
   calendarYear.value = now.getFullYear()
   calendarMonth.value = now.getMonth()
-  isMonthCalendarOpen.value = true
   try {
     calendarSessionDates.value = await getMonthSessionDates(
       calendarYear.value,
@@ -1149,6 +1147,8 @@ async function openMonthCalendar() {
     }
     calendarSessionDates.value = []
     calendarStressByDay.value = {}
+  } finally {
+    router.push({ name: 'calendrier' })
   }
 }
 
@@ -1421,6 +1421,17 @@ onBeforeUnmount(() => {
         :update-stress-reason="updateStressReason"
       />
       <component
+        v-else-if="route.name === 'calendrier'"
+        :is="Component"
+        :month-label="calendarMonthLabel"
+        :cells="calendarCells"
+        :month-avg-stress="calendarMonthStressSummary.avg"
+        :month-checkins-count="calendarMonthStressSummary.count"
+        @prev-month="changeCalendarMonth(-1)"
+        @next-month="changeCalendarMonth(1)"
+        @select-day="onCalendarSelectDay"
+      />
+      <component
         v-else-if="route.name === 'jour'"
         :is="Component"
         :is-authenticated="isAuthenticated"
@@ -1537,20 +1548,6 @@ onBeforeUnmount(() => {
       :is-saving="isCheckinSaving"
       @close="isEveningDialogOpen = false"
       @confirm="onEveningConfirm"
-    />
-
-    <MonthCalendarDialog
-      v-if="isMonthCalendarOpen"
-      :month-label="calendarMonthLabel"
-      :cells="calendarCells"
-      :month-avg-stress="calendarMonthStressSummary.avg"
-      :month-checkins-count="calendarMonthStressSummary.count"
-      @close="isMonthCalendarOpen = false"
-      @prev-month="changeCalendarMonth(-1)"
-      @next-month="changeCalendarMonth(1)"
-      @touch-start="onCalendarTouchStart"
-      @touch-end="onCalendarTouchEnd"
-      @select-day="onCalendarSelectDay"
     />
 
     <div

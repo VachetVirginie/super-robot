@@ -19,26 +19,26 @@ const breathingPresets = [
   {
     key: 'coherence-5-5',
     title: 'Cohérence cardiaque (5-5)',
-    description: 'Inspire 5 secondes, expire 5 secondes, quelques minutes.',
-    context: 'Avant une reunion ou un moment stressant.',
+    description: 'Ralentit le systeme nerveux. 1 minute suffit.',
+    context: 'Pour calmer avant une reunion ou te recentrer.',
   },
   {
     key: 'box-4-4-4-4',
     title: 'Respiration carree (4-4-4-4)',
-    description: 'Inspire, retiens, expire, retiens, 4 secondes a chaque fois.',
-    context: 'Pour calmer le mental en quelques cycles.',
+    description: '4 temps egaux pour couper le pilote automatique.',
+    context: 'A utiliser quand les pensees tournent en boucle.',
   },
   {
     key: 'slow-6-6',
     title: 'Respiration lente (6-6)',
-    description: 'Respiration profonde et lente pour relacher la pression.',
+    description: 'Inspire 6s, expire 6s pour relacher la pression.',
     context: 'Ideal le soir ou quand tout va trop vite.',
   },
   {
     key: 'reset-3min',
     title: 'Reinitialisation mentale (3 min)',
-    description: 'Mini-protocole pour repartir du bon pied.',
-    context: 'Apres une discussion ou une journee chargee.',
+    description: 'Reset de 3 minutes pour repartir plus calme.',
+    context: 'Apres une journee chargee ou un conflit.',
   },
 ]
 
@@ -122,9 +122,6 @@ function openSound(id: string) {
           <h3 class="resources-breathing-title">{{ item.title }}</h3>
           <p class="resources-breathing-desc">
             {{ item.description }}
-          </p>
-          <p class="resources-breathing-meta">
-            {{ item.context }}
           </p>
         </article>
       </div>
@@ -283,8 +280,8 @@ function openSound(id: string) {
 
 .resources-text {
   margin: 0;
-  font-size: 0.85rem;
-  opacity: 0.9;
+  font-size: 0.8rem;
+  opacity: 0.75;
 }
 
 .resources-sounds-strip {

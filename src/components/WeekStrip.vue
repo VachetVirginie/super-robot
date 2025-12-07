@@ -186,7 +186,7 @@ function progressOpacity(day: WeekDay) {
 .week-strip-days {
   margin-top: 0.85rem;
   padding: 0.55rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 35px;
   background: #111827;
   display: flex;
   justify-content: space-between;

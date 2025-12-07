@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-defineProps<{
+interface ResourcesPageProps {
   isAuthenticated: boolean
-}>()
+  todayReflections: {
+    mindset_note: string | null
+    gratitude_note: string | null
+  } | null
+  isReflectionsSaving: boolean
+  reflectionsError: string | null
+  saveReflections: (payload: { mindsetNote?: string; gratitudeNote?: string }) => void | Promise<void>
+}
+
+const props = defineProps<ResourcesPageProps>()
 
 const router = useRouter()
 
@@ -66,8 +75,30 @@ function openSound(id: string) {
 }
 
 const showMindsetDetails = ref(false)
-
 const showGratitudeDetails = ref(false)
+
+const mindsetText = ref('')
+const gratitudeText = ref('')
+
+watch(
+  () => props.todayReflections,
+  (value) => {
+    mindsetText.value = value?.mindset_note ?? ''
+    gratitudeText.value = value?.gratitude_note ?? ''
+  },
+  { immediate: true },
+)
+
+async function onSaveReflections() {
+  if (!props.isAuthenticated) {
+    return
+  }
+
+  await props.saveReflections({
+    mindsetNote: mindsetText.value,
+    gratitudeNote: gratitudeText.value,
+  })
+}
 
 let sectionObserver: IntersectionObserver | null = null
 
@@ -237,13 +268,20 @@ onBeforeUnmount(() => {
           <label class="resources-mindset-label">
             Deposer une pensee
             <textarea
+              v-model="mindsetText"
               rows="3"
               class="resources-mindset-textarea"
               placeholder="Une phrase ou deux suffisent. C'est juste pour toi."
             ></textarea>
           </label>
-          <button type="button" class="primary resources-mindset-cta">
-            Enregistrer pour aujourd'hui
+          <button
+            type="button"
+            class="primary resources-mindset-cta"
+            :disabled="!isAuthenticated || isReflectionsSaving"
+            @click="onSaveReflections"
+          >
+            <span v-if="isReflectionsSaving">Enregistrement...</span>
+            <span v-else>Enregistrer pour aujourd'hui</span>
           </button>
         </div>
       </div>
@@ -279,13 +317,20 @@ onBeforeUnmount(() => {
           <label class="resources-mindset-label">
             Tes 3 gratitudes
             <textarea
+              v-model="gratitudeText"
               rows="3"
               class="resources-mindset-textarea"
               placeholder="Ex : un message d'une amie, un rayon de soleil, un cafe chaud..."
             ></textarea>
           </label>
-          <button type="button" class="primary resources-mindset-cta">
-            Garder en tete pour aujourd'hui
+          <button
+            type="button"
+            class="primary resources-mindset-cta"
+            :disabled="!isAuthenticated || isReflectionsSaving"
+            @click="onSaveReflections"
+          >
+            <span v-if="isReflectionsSaving">Enregistrement...</span>
+            <span v-else>Garder en tete pour aujourd'hui</span>
           </button>
         </div>
       </div>

@@ -143,11 +143,11 @@ watch(
 
 <template>
   <section v-if="isAuthenticated && todaysMotivation" class="card hero">
-    <h2>{{ todaysMotivation.title }}</h2>
+    <h2 class="hero-title">{{ todaysMotivation.title }}</h2>
     <p class="hero-text">
       {{ todaysMotivation.body }}
     </p>
-    <div class="hero-image"></div>
+    <!-- <div class="hero-image"></div> -->
     <!-- <img src="/images/dd.jpg" alt="Hero" /> -->
   </section>
 
@@ -310,9 +310,21 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  background:
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.16), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 60%),
+    #111111;
+  border-color: rgba(255, 255, 255, 0.09);
+}
+.hero-title {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 .hero-text {
-  margin: 0;
+  margin: 0.25rem 0 0;
   font-size: 0.95rem;
   opacity: 0.9;
 }

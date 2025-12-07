@@ -12,6 +12,7 @@ import { useStressReasons } from './composables/useStressReasons'
 import { useRituals } from './composables/useRituals'
 import { useDailyPlan, type TodaySlot, type DailyIntention } from './composables/useDailyPlan'
 import { useMorningState } from './composables/useMorningState'
+import { useDailyReflections } from './composables/useDailyReflections'
 import { pickWorkoutTemplate, type WorkoutKind, WORKOUT_TEMPLATES } from './workoutCatalog'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
@@ -142,6 +143,13 @@ const {
   weeklyAverageSleepBedTime,
   weeklyAverageSleepWakeTime,
 } = useMorningState(session)
+
+const {
+  todayReflections,
+  isReflectionsSaving,
+  reflectionsError,
+  saveDailyReflections,
+} = useDailyReflections(session)
 
 const pendingMiddayMoodLevel = ref<number | null>(null)
 const pendingMiddayPath = ref<'move' | 'breathe' | null>(null)
@@ -1438,6 +1446,10 @@ onBeforeUnmount(() => {
         v-else-if="route.name === 'ressources'"
         :is="Component"
         :is-authenticated="isAuthenticated"
+        :today-reflections="todayReflections"
+        :is-reflections-saving="isReflectionsSaving"
+        :reflections-error="reflectionsError"
+        :save-reflections="saveDailyReflections"
       />
       <component
         v-else-if="route.name === 'breath'"
@@ -2001,7 +2013,7 @@ onBeforeUnmount(() => {
 .week-strip-days {
   margin-top: 0.85rem;
   padding: 0.55rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 35px;
   background: #111827;
   display: flex;
   justify-content: space-between;

@@ -65,6 +65,10 @@ const ritualShortcuts = [
 function openBreathingFlow(id: string) {
   router.push({ name: 'breath', params: { id } })
 }
+
+function openSound(id: string) {
+  router.push({ name: 'pause', query: { sound: id } })
+}
 </script>
 
 <template>
@@ -88,7 +92,11 @@ function openBreathingFlow(id: string) {
           <p class="resources-sound-hint">
             {{ item.hint }}
           </p>
-          <button type="button" class="secondary resources-sound-cta">
+          <button
+            type="button"
+            class="secondary resources-sound-cta"
+            @click="openSound(item.key)"
+          >
             Ecouter
           </button>
         </article>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const isPlaying = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
+
+const router = useRouter()
 
 const SESSION_DURATION = 180
 
@@ -230,8 +232,27 @@ function openOverlay(autoStart?: boolean | Event) {
   }
 }
 
-function openRandomOverlayIfNeeded() {
+function openOverlayFromQuery() {
   const auto = route.query.auto
+  const soundParam = route.query.sound
+  const sound = Array.isArray(soundParam)
+    ? soundParam[0]
+    : typeof soundParam === 'string'
+      ? soundParam
+      : null
+
+  // Si un son est explicitement demande (depuis la page Ressources)
+  if (sound) {
+    const explicit = tracks.find((track) => track.id === sound)
+    if (explicit) {
+      selectedTrackId.value = explicit.id
+    }
+    // On ouvre le lecteur; lecture auto uniquement si auto=1
+    openOverlay(auto === '1')
+    return
+  }
+
+  // Comportement existant : auto=1 -> track aleatoire + lecture auto
   if (auto === '1') {
     if (tracks.length > 0) {
       const index = Math.floor(Math.random() * tracks.length)
@@ -249,8 +270,17 @@ function closeOverlay() {
   stopTimer()
   stopAudio()
 
+  const openedWithSound = !!route.query.sound
   const hasStarted = remainingSeconds.value < SESSION_DURATION
   const finished = remainingSeconds.value <= 0
+
+  // Si la pause a ete ouverte depuis la page Ressources avec un son explicite,
+  // on revient simplement en arriere sans afficher le formulaire de reflection.
+  if (openedWithSound) {
+    router.back()
+    return
+  }
+
   if (!isQuickPause.value && hasStarted && !finished) {
     showReflection.value = true
   }
@@ -279,9 +309,10 @@ watch(selectedTrackId, () => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  openRandomOverlayIfNeeded()
+  openOverlayFromQuery()
 
-  if (!isQuickPause.value) {
+  // Si aucune pause rapide ni son explicite, on ouvre le lecteur comme avant.
+  if (!isQuickPause.value && !route.query.sound) {
     openOverlay()
   }
 })

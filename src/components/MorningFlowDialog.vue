@@ -46,6 +46,49 @@ const selectedIntention = ref<DailyIntention>(props.initialIntention ?? 'none')
 const sleepBedTime = ref<string | null>(null)
 const sleepWakeTime = ref<string | null>(null)
 
+const SLEEP_MINUTES_IN_DAY = 24 * 60
+
+function timeToMinutes(value: string | null): number | null {
+  if (!value || value.length < 4) {
+    return null
+  }
+  const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+  const hour = Number(hourStr)
+  const minute = Number(minuteStr)
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    return null
+  }
+  return hour * 60 + minute
+}
+
+function minutesToTime(totalMinutes: number): string {
+  const normalized =
+    ((totalMinutes % SLEEP_MINUTES_IN_DAY) + SLEEP_MINUTES_IN_DAY) % SLEEP_MINUTES_IN_DAY
+  const hours = Math.floor(normalized / 60)
+  const minutes = normalized % 60
+  const h = String(hours).padStart(2, '0')
+  const m = String(minutes).padStart(2, '0')
+  return `${h}:${m}`
+}
+
+function buildSleepOptions(
+  currentValue: string | null,
+  fallbackMinutes: number,
+): { label: string; isCurrent: boolean }[] {
+  const baseMinutes = timeToMinutes(currentValue) ?? fallbackMinutes
+  const offsets = [-30, -15, 0, 15, 30]
+  return offsets.map((offset) => {
+    const minutes = baseMinutes + offset
+    return {
+      label: minutesToTime(minutes),
+      isCurrent: offset === 0,
+    }
+  })
+}
+
+const bedTimeOptions = computed(() => buildSleepOptions(sleepBedTime.value, 23 * 60))
+const wakeTimeOptions = computed(() => buildSleepOptions(sleepWakeTime.value, 7 * 60))
+
 const friendlyName = computed(() => {
   const raw = props.displayName?.trim()
   if (!raw) return ''
@@ -89,7 +132,7 @@ const contractProgressLine = computed(() => {
 })
 
 const currentStep = ref(1)
-const totalSteps = 7
+const totalSteps = 8
 
 const stepIndicatorLabel = computed(
   () => `Routine du matin · Etape ${currentStep.value} / ${totalSteps}`,
@@ -144,7 +187,7 @@ const intentionLabel = computed(() => {
   return option?.label ?? ''
 })
 
-const isLastStep = computed(() => currentStep.value === 7)
+const isLastStep = computed(() => currentStep.value === 8)
 
 const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer' : 'Continuer'))
 
@@ -185,6 +228,16 @@ function togglePriority(value: string) {
   }
   selectedPriorities.value = [...list, value]
   vibrateLight()
+}
+
+function adjustBedTime(deltaMinutes: number) {
+  const base = timeToMinutes(sleepBedTime.value) ?? 23 * 60
+  sleepBedTime.value = minutesToTime(base + deltaMinutes)
+}
+
+function adjustWakeTime(deltaMinutes: number) {
+  const base = timeToMinutes(sleepWakeTime.value) ?? 7 * 60
+  sleepWakeTime.value = minutesToTime(base + deltaMinutes)
 }
 
 function goToPreviousStep() {
@@ -249,39 +302,103 @@ function onConfirm() {
           </p>
 
           <div class="morning-step-main morning-section-card">
-            <h4 class="morning-section-title">Ton sommeil</h4>
+            <h4 class="morning-section-title">Heure du coucher</h4>
             <p class="morning-text">
-              A quelle heure tu t'es couche(e) hier soir et a quelle heure tu t'es leve(e) ?
+              A quelle heure tu t'es couche(e) hier soir ?
             </p>
 
-            <div class="morning-options-row morning-sleep-row">
-              <div class="morning-sleep-field">
-                <span class="morning-sleep-label">Coucher</span>
-                <input
-                  v-model="sleepBedTime"
-                  type="time"
-                  class="morning-time-input"
-                />
+            <div class="sleep-picker">
+              <div class="sleep-picker-track">
+                <div
+                  v-for="option in bedTimeOptions"
+                  :key="option.label"
+                  class="sleep-picker-row"
+                  :class="{ 'is-current': option.isCurrent }"
+                  @click="sleepBedTime = option.label"
+                >
+                  <span class="sleep-picker-time">
+                    {{ option.label }}
+                  </span>
+                </div>
               </div>
-
-              <div class="morning-sleep-field">
-                <span class="morning-sleep-label">Lever</span>
-                <input
-                  v-model="sleepWakeTime"
-                  type="time"
-                  class="morning-time-input"
-                />
-              </div>
+              <div class="sleep-picker-center-line"></div>
             </div>
 
-            <p class="morning-microcopy">
-              Une heure approximative suffit, c'est juste pour suivre les tendances.
-            </p>
+            <div class="sleep-picker-actions">
+              <button
+                type="button"
+                class="sleep-picker-chip"
+                @click="adjustBedTime(-15)"
+              >
+                -15 min
+              </button>
+              <button
+                type="button"
+                class="sleep-picker-chip"
+                @click="adjustBedTime(15)"
+              >
+                +15 min
+              </button>
+            </div>
           </div>
         </section>
 
         <section
           v-else-if="currentStep === 2"
+          class="morning-step-sleep"
+        >
+          <p class="morning-text morning-intro">
+            Et a quelle heure tu t'es leve(e) ce matin ?
+          </p>
+
+          <div class="morning-step-main morning-section-card">
+            <h4 class="morning-section-title">Heure du reveil</h4>
+            <p class="morning-text">
+              La aussi, une heure approximative suffit.
+            </p>
+
+            <div class="sleep-picker">
+              <div class="sleep-picker-track">
+                <div
+                  v-for="option in wakeTimeOptions"
+                  :key="option.label"
+                  class="sleep-picker-row"
+                  :class="{ 'is-current': option.isCurrent }"
+                  @click="sleepWakeTime = option.label"
+                >
+                  <span class="sleep-picker-time">
+                    {{ option.label }}
+                  </span>
+                </div>
+              </div>
+              <div class="sleep-picker-center-line"></div>
+            </div>
+
+            <div class="sleep-picker-actions">
+              <button
+                type="button"
+                class="sleep-picker-chip"
+                @click="adjustWakeTime(-15)"
+              >
+                -15 min
+              </button>
+              <button
+                type="button"
+                class="sleep-picker-chip"
+                @click="adjustWakeTime(15)"
+              >
+                +15 min
+              </button>
+            </div>
+
+            <p class="morning-microcopy">
+              Tu peux passer cette question si tu preferes.
+            </p>
+          </div>
+        </section>
+
+        <section
+          v-else-if="currentStep === 3"
           class="morning-step-mood"
         >
           <p class="morning-text morning-intro">
@@ -321,7 +438,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 3">
+        <section v-else-if="currentStep === 4">
           <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ton niveau d'energie</h4>
             <p class="morning-text">
@@ -342,7 +459,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 4">
+        <section v-else-if="currentStep === 5">
           <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ta priorite pour aujourdhui</h4>
             <p class="morning-text">
@@ -363,7 +480,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 5">
+        <section v-else-if="currentStep === 6">
           <div class="morning-step-main morning-section-card">
             <p v-if="previousSlotLabel" class="morning-previous-slot">
               Tu avais choisi : {{ previousSlotLabel }}. Tu veux changer ?
@@ -390,7 +507,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 6">
+        <section v-else-if="currentStep === 7">
           <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ton intention du jour</h4>
             <p class="morning-text">
@@ -443,7 +560,7 @@ function onConfirm() {
           Retour
         </button>
         <button
-          v-if="currentStep < 7"
+          v-if="currentStep < 8"
           type="button"
           class="morning-skip"
           @click="skipStep"
@@ -456,7 +573,7 @@ function onConfirm() {
           :disabled="isSaving || isLoading"
           @click="goToNextStep"
         >
-          <span v-if="isSaving && currentStep === 7">Enregistrement...</span>
+          <span v-if="isSaving && currentStep === 8">Enregistrement...</span>
           <span v-else>{{ primaryCtaLabel }}</span>
         </button>
       </div>
@@ -577,6 +694,63 @@ function onConfirm() {
 .morning-sleep-row {
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.sleep-picker {
+  position: relative;
+  margin-top: 1rem;
+  padding: 0.75rem 0;
+}
+
+.sleep-picker-track {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sleep-picker-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.25rem 0;
+  opacity: 0.6;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+.sleep-picker-row.is-current {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.sleep-picker-time {
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+}
+
+.sleep-picker-center-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.5);
+  pointer-events: none;
+}
+
+.sleep-picker-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.sleep-picker-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.7rem;
 }
 
 .morning-sleep-card {

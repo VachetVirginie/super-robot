@@ -1170,6 +1170,14 @@ async function changeCalendarMonth(delta: number) {
   calendarStressByDay.value = await getMonthStressByDay(year, monthIndex)
 }
 
+function onCalendarSelectDay(iso: string) {
+  if (!iso) {
+    return
+  }
+  isMonthCalendarOpen.value = false
+  router.push({ name: 'jour', params: { iso } })
+}
+
 function onCalendarTouchStart(event: TouchEvent) {
   if (!event.touches.length) return
   const touch = event.touches.item(0)
@@ -1413,6 +1421,11 @@ onBeforeUnmount(() => {
         :update-stress-reason="updateStressReason"
       />
       <component
+        v-else-if="route.name === 'jour'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+      />
+      <component
         v-else-if="route.name === 'pause'"
         :is="Component"
         :is-authenticated="isAuthenticated"
@@ -1537,6 +1550,7 @@ onBeforeUnmount(() => {
       @next-month="changeCalendarMonth(1)"
       @touch-start="onCalendarTouchStart"
       @touch-end="onCalendarTouchEnd"
+      @select-day="onCalendarSelectDay"
     />
 
     <div

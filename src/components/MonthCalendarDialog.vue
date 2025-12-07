@@ -15,9 +15,17 @@ const emit = defineEmits<{
   (e: 'next-month'): void
   (e: 'touch-start', event: TouchEvent): void
   (e: 'touch-end', event: TouchEvent): void
+  (e: 'select-day', iso: string): void
 }>()
 
 const showSessions = ref(true)
+
+function onCellClick(cell: CalendarCell) {
+  if (!cell.date || !cell.iso) {
+    return
+  }
+  emit('select-day', cell.iso)
+}
 </script>
 
 <template>
@@ -94,6 +102,7 @@ const showSessions = ref(true)
             'stress-high': cell.stressLevel && cell.stressLevel > 3.5,
           }"
           :disabled="cell.date === null"
+          @click="onCellClick(cell)"
         >
           <span v-if="cell.date !== null" class="calendar-date">
             {{ cell.date }}

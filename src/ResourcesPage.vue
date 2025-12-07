@@ -1,0 +1,500 @@
+<script setup lang="ts">
+defineProps<{
+  isAuthenticated: boolean
+}>()
+
+const soundPresets = [
+  { key: 'waves', title: 'Vagues', hint: 'Fond calme et regulier pour respirer.' },
+  { key: 'deep-sea', title: 'Mer profonde', hint: 'Sons graves pour se sentir enveloppee.' },
+  { key: 'soft-forest', title: 'Foret douce', hint: 'Oiseaux et feuillages legers.' },
+  { key: 'white-noise', title: 'Bruit blanc', hint: 'Masquer le bruit ambiant.' },
+  { key: 'soft-wind', title: 'Vent calme', hint: 'Souffle discret pour se poser.' },
+]
+
+const breathingPresets = [
+  {
+    key: 'coherence-5-5',
+    title: 'Cohérence cardiaque (5-5)',
+    description: 'Inspire 5 secondes, expire 5 secondes, quelques minutes.',
+    context: 'Avant une reunion ou un moment stressant.',
+  },
+  {
+    key: 'box-4-4-4-4',
+    title: 'Respiration carree (4-4-4-4)',
+    description: 'Inspire, retiens, expire, retiens, 4 secondes a chaque fois.',
+    context: 'Pour calmer le mental en quelques cycles.',
+  },
+  {
+    key: 'slow-6-6',
+    title: 'Respiration lente (6-6)',
+    description: 'Respiration profonde et lente pour relacher la pression.',
+    context: 'Ideal le soir ou quand tout va trop vite.',
+  },
+  {
+    key: 'reset-3min',
+    title: 'Reinitialisation mentale (3 min)',
+    description: 'Mini-protocole pour repartir du bon pied.',
+    context: 'Apres une discussion ou une journee chargee.',
+  },
+]
+
+const expressPresets = [
+  { key: 'shoulders', label: 'Relacher les epaules' },
+  { key: 'jaw', label: 'Decrisper la machoire' },
+  { key: 'body-scan', label: 'Scan corporel rapide' },
+  { key: 'heart-hands', label: 'Mains sur le coeur' },
+]
+
+const movementPresets = [
+  { key: 'back', title: 'Etirement du dos', context: '2 min pour defroisser le dos.' },
+  { key: 'neck', title: 'Mobilite de la nuque', context: 'Pour relacher les tensions du cou.' },
+  { key: 'chest', title: 'Ouverture du thorax', context: 'Respirer un peu plus large.' },
+  { key: 'wrists', title: 'Mobilite des poignets', context: 'Pour les journees clavier / souris.' },
+]
+
+const ritualShortcuts = [
+  { key: 'morning', title: 'Rituel du matin', hint: 'Commencer la journee du bon pied.' },
+  { key: 'midday', title: 'Pause du midi', hint: 'Souffler au milieu de la journee.' },
+  { key: 'evening', title: 'Bilan du soir', hint: 'Fermer la journee en douceur.' },
+]
+</script>
+
+<template>
+  <div class="resources-root">
+    <section class="card resources-section">
+      <div class="resources-section-header">
+        <p class="resources-kicker">Ressources</p>
+        <h2 class="resources-title">Sons et ambiances</h2>
+        <p class="resources-text">
+          Pour apaiser ton systeme nerveux en quelques secondes.
+        </p>
+      </div>
+
+      <div class="resources-sounds-strip">
+        <article
+          v-for="item in soundPresets"
+          :key="item.key"
+          class="resources-sound-card"
+        >
+          <h3 class="resources-sound-title">{{ item.title }}</h3>
+          <p class="resources-sound-hint">
+            {{ item.hint }}
+          </p>
+          <button type="button" class="secondary resources-sound-cta">
+            Ecouter
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <section class="card resources-section">
+      <div class="resources-section-header">
+        <p class="resources-kicker">Respirations</p>
+        <h2 class="resources-title">Respirations guidees</h2>
+        <p class="resources-text">
+          Des protocoles simples que tu peux utiliser a tout moment de la journee.
+        </p>
+      </div>
+
+      <div class="resources-breathing-list">
+        <article
+          v-for="item in breathingPresets"
+          :key="item.key"
+          class="resources-breathing-card"
+        >
+          <h3 class="resources-breathing-title">{{ item.title }}</h3>
+          <p class="resources-breathing-desc">
+            {{ item.description }}
+          </p>
+          <p class="resources-breathing-meta">
+            {{ item.context }}
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="card resources-section">
+      <div class="resources-section-header">
+        <p class="resources-kicker">Anti-stress express</p>
+        <h2 class="resources-title">1 minute pour relacher</h2>
+        <p class="resources-text">
+          Des micro-gestes pour detendre ton corps sans changer de piece.
+        </p>
+      </div>
+
+      <div class="resources-grid resources-grid-express">
+        <button
+          v-for="item in expressPresets"
+          :key="item.key"
+          type="button"
+          class="resources-chip"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+    </section>
+
+    <section class="card resources-section">
+      <div class="resources-section-header">
+        <p class="resources-kicker">Mouvement doux</p>
+        <h2 class="resources-title">Bouger sans performance</h2>
+        <p class="resources-text">
+          Des mini-seances pour remettre un peu de mouvement dans la journee.
+        </p>
+      </div>
+
+      <div class="resources-grid resources-grid-move">
+        <article
+          v-for="item in movementPresets"
+          :key="item.key"
+          class="resources-move-card"
+        >
+          <div class="resources-move-icon-circle"></div>
+          <div class="resources-move-content">
+            <h3 class="resources-move-title">{{ item.title }}</h3>
+            <p class="resources-move-text">
+              {{ item.context }}
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="card resources-section resources-mindset">
+      <div class="resources-section-header">
+        <p class="resources-kicker">Mindset</p>
+        <h2 class="resources-title">Changer de regard</h2>
+        <p class="resources-text">
+          Une question, une perspective, un espace pour deposer ce qui tourne en boucle.
+        </p>
+      </div>
+
+      <div class="resources-mindset-body">
+        <div class="resources-mindset-block">
+          <h3 class="resources-mindset-title">Question du jour</h3>
+          <p class="resources-mindset-text">
+            Quel petit geste pourrait rendre ta journee un peu plus douce pour toi ?
+          </p>
+        </div>
+        <div class="resources-mindset-block">
+          <h3 class="resources-mindset-title">Perspective</h3>
+          <p class="resources-mindset-text">
+            Tu ne controles pas tout ce qui arrive, mais tu peux choisir ce que tu nourris
+            maintenant.
+          </p>
+        </div>
+        <div class="resources-mindset-field">
+          <label class="resources-mindset-label">
+            Deposer une pensee
+            <textarea
+              rows="3"
+              class="resources-mindset-textarea"
+              placeholder="Une phrase ou deux suffisent. C'est juste pour toi."
+            ></textarea>
+          </label>
+          <button type="button" class="primary resources-mindset-cta">
+            Enregistrer pour aujourd'hui
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card resources-section">
+      <div class="resources-section-header">
+        <p class="resources-kicker">Rituels</p>
+        <h2 class="resources-title">Guides et rituels</h2>
+        <p class="resources-text">
+          Des raccourcis vers tes routines matin, midi et soir.
+        </p>
+      </div>
+
+      <div class="resources-rituals-list">
+        <article
+          v-for="item in ritualShortcuts"
+          :key="item.key"
+          class="resources-ritual-row"
+        >
+          <div class="resources-ritual-main">
+            <h3 class="resources-ritual-title">{{ item.title }}</h3>
+            <p class="resources-ritual-hint">
+              {{ item.hint }}
+            </p>
+          </div>
+          <button type="button" class="resources-ritual-cta">
+            Ouvrir
+          </button>
+        </article>
+      </div>
+    </section>
+  </div>
+</template>
+
+<style scoped>
+.resources-root {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.5rem 0.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resources-section {
+  padding: 0.9rem 0.9rem 0.9rem;
+}
+
+.resources-section-header {
+  margin-bottom: 0.75rem;
+}
+
+.resources-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-soft);
+  opacity: 0.9;
+}
+
+.resources-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.resources-text {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.resources-sounds-strip {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.resources-sound-card {
+  min-width: 220px;
+  max-width: 260px;
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.85rem;
+  background:
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.12), transparent 60%),
+    #111111;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resources-sound-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.resources-sound-hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.resources-sound-cta {
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+.resources-breathing-list {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.resources-breathing-card {
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.8rem;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resources-breathing-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.resources-breathing-desc {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.resources-breathing-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.resources-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.resources-grid-express {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.resources-grid-move {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.resources-chip {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.resources-move-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #111111;
+}
+
+.resources-move-icon-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 20% 0%, rgba(20, 244, 209, 0.2), rgba(15, 23, 42, 0.95));
+}
+
+.resources-move-title {
+  margin: 0 0 0.1rem;
+  font-size: 0.9rem;
+}
+
+.resources-move-text {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.resources-mindset {
+  margin-top: 0.25rem;
+}
+
+.resources-mindset-body {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resources-mindset-block {
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.8rem;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resources-mindset-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.resources-mindset-text {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.resources-mindset-field {
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.8rem;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resources-mindset-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.resources-mindset-textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.resources-mindset-cta {
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.resources-rituals-list {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resources-ritual-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid #27272a;
+}
+
+.resources-ritual-row:first-of-type {
+  border-top: none;
+}
+
+.resources-ritual-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.resources-ritual-title {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.resources-ritual-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.resources-ritual-cta {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+}
+</style>

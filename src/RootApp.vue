@@ -1435,6 +1435,11 @@ onBeforeUnmount(() => {
         :update-stress-reason="updateStressReason"
       />
       <component
+        v-else-if="route.name === 'ressources'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+      />
+      <component
         v-else-if="route.name === 'calendrier'"
         :is="Component"
         :month-label="calendarMonthLabel"
@@ -1683,6 +1688,14 @@ onBeforeUnmount(() => {
       >
         <i class="pi pi-chart-line nav-icon" aria-hidden="true"></i>
         <span class="nav-label">Journal</span>
+      </button>
+      <button
+        type="button"
+        :class="['nav-item', { 'is-active': route.name === 'ressources' }]"
+        @click="router.push({ name: 'ressources' })"
+      >
+        <i class="pi pi-compass nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Ressources</span>
       </button>
       <button
         type="button"

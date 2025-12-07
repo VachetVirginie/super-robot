@@ -11,6 +11,7 @@ import WeekConfigPage from './WeekConfigPage.vue'
 import ResetPasswordPage from './ResetPasswordPage.vue'
 import DayDetailsPage from './DayDetailsPage.vue'
 import CalendarPage from './CalendarPage.vue'
+import ResourcesPage from './ResourcesPage.vue'
 
 const routes = [
   {
@@ -65,6 +66,11 @@ const routes = [
         path: 'pause',
         name: 'pause',
         component: AlertPage,
+      },
+      {
+        path: 'ressources',
+        name: 'ressources',
+        component: ResourcesPage,
       },
       {
         path: 'calendrier',

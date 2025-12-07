@@ -9,6 +9,8 @@ interface MorningStateRow {
   mood_level: number | null
   energy_level: number | null
   priorities: string[] | null
+  sleep_bed_time: string | null
+  sleep_wake_time: string | null
 }
 
 export function useMorningState(session: Ref<Session | null>) {
@@ -39,7 +41,7 @@ export function useMorningState(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('morning_states')
-        .select('id, created_at, mood_level, energy_level, priorities')
+        .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString())
@@ -86,7 +88,7 @@ export function useMorningState(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('morning_states')
-        .select('id, created_at, mood_level, energy_level, priorities')
+        .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', now.toISOString())
@@ -119,6 +121,8 @@ export function useMorningState(session: Ref<Session | null>) {
     moodLevel: number | null
     energyLevel: number | null
     priorities: string[]
+    sleepBedTime: string | null
+    sleepWakeTime: string | null
   }) {
     const user = session.value?.user
     if (!user) {
@@ -135,6 +139,8 @@ export function useMorningState(session: Ref<Session | null>) {
         mood_level?: number | null
         energy_level?: number | null
         priorities?: string[] | null
+        sleep_bed_time?: string | null
+        sleep_wake_time?: string | null
       } = {
         user_id: user.id,
       }
@@ -160,6 +166,18 @@ export function useMorningState(session: Ref<Session | null>) {
         payload.priorities = options.priorities
       } else {
         payload.priorities = null
+      }
+
+      if (options.sleepBedTime) {
+        payload.sleep_bed_time = options.sleepBedTime
+      } else {
+        payload.sleep_bed_time = null
+      }
+
+      if (options.sleepWakeTime) {
+        payload.sleep_wake_time = options.sleepWakeTime
+      } else {
+        payload.sleep_wake_time = null
       }
 
       const { error } = await supabase
@@ -241,6 +259,80 @@ export function useMorningState(session: Ref<Session | null>) {
     return entries.sort((a, b) => b.count - a.count).slice(0, 3)
   })
 
+  const weeklyAverageSleepBedTime = computed(() => {
+    const times = recentMorningStates.value
+      .map((row) => row.sleep_bed_time)
+      .filter((value): value is string => typeof value === 'string' && value.length >= 4)
+
+    if (!times.length) {
+      return null as string | null
+    }
+
+    const toMinutes = (value: string) => {
+      const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+      const hour = Number(hourStr)
+      const minute = Number(minuteStr)
+      if (Number.isNaN(hour) || Number.isNaN(minute)) {
+        return null as number | null
+      }
+      return hour * 60 + minute
+    }
+
+    const minutesList = times
+      .map(toMinutes)
+      .filter((value): value is number => value !== null)
+
+    if (!minutesList.length) {
+      return null as string | null
+    }
+
+    const sum = minutesList.reduce((acc, value) => acc + value, 0)
+    const avg = Math.round(sum / minutesList.length)
+
+    const hours = Math.floor(avg / 60)
+    const minutes = avg % 60
+    const h = String(hours).padStart(2, '0')
+    const m = String(minutes).padStart(2, '0')
+    return `${h}:${m}`
+  })
+
+  const weeklyAverageSleepWakeTime = computed(() => {
+    const times = recentMorningStates.value
+      .map((row) => row.sleep_wake_time)
+      .filter((value): value is string => typeof value === 'string' && value.length >= 4)
+
+    if (!times.length) {
+      return null as string | null
+    }
+
+    const toMinutes = (value: string) => {
+      const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+      const hour = Number(hourStr)
+      const minute = Number(minuteStr)
+      if (Number.isNaN(hour) || Number.isNaN(minute)) {
+        return null as number | null
+      }
+      return hour * 60 + minute
+    }
+
+    const minutesList = times
+      .map(toMinutes)
+      .filter((value): value is number => value !== null)
+
+    if (!minutesList.length) {
+      return null as string | null
+    }
+
+    const sum = minutesList.reduce((acc, value) => acc + value, 0)
+    const avg = Math.round(sum / minutesList.length)
+
+    const hours = Math.floor(avg / 60)
+    const minutes = avg % 60
+    const h = String(hours).padStart(2, '0')
+    const m = String(minutes).padStart(2, '0')
+    return `${h}:${m}`
+  })
+
   return {
     todayMorningState,
     isMorningStateLoading,
@@ -251,5 +343,7 @@ export function useMorningState(session: Ref<Session | null>) {
     weeklyAverageMorningMood,
     weeklyAverageMorningEnergy,
     weeklyMorningPriorities,
+    weeklyAverageSleepBedTime,
+    weeklyAverageSleepWakeTime,
   }
 }

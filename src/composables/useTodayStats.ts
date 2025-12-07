@@ -86,6 +86,7 @@ export function useTodayStats(session: Ref<Session | null>) {
           weekday: 'short',
           day: '2-digit',
           month: '2-digit',
+          timeZone: 'Europe/Paris',
         })
         .replace('.', '')
 

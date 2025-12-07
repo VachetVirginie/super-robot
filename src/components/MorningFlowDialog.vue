@@ -20,6 +20,8 @@ const emit = defineEmits<{
     moodLevel: number | null
     energyLevel: number | null
     priorities: string[]
+    sleepBedTime: string | null
+    sleepWakeTime: string | null
   }): void
 }>()
 
@@ -41,6 +43,8 @@ const intentionOptions: { value: DailyIntention; label: string }[] = [
 
 const selectedSlot = ref<TodaySlot>(props.initialSlot ?? 'unknown')
 const selectedIntention = ref<DailyIntention>(props.initialIntention ?? 'none')
+const sleepBedTime = ref<string | null>(null)
+const sleepWakeTime = ref<string | null>(null)
 
 const friendlyName = computed(() => {
   const raw = props.displayName?.trim()
@@ -85,7 +89,7 @@ const contractProgressLine = computed(() => {
 })
 
 const currentStep = ref(1)
-const totalSteps = 6
+const totalSteps = 7
 
 const stepIndicatorLabel = computed(
   () => `Routine du matin · Etape ${currentStep.value} / ${totalSteps}`,
@@ -140,7 +144,7 @@ const intentionLabel = computed(() => {
   return option?.label ?? ''
 })
 
-const isLastStep = computed(() => currentStep.value === 6)
+const isLastStep = computed(() => currentStep.value === 7)
 
 const primaryCtaLabel = computed(() => (isLastStep.value ? 'Enregistrer' : 'Continuer'))
 
@@ -212,6 +216,8 @@ function onConfirm() {
     moodLevel: moodLevel.value,
     energyLevel: energyLevel.value,
     priorities: selectedPriorities.value,
+    sleepBedTime: sleepBedTime.value,
+    sleepWakeTime: sleepWakeTime.value,
   })
 }
 </script>
@@ -236,6 +242,46 @@ function onConfirm() {
       <div class="morning-body">
         <section
           v-if="currentStep === 1"
+          class="morning-step-sleep"
+        >
+          <p class="morning-text morning-intro">
+            On commence par ton sommeil. Tu peux passer si tu preferes.
+          </p>
+
+          <div class="morning-step-main morning-section-card">
+            <h4 class="morning-section-title">Ton sommeil</h4>
+            <p class="morning-text">
+              A quelle heure tu t'es couche(e) hier soir et a quelle heure tu t'es leve(e) ?
+            </p>
+
+            <div class="morning-options-row morning-sleep-row">
+              <div class="morning-sleep-field">
+                <span class="morning-sleep-label">Coucher</span>
+                <input
+                  v-model="sleepBedTime"
+                  type="time"
+                  class="morning-time-input"
+                />
+              </div>
+
+              <div class="morning-sleep-field">
+                <span class="morning-sleep-label">Lever</span>
+                <input
+                  v-model="sleepWakeTime"
+                  type="time"
+                  class="morning-time-input"
+                />
+              </div>
+            </div>
+
+            <p class="morning-microcopy">
+              Une heure approximative suffit, c'est juste pour suivre les tendances.
+            </p>
+          </div>
+        </section>
+
+        <section
+          v-else-if="currentStep === 2"
           class="morning-step-mood"
         >
           <p class="morning-text morning-intro">
@@ -275,7 +321,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 2">
+        <section v-else-if="currentStep === 3">
           <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ton niveau d'energie</h4>
             <p class="morning-text">
@@ -296,7 +342,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 3">
+        <section v-else-if="currentStep === 4">
           <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ta priorite pour aujourdhui</h4>
             <p class="morning-text">
@@ -317,7 +363,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 4">
+        <section v-else-if="currentStep === 5">
           <div class="morning-step-main morning-section-card">
             <p v-if="previousSlotLabel" class="morning-previous-slot">
               Tu avais choisi : {{ previousSlotLabel }}. Tu veux changer ?
@@ -344,7 +390,7 @@ function onConfirm() {
           </div>
         </section>
 
-        <section v-else-if="currentStep === 5">
+        <section v-else-if="currentStep === 6">
           <div class="morning-step-main morning-section-card">
             <h4 class="morning-section-title">Ton intention du jour</h4>
             <p class="morning-text">
@@ -397,7 +443,7 @@ function onConfirm() {
           Retour
         </button>
         <button
-          v-if="currentStep < 6"
+          v-if="currentStep < 7"
           type="button"
           class="morning-skip"
           @click="skipStep"
@@ -410,7 +456,7 @@ function onConfirm() {
           :disabled="isSaving || isLoading"
           @click="goToNextStep"
         >
-          <span v-if="isSaving && currentStep === 6">Enregistrement...</span>
+          <span v-if="isSaving && currentStep === 7">Enregistrement...</span>
           <span v-else>{{ primaryCtaLabel }}</span>
         </button>
       </div>
@@ -460,6 +506,10 @@ function onConfirm() {
 }
 
 .morning-step-mood {
+  justify-content: flex-start;
+}
+
+.morning-step-sleep {
   justify-content: flex-start;
 }
 
@@ -522,6 +572,84 @@ function onConfirm() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.morning-sleep-row {
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.morning-sleep-card {
+  gap: 0.75rem;
+}
+
+.morning-sleep-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.morning-sleep-icon-circle {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 20% 0%, rgba(34, 197, 94, 0.2), rgba(15, 23, 42, 0.95));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e5e7eb;
+  flex-shrink: 0;
+}
+
+.morning-sleep-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.morning-sleep-field-card {
+  width: 100%;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), #020617);
+  padding: 0.75rem 0.9rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.morning-sleep-field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.morning-sleep-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.morning-sleep-time-display {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.morning-time-input {
+  border-radius: 999px;
+  border: 1px solid #4b5563;
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.morning-sleep-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.75;
 }
 
 .morning-option,

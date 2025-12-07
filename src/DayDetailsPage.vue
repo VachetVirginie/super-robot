@@ -36,6 +36,8 @@ interface MorningStateRow {
   mood_level: number | null
   energy_level: number | null
   priorities: string[] | null
+  sleep_bed_time: string | null
+  sleep_wake_time: string | null
 }
 
 interface StressReasonRow {
@@ -68,6 +70,7 @@ const dayLabel = computed(() => {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Europe/Paris',
   })
 })
 
@@ -93,6 +96,7 @@ function formatTime(value: string) {
   return date.toLocaleTimeString('fr-FR', {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Europe/Paris',
   })
 }
 
@@ -129,7 +133,11 @@ const sessionDetails = computed(() => {
   return daySessions.value.map((sessionItem) => {
     const date = new Date(sessionItem.performed_at)
     const dateLabel = date
-      .toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      .toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Europe/Paris',
+      })
 
     const minutes =
       typeof sessionItem.duration_minutes === 'number' &&
@@ -166,6 +174,9 @@ const morningSummary = computed(() => {
   const energy = typeof row.energy_level === 'number' ? row.energy_level : null
   const priorities = row.priorities ?? []
 
+  const sleepBed = row.sleep_bed_time
+  const sleepWake = row.sleep_wake_time
+
   const priorityLabels: Record<string, string> = {
     work: 'Travail',
     relax: 'Se detendre',
@@ -182,6 +193,19 @@ const morningSummary = computed(() => {
       : null
 
   const parts: string[] = []
+  if (typeof sleepBed === 'string' && sleepBed) {
+    const bedLabel = sleepBed.slice(0, 5)
+    if (typeof sleepWake === 'string' && sleepWake) {
+      const wakeLabel = sleepWake.slice(0, 5)
+      parts.push(`sommeil ${bedLabel}-${wakeLabel}`)
+    } else {
+      parts.push(`coucher ${bedLabel}`)
+    }
+  } else if (typeof sleepWake === 'string' && sleepWake) {
+    const wakeLabel = sleepWake.slice(0, 5)
+    parts.push(`lever ${wakeLabel}`)
+  }
+
   if (mood !== null) {
     parts.push(`humeur ${mood}/5`)
   }
@@ -257,7 +281,7 @@ async function loadDayDetails() {
 
     const morningPromise = supabase
       .from('morning_states')
-      .select('id, created_at, mood_level, energy_level, priorities')
+      .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
       .eq('user_id', user.id)
       .gte('created_at', start)
       .lte('created_at', end)

@@ -25,6 +25,8 @@ const props = defineProps<{
   weeklyMorningPriorities: { key: string; count: number }[]
   weeklyAverageStressMidday: number | null
   weeklyAverageStressEvening: number | null
+  weeklySleepBedTime: string | null
+  weeklySleepWakeTime: string | null
   onOpenWeekPlan: () => void
   onOpenWeeklySessions: () => void
 }>()
@@ -155,8 +157,9 @@ const hasMorningData = computed(() => {
   const hasMood = typeof props.weeklyMorningMood === 'number'
   const hasEnergy = typeof props.weeklyMorningEnergy === 'number'
   const hasPriorities = Array.isArray(props.weeklyMorningPriorities) && props.weeklyMorningPriorities.length > 0
+  const hasSleep = !!(props.weeklySleepBedTime || props.weeklySleepWakeTime)
 
-  return hasMood || hasEnergy || hasPriorities
+  return hasMood || hasEnergy || hasPriorities || hasSleep
 })
 
 const morningMoodLabel = computed(() => {
@@ -173,6 +176,21 @@ const morningEnergyLabel = computed(() => {
     return null as string | null
   }
   return `${energy}/5`
+})
+
+const morningSleepLabel = computed(() => {
+  const bed = props.weeklySleepBedTime
+  const wake = props.weeklySleepWakeTime
+
+  if (!bed && !wake) {
+    return null as string | null
+  }
+
+  if (bed && wake) {
+    return `${bed}-${wake}`
+  }
+
+  return (bed || wake) ?? null
 })
 
 const morningPriorityLabels = computed(() => {
@@ -448,7 +466,7 @@ const moodHistorySeries = computed(() => {
     const iso = `${year}-${month}-${dayNum}`
 
     const weekday = d
-      .toLocaleDateString('fr-FR', { weekday: 'short' })
+      .toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Paris' })
       .replace('.', '')
 
     const info = (stressByDay as Record<string, { avg: number; count: number }>)[iso]
@@ -671,6 +689,13 @@ const moodHistorySeries = computed(() => {
             </p>
 
             <div v-else class="progress-summary">
+              <p
+                v-if="morningSleepLabel"
+                class="progress-text progress-text--muted"
+              >
+                Sommeil moyen (coucher-lever) :
+                <strong>{{ morningSleepLabel }}</strong>
+              </p>
               <p v-if="morningMoodLabel" class="progress-text progress-text--muted">
                 Humeur moyenne au reveil : <strong>{{ morningMoodLabel }}</strong>
               </p>

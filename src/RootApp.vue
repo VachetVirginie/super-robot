@@ -139,6 +139,8 @@ const {
   weeklyAverageMorningMood,
   weeklyAverageMorningEnergy,
   weeklyMorningPriorities,
+  weeklyAverageSleepBedTime,
+  weeklyAverageSleepWakeTime,
 } = useMorningState(session)
 
 const pendingMiddayMoodLevel = ref<number | null>(null)
@@ -281,7 +283,7 @@ const thermoLast3Days = computed(() => {
     const iso = `${year}-${month}-${dayNum}`
 
     const weekday = d
-      .toLocaleDateString('fr-FR', { weekday: 'short' })
+      .toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Paris' })
       .replace('.', '')
 
     const info = (stressByDay as Record<string, { avg: number; count: number }>)[iso]
@@ -494,7 +496,7 @@ const weekStrip = computed(() => {
     const dayNum = String(d.getDate()).padStart(2, '0')
     const isoDate = `${year}-${month}-${dayNum}`
     const label = d
-      .toLocaleDateString('fr-FR', { weekday: 'short' })
+      .toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Paris' })
       .replace('.', '')
 
     const actualCount = sessionCountsByDate.get(isoDate) ?? 0
@@ -528,7 +530,7 @@ const weekStrip = computed(() => {
   endOfWeek.setDate(startOfWeek.getDate() + 6)
 
   const format = (date: Date) =>
-    date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+    date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', timeZone: 'Europe/Paris' })
 
   const rangeLabel = `${format(startOfWeek)} - ${format(endOfWeek)}`
 
@@ -708,7 +710,12 @@ const weeklySessionDays = computed(() => {
     const iso = `${year}-${month}-${day}`
 
     const label = d
-      .toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' })
+      .toLocaleDateString('fr-FR', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        timeZone: 'Europe/Paris',
+      })
       .replace('.', '')
 
     const sessionsCount = counts.get(iso) ?? 0
@@ -750,6 +757,7 @@ const calendarMonthLabel = computed(() => {
   return base.toLocaleDateString('fr-FR', {
     month: 'long',
     year: 'numeric',
+    timeZone: 'Europe/Paris',
   })
 })
 
@@ -1235,6 +1243,8 @@ async function onMorningConfirm(payload: {
   moodLevel: number | null
   energyLevel: number | null
   priorities: string[]
+  sleepBedTime: string | null
+  sleepWakeTime: string | null
 }) {
   const previousError = dailyPlanError.value
   await saveDailyPlan({ slot: payload.slot, intention: payload.intention })
@@ -1244,6 +1254,8 @@ async function onMorningConfirm(payload: {
     moodLevel: payload.moodLevel,
     energyLevel: payload.energyLevel,
     priorities: payload.priorities,
+    sleepBedTime: payload.sleepBedTime,
+    sleepWakeTime: payload.sleepWakeTime,
   })
 
   if (!dailyPlanError.value) {
@@ -1367,6 +1379,8 @@ onBeforeUnmount(() => {
         :weekly-morning-mood="weeklyAverageMorningMood"
         :weekly-morning-energy="weeklyAverageMorningEnergy"
         :weekly-morning-priorities="weeklyMorningPriorities"
+        :weekly-sleep-bed-time="weeklyAverageSleepBedTime"
+        :weekly-sleep-wake-time="weeklyAverageSleepWakeTime"
         :weekly-average-stress-midday="weeklyAverageStressMidday"
         :weekly-average-stress-evening="weeklyAverageStressEvening"
         :on-open-week-plan="openPlanWeekDialog"

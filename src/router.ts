@@ -12,6 +12,7 @@ import ResetPasswordPage from './ResetPasswordPage.vue'
 import DayDetailsPage from './DayDetailsPage.vue'
 import CalendarPage from './CalendarPage.vue'
 import ResourcesPage from './ResourcesPage.vue'
+import BreathPlayerPage from './BreathPlayerPage.vue'
 
 const routes = [
   {
@@ -66,6 +67,11 @@ const routes = [
         path: 'pause',
         name: 'pause',
         component: AlertPage,
+      },
+      {
+        path: 'respiration/:id',
+        name: 'breath',
+        component: BreathPlayerPage,
       },
       {
         path: 'ressources',

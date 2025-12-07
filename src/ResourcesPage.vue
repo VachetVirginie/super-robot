@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
 defineProps<{
   isAuthenticated: boolean
 }>()
+
+const router = useRouter()
 
 const soundPresets = [
   { key: 'waves', title: 'Vagues', hint: 'Fond calme et regulier pour respirer.' },
@@ -57,6 +61,10 @@ const ritualShortcuts = [
   { key: 'midday', title: 'Pause du midi', hint: 'Souffler au milieu de la journee.' },
   { key: 'evening', title: 'Bilan du soir', hint: 'Fermer la journee en douceur.' },
 ]
+
+function openBreathingFlow(id: string) {
+  router.push({ name: 'breath', params: { id } })
+}
 </script>
 
 <template>
@@ -101,6 +109,7 @@ const ritualShortcuts = [
           v-for="item in breathingPresets"
           :key="item.key"
           class="resources-breathing-card"
+          @click="openBreathingFlow(item.key)"
         >
           <h3 class="resources-breathing-title">{{ item.title }}</h3>
           <p class="resources-breathing-desc">

@@ -1440,6 +1440,11 @@ onBeforeUnmount(() => {
         :is-authenticated="isAuthenticated"
       />
       <component
+        v-else-if="route.name === 'breath'"
+        :is="Component"
+        :is-authenticated="isAuthenticated"
+      />
+      <component
         v-else-if="route.name === 'calendrier'"
         :is="Component"
         :month-label="calendarMonthLabel"
@@ -1691,14 +1696,6 @@ onBeforeUnmount(() => {
       </button>
       <button
         type="button"
-        :class="['nav-item', { 'is-active': route.name === 'ressources' }]"
-        @click="router.push({ name: 'ressources' })"
-      >
-        <i class="pi pi-compass nav-icon" aria-hidden="true"></i>
-        <span class="nav-label">Ressources</span>
-      </button>
-      <button
-        type="button"
         :class="['nav-item', 'nav-item-sos', { 'is-active': route.name === 'pause' }]"
         @click="router.push({ name: 'pause' })"
       >
@@ -1706,6 +1703,14 @@ onBeforeUnmount(() => {
           <i class="pi pi-pause nav-icon" aria-hidden="true"></i>
         </span>
         <span class="nav-label nav-label-sos">Pause</span>
+      </button>
+            <button
+        type="button"
+        :class="['nav-item', { 'is-active': route.name === 'ressources' }]"
+        @click="router.push({ name: 'ressources' })"
+      >
+        <i class="pi pi-compass nav-icon" aria-hidden="true"></i>
+        <span class="nav-label">Ressources</span>
       </button>
             <!-- <button
         type="button"

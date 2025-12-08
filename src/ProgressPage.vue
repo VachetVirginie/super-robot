@@ -346,19 +346,19 @@ const progressCoachMessage = computed(() => {
   return "Tu es tres proche ou deja sur ton objectif. Pense aussi a te feliciter et a garder des jours plus legers quand tu en as besoin."
 })
 
-const progressCoachSuggestion = computed(() => {
-  const level = progressCoachLevel.value
-  if (level === 'start') {
-    return "Choisis un seul moment cette semaine ou tu pourrais faire une courte seance (meme 5 minutes) et note-le dans ton planning."
-  }
-  if (level === 'low') {
-    return "Identifie le jour le plus simple pour ajouter une petite seance en plus, sans toucher au reste de ta semaine."
-  }
-  if (level === 'medium') {
-    return "Repere le jour ou tu es le plus fatigue et autorise-toi une version plus courte de ta seance ce jour-la."
-  }
-  return "Garde 1 ou 2 moments fixes qui te font du bien et accepte que certaines semaines soient plus legeres sans que ce soit un echec."
-})
+// const progressCoachSuggestion = computed(() => {
+//   const level = progressCoachLevel.value
+//   if (level === 'start') {
+//     return "Choisis un seul moment cette semaine ou tu pourrais faire une courte seance (meme 5 minutes) et note-le dans ton planning."
+//   }
+//   if (level === 'low') {
+//     return "Identifie le jour le plus simple pour ajouter une petite seance en plus, sans toucher au reste de ta semaine."
+//   }
+//   if (level === 'medium') {
+//     return "Repere le jour ou tu es le plus fatigue et autorise-toi une version plus courte de ta seance ce jour-la."
+//   }
+//   return "Garde 1 ou 2 moments fixes qui te font du bien et accepte que certaines semaines soient plus legeres sans que ce soit un echec."
+// })
 
 const movementStressCorrelation = computed(() => {
   const stressByDay = props.weeklyStressByDay ?? {}
@@ -594,13 +594,13 @@ const moodHistorySeries = computed(() => {
               </p>
             </div>
 
-            <button
+            <!-- <button
               type="button"
               class="primary stress-link-button"
               @click="props.onOpenWeekPlan()"
             >
               Planifier ma semaine
-            </button>
+            </button> -->
           </section>
         </div>
 

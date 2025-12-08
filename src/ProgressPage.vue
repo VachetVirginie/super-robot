@@ -618,6 +618,200 @@ const moodHistorySeries = computed(() => {
 
   return result
 })
+
+const coachMovementMessage = computed(() => {
+  return movementStressInsight.value
+})
+
+const coachSleepMessage = computed(() => {
+  const { shortAvg, longAvg, hasData } = sleepStressCorrelation.value
+
+  if (!hasData || shortAvg == null || longAvg == null) {
+    return "Pour l'instant, difficile de voir un effet net de tes nuits sur ton stress. On continue d'observer sans pression."
+  }
+
+  const diff = shortAvg - longAvg
+
+  if (diff > 0.3) {
+    return 'Apres des nuits de 7h ou plus, ta journee semble nettement plus respirable.'
+  }
+
+  if (diff > 0.1) {
+    return "Les nuits un peu plus longues ont l'air de taider un peu a encaisser la journee."
+  }
+
+  if (diff >= -0.1) {
+    return "Pour l'instant, ton niveau de stress varie peu selon la longueur de tes nuits. Tu peux simplement continuer a observer."
+  }
+
+  return "Tu peux explorer a ton rythme ce qui, cote sommeil, te fait le plus de bien."
+})
+
+const coachPeriodLabel = computed(() => {
+  const avg = props.weeklyAverageStress
+
+  if (avg == null) {
+    return "On commence a peine a suivre ton stress. Plus tu feras de check-ins, plus ce bilan sera parlant."
+  }
+
+  if (avg <= 2) {
+    return 'Globalement, tu traverses une periode plutot calme.'
+  }
+
+  if (avg <= 3.5) {
+    return "Globalement, c'est une periode chargee mais tu sembles garder le cap."
+  }
+
+  return "Globalement, tu traverses une periode assez intense. L'idee n'est pas de tout changer, mais de proteger un peu plus ton energie."
+})
+
+const equilibriumScore = computed(() => {
+  const stress = props.weeklyAverageStress
+  const activeDays = props.weeklyActiveDays ?? 0
+
+  const hasStress = typeof stress === 'number'
+  const hasMovement = activeDays > 0
+
+  if (!hasStress && !hasMovement) {
+    return null as number | null
+  }
+
+  let score: number
+
+  if (hasStress) {
+    const moodLike = 6 - (stress as number)
+    const bounded = Math.max(1, Math.min(5, moodLike))
+    score = (bounded / 5) * 70
+  } else {
+    score = 40
+  }
+
+  if (hasMovement) {
+    const factor = Math.min(activeDays, 5) / 5
+    score += factor * 20
+  }
+
+  const clamped = Math.max(0, Math.min(100, Math.round(score)))
+  return clamped
+})
+
+const equilibriumTag = computed(() => {
+  const score = equilibriumScore.value
+
+  if (score == null) {
+    return {
+      label: 'En cours de calcul',
+      tone: 'neutral',
+    }
+  }
+
+  if (score >= 80) {
+    return {
+      label: 'Equilibre solide',
+      tone: 'good',
+    }
+  }
+
+  if (score >= 60) {
+    return {
+      label: 'Semaine stable',
+      tone: 'ok',
+    }
+  }
+
+  if (score >= 40) {
+    return {
+      label: 'A surveiller',
+      tone: 'warn',
+    }
+  }
+
+  return {
+    label: 'Sous pression',
+    tone: 'alert',
+  }
+})
+
+type FocusType = 'movement' | 'sleep' | 'days' | 'none'
+
+const focusBlock = computed(() => {
+  const movement = movementStressCorrelation.value
+  const sleep = sleepStressCorrelation.value
+  const weekdays = weekdayStressSummary.value
+  const activeDays = props.weeklyActiveDays ?? 0
+
+  const base = {
+    type: 'none' as FocusType,
+    reason:
+      "On continue a observer quelques jours pour preparer ton prochain focus. Pour l'instant, l'idee est surtout de prendre le reflexe de noter ce que tu vis.",
+    commitment:
+      'Objectif pour les prochains jours : garder seulement le reflexe de faire quelques check-ins quand tu peux.',
+    ctaLabel: null as string | null,
+    ctaRouteName: null as string | null,
+  }
+
+  if (
+    movement.hasData &&
+    movement.avgWithoutMove != null &&
+    movement.avgWithMove != null &&
+    movement.avgWithoutMove - movement.avgWithMove > 0.2
+  ) {
+    const reason =
+      activeDays > 0
+        ? 'Tes jours actifs semblent alleger un peu ton stress. On va securiser au moins un jour "jamais zero".'
+        : 'On voit que les jours ou tu bouges un peu, ton stress est plus bas. On va taider a lancer un premier jour "jamais zero".'
+
+    return {
+      ...base,
+      type: 'movement' as FocusType,
+      reason,
+      commitment:
+        'Objectif pour les prochains jours : une seule seance courte, meme 5 minutes, au moment qui te semble le plus simple.',
+      ctaLabel: 'Voir tes seances',
+      ctaRouteName: 'seances',
+    }
+  }
+
+  if (
+    sleep.hasData &&
+    sleep.shortAvg != null &&
+    sleep.longAvg != null &&
+    sleep.shortAvg - sleep.longAvg > 0.2
+  ) {
+    return {
+      ...base,
+      type: 'sleep' as FocusType,
+      reason:
+        'Tes nuits plus courtes sont souvent suivies de journees plus chargees. On va proteger un peu ton sommeil, sans chercher la perfection.',
+      commitment:
+        "Objectif pour les prochains jours : 2 soirs ou tu te couches un peu plus tot que d'habitude, meme de 20 minutes.",
+    }
+  }
+
+  if (weekdays.length > 0) {
+    const [first, second] = weekdays
+
+    if (first && first.avg >= 3.5) {
+      const mainDay = first.label
+      const secondDayLabel = second?.label
+      const reason = secondDayLabel
+        ? `En ce moment, tes ${mainDay} et ${secondDayLabel} ressortent comme les jours les plus tendus.`
+        : `En ce moment, tes ${mainDay} ressortent comme les jours les plus tendus.`
+
+      return {
+        ...base,
+        type: 'days' as FocusType,
+        reason,
+        commitment:
+          'Objectif pour les prochains jours : faire un check-in rapide ces jours-la pour mieux cerner ce qui te pese vraiment.',
+        ctaLabel: 'Explorer ces journees',
+        ctaRouteName: 'stress',
+      }
+    }
+  }
+
+  return base
+})
 </script>
 
 <template>
@@ -630,44 +824,86 @@ const moodHistorySeries = computed(() => {
   </section>
 
   <template v-else>
-    <section class="card progress-card">
-      <p class="progress-kicker">Bilan</p>
-      <h2 class="progress-title">Ton equilibre en un coup d'oeil</h2>
-      <p class="progress-subtitle">
-        Une vue rapide de ta semaine entre mouvement, stress et sommeil.
-      </p>
+    <section class="card progress-card progress-hero">
+      <div class="progress-hero-top">
+        <p class="progress-kicker">Bilan</p>
+        <h2 class="progress-title">Ton equilibre du moment</h2>
+      </div>
 
-      <div class="progress-summary">
-        <p class="progress-text progress-text--muted">
-          Mouvement :
-          <strong>{{ summarySessionsLabel }}</strong>
-          <span v-if="summaryPercentLabel"> ({{ summaryPercentLabel }})</span>
+      <div class="progress-hero-main">
+        <div class="progress-hero-score-orbit">
+          <div class="progress-hero-score-pill">
+            <span class="progress-hero-score-number">
+              {{ equilibriumScore !== null ? equilibriumScore : '–' }}
+            </span>
+            <span class="progress-hero-score-unit">/100</span>
+          </div>
+        </div>
+
+        <div class="progress-hero-meta">
+          <span
+            class="progress-hero-tag"
+            :class="`is-${equilibriumTag.tone}`"
+          >
+            {{ equilibriumTag.label }}
+          </span>
+        </div>
+
+        <div class="progress-hero-gauge">
+          <div class="progress-hero-gauge-track">
+            <div
+              class="progress-hero-gauge-fill"
+              :style="{ width: (equilibriumScore ?? 0) + '%' }"
+            ></div>
+          </div>
+        </div>
+
+        <p class="progress-hero-caption">
+          Base sur ton stress et ton mouvement recents.
+        </p>
+      </div>
+
+      <div class="progress-hero-messages">
+        <p class="progress-text">
+          {{ coachMovementMessage }}
         </p>
 
-        <p class="progress-text progress-text--muted">
-          Stress :
-          <strong>
-            {{ weeklyAverageStress !== null ? `${weeklyAverageStress}/5` : '–/5' }}
-          </strong>
-          {{ stressWeekSummary }}
-        </p>
-
-        <p v-if="morningSleepLabel" class="progress-text progress-text--muted">
-          Sommeil moyen (coucher-lever) :
-          <strong>{{ morningSleepLabel }}</strong>
-        </p>
-
-        <p v-if="movementStressNumbers" class="progress-text progress-text--muted">
-          Les jours avec seance :
+        <p
+          v-if="movementStressNumbers"
+          class="progress-text progress-text--muted"
+        >
+          Jours avec seance :
           <strong>{{ movementStressNumbers.withMove ?? '–' }}/5</strong>
-          de stress en moyenne, contre
+          sans seance :
           <strong>{{ movementStressNumbers.withoutMove ?? '–' }}/5</strong>
-          les jours sans seance.
+        </p>
+
+        <p class="progress-text">
+          {{ coachSleepMessage }}
+        </p>
+
+        <p
+          v-if="sleepStressCorrelation.hasData"
+          class="progress-text progress-text--muted"
+        >
+          Apres des nuits de 7h ou plus :
+          <strong>{{ sleepStressCorrelation.longAvg ?? '–' }}/5</strong>
+          nuits plus courtes :
+          <strong>{{ sleepStressCorrelation.shortAvg ?? '–' }}/5</strong>
+        </p>
+
+        <p class="progress-status progress-status--muted">
+          {{ coachPeriodLabel }}
         </p>
       </div>
     </section>
 
     <div class="progress-tabs">
+      <div
+        class="progress-tabs-highlight"
+        :class="activeTab === 'stress' ? 'is-right' : 'is-left'"
+      ></div>
+
       <button
         type="button"
         class="progress-tab"
@@ -688,10 +924,9 @@ const moodHistorySeries = computed(() => {
 
     <div class="progress-tabs-panels">
       <div
-        class="progress-tabs-inner"
-        :class="activeTab === 'sessions' ? 'is-sessions' : 'is-stress'"
+        v-if="activeTab === 'sessions'"
+        class="progress-tab-panel"
       >
-        <div class="progress-tab-panel">
           <section class="card progress-card progress-card--highlight">
             <div class="progress-header">
               <p class="progress-kicker">Mouvement</p>
@@ -772,24 +1007,36 @@ const moodHistorySeries = computed(() => {
               Ce que montre ta semaine entre seances et stress.
             </p>
 
-            <p class="progress-text">
-              {{ movementStressInsight }}
-            </p>
+            <div class="insight-block">
+              <p class="insight-label">Insight</p>
+              <p class="insight-text">
+                {{ movementStressInsight }}
+              </p>
+            </div>
 
             <div
               v-if="movementStressNumbers"
-              class="progress-summary progress-summary--linked"
+              class="data-badges"
             >
-              <p class="progress-text progress-text--muted">
-                Jours avec seance :
-                <strong>{{ movementStressNumbers.withMove ?? '\u2014' }}/5</strong>
-                de stress en moyenne.
-              </p>
-              <p class="progress-text progress-text--muted">
-                Jours sans seance :
-                <strong>{{ movementStressNumbers.withoutMove ?? '\u2014' }}/5</strong>
-                de stress en moyenne.
-              </p>
+              <div class="data-badge data-badge--with">
+                <span class="data-badge-dot data-badge-dot--with"></span>
+                <div class="data-badge-body">
+                  <span class="data-badge-label">Jours avec seance</span>
+                  <span class="data-badge-value">
+                    {{ movementStressNumbers.withMove ?? '\u2014' }}/5 de stress
+                  </span>
+                </div>
+              </div>
+
+              <div class="data-badge data-badge--without">
+                <span class="data-badge-dot data-badge-dot--without"></span>
+                <div class="data-badge-body">
+                  <span class="data-badge-label">Jours sans seance</span>
+                  <span class="data-badge-value">
+                    {{ movementStressNumbers.withoutMove ?? '\u2014' }}/5 de stress
+                  </span>
+                </div>
+              </div>
             </div>
 
             <p
@@ -813,7 +1060,10 @@ const moodHistorySeries = computed(() => {
           </section>
         </div>
 
-        <div class="progress-tab-panel">
+        <div
+          v-else
+          class="progress-tab-panel"
+        >
           <section class="card progress-card">
             <p class="progress-kicker">Routines du jour</p>
             <h2 class="progress-title">Tes matins cette semaine</h2>
@@ -877,9 +1127,12 @@ const moodHistorySeries = computed(() => {
               Comment tu as vecu la semaine du point de vue du stress.
             </p>
 
-            <p class="stress-text">
-              <strong>{{ stressWeekSummary }}</strong>
-            </p>
+            <div class="insight-block insight-block--stress">
+              <p class="insight-label">Insight</p>
+              <p class="insight-text">
+                <strong>{{ stressWeekSummary }}</strong>
+              </p>
+            </div>
 
             <section class="stress-section">
               <h3 class="stress-title">Ton stress cette semaine</h3>
@@ -966,9 +1219,12 @@ const moodHistorySeries = computed(() => {
               class="stress-categories-section"
             >
               <h3 class="stress-categories-title">Sommeil et charge mentale</h3>
-              <p class="stress-categories-text">
-                On regarde comment la longueur de tes nuits se reflète dans ton stress du jour.
-              </p>
+              <div class="insight-block insight-block--sleep">
+                <p class="insight-label">Insight</p>
+                <p class="insight-text">
+                  On regarde comment la longueur de tes nuits se reflète dans ton stress du jour.
+                </p>
+              </div>
               <p
                 v-if="sleepStressCorrelation.longAvg !== null"
                 class="stress-text stress-text--muted"
@@ -1033,11 +1289,224 @@ const moodHistorySeries = computed(() => {
           </section>
         </div>
       </div>
-    </div>
+
+    <section class="card progress-card">
+      <p class="progress-kicker">Focus</p>
+      <h2 class="progress-title">Ton focus pour les prochains jours</h2>
+      <p class="progress-subtitle">
+        On choisit ensemble un seul geste simple a tester.
+      </p>
+
+      <div class="progress-summary">
+        <p class="progress-text">
+          {{ focusBlock.reason }}
+        </p>
+        <p class="progress-text progress-text--muted">
+          {{ focusBlock.commitment }}
+        </p>
+      </div>
+
+      <button
+        v-if="focusBlock.ctaLabel && focusBlock.ctaRouteName"
+        type="button"
+        class="primary stress-link-button stress-link-button--highlight"
+        @click="router.push({ name: focusBlock.ctaRouteName })"
+      >
+        {{ focusBlock.ctaLabel }}
+      </button>
+    </section>
   </template>
 </template>
 
 <style scoped>
+.progress-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.1rem 1.3rem;
+  background: #111111;
+  border-color: rgba(148, 163, 184, 0.45);
+  box-shadow:
+    0 18px 60px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.progress-hero::before {
+  content: '';
+  position: absolute;
+  inset: -80% -40% auto auto;
+  background: radial-gradient(circle at top, rgba(34, 197, 94, 0.7), transparent 65%);
+  opacity: 0.32;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.progress-hero-top {
+  position: relative;
+  z-index: 1;
+}
+
+.progress-hero-main {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.progress-hero-score-orbit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(45, 212, 191, 0.55), transparent 60%),
+    radial-gradient(circle at 50% 120%, rgba(56, 189, 248, 0.4), transparent 70%);
+}
+
+.progress-hero-score-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.6), transparent 55%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(14px);
+}
+
+.progress-hero-score-number {
+  font-size: 2.7rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #a5f3fc, #22c55e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.progress-hero-score-unit {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(209, 213, 219, 0.8);
+}
+
+.progress-hero-caption {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.progress-hero-messages {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.progress-hero-meta {
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.progress-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.progress-hero-tag.is-good {
+  border-color: rgba(34, 197, 94, 0.9);
+  color: #bbf7d0;
+}
+
+.progress-hero-tag.is-ok {
+  border-color: rgba(52, 211, 153, 0.9);
+  color: #a7f3d0;
+}
+
+.progress-hero-tag.is-warn {
+  border-color: rgba(251, 191, 36, 0.9);
+  color: #fef3c7;
+}
+
+.progress-hero-tag.is-alert {
+  border-color: rgba(248, 113, 113, 0.9);
+  color: #fee2e2;
+}
+
+.progress-hero-gauge {
+  margin-top: 0.6rem;
+}
+
+.progress-hero-gauge-track {
+  width: 100%;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.2), rgba(248, 250, 252, 0.05));
+  overflow: hidden;
+}
+
+.progress-hero-gauge-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #a3e635, #f97316);
+  transition: width 0.35s ease-out;
+}
+
+.insight-block {
+  margin-top: 0.4rem;
+  margin-bottom: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 65%),
+    rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.55);
+}
+
+.insight-block--stress {
+  background:
+    radial-gradient(circle at top left, rgba(248, 113, 113, 0.22), transparent 65%),
+    rgba(15, 23, 42, 0.92);
+  border-color: rgba(248, 113, 113, 0.75);
+}
+
+.insight-block--sleep {
+  background:
+    radial-gradient(circle at top left, rgba(129, 140, 248, 0.22), transparent 65%),
+    rgba(15, 23, 42, 0.92);
+  border-color: rgba(129, 140, 248, 0.65);
+}
+
+.insight-label {
+  margin: 0 0 0.2rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(191, 219, 254, 0.95);
+}
+
+.insight-text {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
 .progress-title {
   margin: 0 0 0.9rem;
   font-size: 1.05rem;
@@ -1050,10 +1519,7 @@ const moodHistorySeries = computed(() => {
 .progress-card--highlight {
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(20, 244, 209, 0.18), transparent 60%),
-    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 60%),
-    #111111;
+  background:#111111;
   border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -1084,13 +1550,14 @@ const moodHistorySeries = computed(() => {
 }
 
 .progress-tabs {
-  margin-bottom: 0.75rem;
+  position: relative;
+  margin: 0.9rem 0 0.9rem;
   display: flex;
-  gap: 0.35rem;
-  padding: 0.15rem;
+  padding: 0.16rem;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid #1f2937;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  overflow: hidden;
 }
 
 .progress-tab {
@@ -1101,12 +1568,31 @@ const moodHistorySeries = computed(() => {
   color: #9ca3af;
   padding: 0.35rem 0.6rem;
   font-size: 0.8rem;
+  position: relative;
+  z-index: 1;
 }
 
 .progress-tab.is-active {
-  background: #22c55e;
   color: #020617;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.progress-tabs-highlight {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 50%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #22c55e, #a3e635);
+  box-shadow:
+    0 10px 30px rgba(34, 197, 94, 0.55),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+  transform: translateX(0%);
+  transition: transform 0.25s ease-out;
+}
+
+.progress-tabs-highlight.is-right {
+  transform: translateX(100%);
 }
 
 .progress-tabs-panels {

@@ -41,7 +41,7 @@ function onCellClick(cell: CalendarCell) {
       <p class="calendar-page-kicker">Journal</p>
       <h2 class="calendar-page-title">Ton calendrier</h2>
       <p class="calendar-page-subtitle">
-        Un coup d'oeil sur tes seances et ton stress ce mois-ci.
+        Ton calendrier met en vert les jours ou il y a des entrees a lire.
       </p>
 
       <div class="calendar-nav">
@@ -97,7 +97,7 @@ function onCellClick(cell: CalendarCell) {
           :class="{
             'is-blank': cell.date === null,
             'is-today': cell.isToday,
-            'has-session': showSessions && cell.hasSession,
+            'has-session': cell.hasSession || cell.hasCheckin,
             'stress-low': cell.stressLevel && cell.stressLevel <= 2,
             'stress-medium': cell.stressLevel && cell.stressLevel > 2 && cell.stressLevel <= 3.5,
             'stress-high': cell.stressLevel && cell.stressLevel > 3.5,

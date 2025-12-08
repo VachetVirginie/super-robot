@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots'
+import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots.deprecated'
 
 const props = defineProps<{
   isAuthenticated: boolean

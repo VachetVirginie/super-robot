@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { WeeklySlot as Slot } from '../composables/useWeeklySlots'
+import type { WeeklySlot as Slot } from '../composables/useWeeklySlots.deprecated'
 import WeeklySlotsGrid from './WeeklySlotsGrid.vue'
 
 const props = defineProps<{

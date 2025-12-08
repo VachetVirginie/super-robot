@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TimeOfDay, WeeklySlot } from '../composables/useWeeklySlots'
+import type { TimeOfDay, WeeklySlot } from '../composables/useWeeklySlots.deprecated'
 
 const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const timeSlots: { key: TimeOfDay; label: string }[] = [

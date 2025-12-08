@@ -128,6 +128,7 @@ const {
   weeklyAverageSleepBedTime,
   weeklyAverageSleepWakeTime,
   recentMorningStates,
+  getMonthMorningDates,
 } = useMorningState(session)
 
 const {
@@ -615,6 +616,7 @@ const isMonthCalendarOpen = ref(false)
 const calendarYear = ref(new Date().getFullYear())
 const calendarMonth = ref(new Date().getMonth())
 const calendarSessionDates = ref<string[]>([])
+const calendarMorningDates = ref<string[]>([])
 const calendarStressByDay = ref<Record<string, { avg: number; count: number }>>({})
 const bilanMonthSessionDates = ref<string[]>([])
 const bilanMonthStressByDay = ref<Record<string, { avg: number; count: number }>>({})
@@ -759,6 +761,7 @@ const calendarCells = computed(() => {
   const todayDay = String(today.getDate()).padStart(2, '0')
   const todayIso = `${todayYear}-${todayMonth}-${todayDay}`
   const sessionSet = new Set(calendarSessionDates.value)
+  const morningSet = new Set(calendarMorningDates.value)
   const stressMap = calendarStressByDay.value
 
   const cells: CalendarCell[] = []
@@ -783,6 +786,7 @@ const calendarCells = computed(() => {
     const hasSession = sessionSet.has(iso)
     const stressInfo = stressMap[iso]
     const hasCheckin = !!stressInfo
+    const hasMorning = morningSet.has(iso)
     const stressLevel = hasCheckin ? stressInfo.avg : null
 
     cells.push({
@@ -792,6 +796,7 @@ const calendarCells = computed(() => {
       isToday,
       hasSession,
       hasCheckin,
+      hasMorning,
       stressLevel,
     })
   }
@@ -804,6 +809,7 @@ const calendarCells = computed(() => {
       iso: null,
       isToday: false,
       hasSession: false,
+      hasMorning: false,
     })
   }
 
@@ -1113,6 +1119,10 @@ async function openMonthCalendar() {
       calendarYear.value,
       calendarMonth.value,
     )
+    calendarMorningDates.value = await getMonthMorningDates(
+      calendarYear.value,
+      calendarMonth.value,
+    )
     calendarStressByDay.value = await getMonthStressByDay(
       calendarYear.value,
       calendarMonth.value,
@@ -1124,6 +1134,7 @@ async function openMonthCalendar() {
       console.error('Error loading month sessions in openMonthCalendar', error)
     }
     calendarSessionDates.value = []
+    calendarMorningDates.value = []
     calendarStressByDay.value = {}
   } finally {
     router.push({ name: 'calendrier' })
@@ -1145,6 +1156,7 @@ async function changeCalendarMonth(delta: number) {
   calendarYear.value = year
   calendarMonth.value = monthIndex
   calendarSessionDates.value = await getMonthSessionDates(year, monthIndex)
+  calendarMorningDates.value = await getMonthMorningDates(year, monthIndex)
   calendarStressByDay.value = await getMonthStressByDay(year, monthIndex)
 }
 

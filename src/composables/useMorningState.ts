@@ -334,6 +334,51 @@ export function useMorningState(session: Ref<Session | null>) {
     return `${h}:${m}`
   })
 
+  async function getMonthMorningDates(
+    year: number,
+    monthIndex: number,
+  ): Promise<string[]> {
+    const user = session.value?.user
+
+    if (!user) {
+      return []
+    }
+
+    const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0))
+    const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0, 0))
+
+    const { data, error } = await supabase
+      .from('morning_states')
+      .select('day_date, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', start.toISOString())
+      .lt('created_at', end.toISOString())
+
+    if (error) {
+      const msg = (error as { message?: string }).message ?? ''
+      if (
+        !msg.includes('relation "morning_states" does not exist') &&
+        !msg.includes('NetworkError when attempting to fetch resource')
+      ) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading month morning states', error)
+      }
+      return []
+    }
+
+    const dates = new Set<string>()
+
+    for (const row of (data ?? []) as { day_date?: string | null; created_at: string }[]) {
+      const dayDate =
+        typeof row.day_date === 'string' && row.day_date.length >= 10
+          ? row.day_date.slice(0, 10)
+          : row.created_at.slice(0, 10)
+      dates.add(dayDate)
+    }
+
+    return Array.from(dates)
+  }
+
   return {
     todayMorningState,
     isMorningStateLoading,
@@ -347,5 +392,6 @@ export function useMorningState(session: Ref<Session | null>) {
     weeklyAverageSleepBedTime,
     weeklyAverageSleepWakeTime,
     recentMorningStates,
+    getMonthMorningDates,
   }
 }

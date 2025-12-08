@@ -13,6 +13,7 @@ export interface CalendarCell {
   hasSession: boolean
   iso?: string | null
   hasCheckin?: boolean
+  hasMorning?: boolean
   stressLevel?: number | null
 }
 

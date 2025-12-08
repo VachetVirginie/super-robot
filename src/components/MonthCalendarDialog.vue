@@ -96,7 +96,7 @@ function onCellClick(cell: CalendarCell) {
           :class="{
             'is-blank': cell.date === null,
             'is-today': cell.isToday,
-            'has-session': showSessions && cell.hasSession,
+            'has-session': cell.hasSession || cell.hasCheckin || cell.hasMorning,
             'stress-low': cell.stressLevel && cell.stressLevel <= 2,
             'stress-medium': cell.stressLevel && cell.stressLevel > 2 && cell.stressLevel <= 3.5,
             'stress-high': cell.stressLevel && cell.stressLevel > 3.5,

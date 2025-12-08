@@ -127,6 +127,7 @@ const {
   weeklyMorningPriorities,
   weeklyAverageSleepBedTime,
   weeklyAverageSleepWakeTime,
+  recentMorningStates,
 } = useMorningState(session)
 
 const {
@@ -615,6 +616,8 @@ const calendarYear = ref(new Date().getFullYear())
 const calendarMonth = ref(new Date().getMonth())
 const calendarSessionDates = ref<string[]>([])
 const calendarStressByDay = ref<Record<string, { avg: number; count: number }>>({})
+const bilanMonthSessionDates = ref<string[]>([])
+const bilanMonthStressByDay = ref<Record<string, { avg: number; count: number }>>({})
 // const calendarTouchStartX = ref<number | null>(null)
 
 const snackbarMessage = ref<string | null>(null)
@@ -624,6 +627,40 @@ let snackbarTimeout: number | null = null
 function openWeeklySessionsDialog() {
   if (!isAuthenticated) return
   isWeeklySessionsDialogOpen.value = true
+}
+
+async function loadBilanMonthTrends() {
+  if (!isAuthenticated) {
+    bilanMonthSessionDates.value = []
+    bilanMonthStressByDay.value = {}
+    return
+  }
+
+  const now = new Date()
+  const year = now.getFullYear()
+  const monthIndex = now.getMonth()
+
+  try {
+    bilanMonthSessionDates.value = await getMonthSessionDates(year, monthIndex)
+  } catch (error) {
+    const msg = (error as { message?: string }).message ?? ''
+    if (!msg.includes('NetworkError when attempting to fetch resource')) {
+      // eslint-disable-next-line no-console
+      console.error('Error loading month sessions in loadBilanMonthTrends', error)
+    }
+    bilanMonthSessionDates.value = []
+  }
+
+  try {
+    bilanMonthStressByDay.value = await getMonthStressByDay(year, monthIndex)
+  } catch (error) {
+    const msg = (error as { message?: string }).message ?? ''
+    if (!msg.includes('NetworkError when attempting to fetch resource')) {
+      // eslint-disable-next-line no-console
+      console.error('Error loading month stress in loadBilanMonthTrends', error)
+    }
+    bilanMonthStressByDay.value = {}
+  }
 }
 
 const weeklySessionDays = computed(() => {
@@ -1061,6 +1098,9 @@ watch(
     if (oldName === 'pause' && newName !== 'pause') {
       void recordPendingMiddayCheckin()
     }
+    if (newName === 'bilan') {
+      void loadBilanMonthTrends()
+    }
   },
 )
 
@@ -1231,6 +1271,9 @@ function handleKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  if (route.name === 'bilan') {
+    void loadBilanMonthTrends()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -1296,6 +1339,8 @@ onBeforeUnmount(() => {
         :weekly-average-stress="weeklyAverageStress"
         :weekly-checkins-count="weeklyCheckinsCount"
         :weekly-stress-by-day="weeklyStressByDay"
+        :bilan-month-session-dates="bilanMonthSessionDates"
+        :bilan-month-stress-by-day="bilanMonthStressByDay"
         :stress-reasons="stressReasons"
         :weekly-morning-mood="weeklyAverageMorningMood"
         :weekly-morning-energy="weeklyAverageMorningEnergy"
@@ -1304,6 +1349,7 @@ onBeforeUnmount(() => {
         :weekly-sleep-wake-time="weeklyAverageSleepWakeTime"
         :weekly-average-stress-midday="weeklyAverageStressMidday"
         :weekly-average-stress-evening="weeklyAverageStressEvening"
+        :recent-morning-states="recentMorningStates"
         :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
       <component

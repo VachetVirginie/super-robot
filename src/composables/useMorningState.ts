@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 
 interface MorningStateRow {
   id: string
+  day_date: string
   created_at: string
   mood_level: number | null
   energy_level: number | null
@@ -41,7 +42,7 @@ export function useMorningState(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('morning_states')
-        .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
+        .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString())
@@ -88,7 +89,7 @@ export function useMorningState(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('morning_states')
-        .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
+        .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', now.toISOString())
@@ -345,5 +346,6 @@ export function useMorningState(session: Ref<Session | null>) {
     weeklyMorningPriorities,
     weeklyAverageSleepBedTime,
     weeklyAverageSleepWakeTime,
+    recentMorningStates,
   }
 }

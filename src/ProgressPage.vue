@@ -23,6 +23,18 @@ const props = defineProps<{
   weeklyAverageStressEvening: number | null
   weeklySleepBedTime: string | null
   weeklySleepWakeTime: string | null
+  bilanMonthSessionDates: string[]
+  bilanMonthStressByDay: Record<string, { avg: number; count: number }>
+  recentMorningStates: {
+    id: string
+    day_date: string
+    created_at: string
+    mood_level: number | null
+    energy_level: number | null
+    priorities: string[] | null
+    sleep_bed_time: string | null
+    sleep_wake_time: string | null
+  }[]
   onOpenWeeklySessions: () => void
 }>()
 
@@ -280,7 +292,7 @@ const summaryPercentLabel = computed(() => {
 const minutesLabel = computed(() => {
   const minutes = props.weeklyMinutes ?? 0
   if (!minutes) {
-    return null
+    return "Temps de sport maison non renseigne pour cette semaine. Tu pourras plus tard noter la duree de tes seances."
   }
   return `Soit ${minutes} minute(s) de sport maison cette semaine.`
 })
@@ -288,12 +300,12 @@ const minutesLabel = computed(() => {
 const activeDaysLabel = computed(() => {
   const days = props.weeklyActiveDays ?? 0
   if (!days) {
-    return null
+    return "Pour l'instant, aucun jour actif. On va viser le principe \"jamais zero\" : au moins un jour avec un peu de mouvement, meme tres court."
   }
   if (days === 1) {
-    return "1 jour actif cette semaine : c'est ton premier \"jamais zero\"." 
+    return "Tu as deja 1 jour actif cette semaine. L'idee est surtout de garder au moins un jour \"jamais zero\" meme quand la semaine est chargee."
   }
-  return `${days} jours actifs cette semaine : tu construis ton \"jamais zero\".`
+  return `Tu as bouge ${days} jour(s) cette semaine. Tu construis ton "jamais zero" en douceur.`
 })
 
 const kindTags = computed(() => {
@@ -432,6 +444,153 @@ const movementStressInsight = computed(() => {
   return "Tu peux continuer a explorer ce qui taide le plus, a ton rythme." 
 })
 
+const monthMovementStressNumbers = computed(() => {
+  const stressByDay = props.bilanMonthStressByDay ?? {}
+  const sessionDays = new Set(props.bilanMonthSessionDates ?? [])
+
+  const withMove: number[] = []
+  const withoutMove: number[] = []
+
+  for (const [iso, info] of Object.entries(stressByDay)) {
+    const avg = info?.avg
+    const count = info?.count
+    if (typeof avg !== 'number' || !count) continue
+    if (sessionDays.has(iso)) {
+      withMove.push(avg)
+    } else {
+      withoutMove.push(avg)
+    }
+  }
+
+  const computeAvg = (values: number[]) => {
+    if (!values.length) return null
+    const sum = values.reduce((acc, value) => acc + value, 0)
+    return Math.round((sum / values.length) * 10) / 10
+  }
+
+  const avgWithMove = computeAvg(withMove)
+  const avgWithoutMove = computeAvg(withoutMove)
+
+  if (avgWithMove == null && avgWithoutMove == null) {
+    return null as { withMove: number | null; withoutMove: number | null } | null
+  }
+
+  return {
+    withMove: avgWithMove,
+    withoutMove: avgWithoutMove,
+  }
+})
+
+const weekdayStressSummary = computed(() => {
+  const stressByDay = props.bilanMonthStressByDay ?? {}
+  const buckets = new Map<number, { sum: number; count: number }>()
+
+  for (const [iso, info] of Object.entries(stressByDay)) {
+    const avg = info?.avg
+    const count = info?.count
+    if (typeof avg !== 'number' || !count) continue
+
+    const year = Number(iso.slice(0, 4))
+    const month = Number(iso.slice(5, 7)) - 1
+    const day = Number(iso.slice(8, 10))
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) continue
+
+    const d = new Date(year, month, day)
+    const weekday = d.getDay()
+
+    const bucket = buckets.get(weekday) ?? { sum: 0, count: 0 }
+    bucket.sum += avg * count
+    bucket.count += count
+    buckets.set(weekday, bucket)
+  }
+
+  const weekdayLabels: Record<number, string> = {
+    0: 'Dimanche',
+    1: 'Lundi',
+    2: 'Mardi',
+    3: 'Mercredi',
+    4: 'Jeudi',
+    5: 'Vendredi',
+    6: 'Samedi',
+  }
+
+  const result: { weekday: number; label: string; avg: number; count: number }[] = []
+
+  for (const [weekday, info] of buckets.entries()) {
+    if (!info.count) continue
+    const avg = info.sum / info.count
+    result.push({
+      weekday,
+      label: weekdayLabels[weekday] ?? String(weekday),
+      avg: Math.round(avg * 10) / 10,
+      count: info.count,
+    })
+  }
+
+  return result.sort((a, b) => b.avg - a.avg)
+})
+
+const sleepStressCorrelation = computed(() => {
+  const morningRows = props.recentMorningStates ?? []
+  const stressByDay = props.weeklyStressByDay ?? {}
+
+  const short: number[] = []
+  const long: number[] = []
+  const thresholdMinutes = 7 * 60
+
+  const toMinutes = (value: string | null) => {
+    if (typeof value !== 'string' || value.length < 4) return null
+    const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+    const hour = Number(hourStr)
+    const minute = Number(minuteStr)
+    if (Number.isNaN(hour) || Number.isNaN(minute)) {
+      return null as number | null
+    }
+    return hour * 60 + minute
+  }
+
+  for (const row of morningRows) {
+    const iso =
+      typeof row.day_date === 'string' && row.day_date.length >= 10
+        ? row.day_date.slice(0, 10)
+        : row.created_at.slice(0, 10)
+
+    const info = (stressByDay as Record<string, { avg: number; count: number }>)[iso]
+    const stress = typeof info?.avg === 'number' ? info.avg : null
+    if (stress == null) continue
+
+    const bed = toMinutes(row.sleep_bed_time)
+    const wake = toMinutes(row.sleep_wake_time)
+    if (bed == null || wake == null) continue
+
+    let duration = wake - bed
+    if (duration <= 0) {
+      duration = 24 * 60 - bed + wake
+    }
+
+    if (duration < thresholdMinutes) {
+      short.push(stress)
+    } else {
+      long.push(stress)
+    }
+  }
+
+  const computeAvg = (values: number[]) => {
+    if (!values.length) return null
+    const sum = values.reduce((acc, value) => acc + value, 0)
+    return Math.round((sum / values.length) * 10) / 10
+  }
+
+  const shortAvg = computeAvg(short)
+  const longAvg = computeAvg(long)
+
+  return {
+    shortAvg,
+    longAvg,
+    hasData: shortAvg !== null || longAvg !== null,
+  }
+})
+
 const moodHistorySeries = computed(() => {
   const stressByDay = props.weeklyStressByDay ?? {}
 
@@ -471,6 +630,43 @@ const moodHistorySeries = computed(() => {
   </section>
 
   <template v-else>
+    <section class="card progress-card">
+      <p class="progress-kicker">Bilan</p>
+      <h2 class="progress-title">Ton equilibre en un coup d'oeil</h2>
+      <p class="progress-subtitle">
+        Une vue rapide de ta semaine entre mouvement, stress et sommeil.
+      </p>
+
+      <div class="progress-summary">
+        <p class="progress-text progress-text--muted">
+          Mouvement :
+          <strong>{{ summarySessionsLabel }}</strong>
+          <span v-if="summaryPercentLabel"> ({{ summaryPercentLabel }})</span>
+        </p>
+
+        <p class="progress-text progress-text--muted">
+          Stress :
+          <strong>
+            {{ weeklyAverageStress !== null ? `${weeklyAverageStress}/5` : '–/5' }}
+          </strong>
+          {{ stressWeekSummary }}
+        </p>
+
+        <p v-if="morningSleepLabel" class="progress-text progress-text--muted">
+          Sommeil moyen (coucher-lever) :
+          <strong>{{ morningSleepLabel }}</strong>
+        </p>
+
+        <p v-if="movementStressNumbers" class="progress-text progress-text--muted">
+          Les jours avec seance :
+          <strong>{{ movementStressNumbers.withMove ?? '–' }}/5</strong>
+          de stress en moyenne, contre
+          <strong>{{ movementStressNumbers.withoutMove ?? '–' }}/5</strong>
+          les jours sans seance.
+        </p>
+      </div>
+    </section>
+
     <div class="progress-tabs">
       <button
         type="button"
@@ -496,12 +692,14 @@ const moodHistorySeries = computed(() => {
         :class="activeTab === 'sessions' ? 'is-sessions' : 'is-stress'"
       >
         <div class="progress-tab-panel">
-          <section class="card progress-card">
-            <p class="progress-kicker">Mouvement</p>
-            <h2 class="progress-title">Bouger cette semaine</h2>
-            <p class="progress-subtitle">
-              Ton bilan hebdo sans culte de la perf.
-            </p>
+          <section class="card progress-card progress-card--highlight">
+            <div class="progress-header">
+              <p class="progress-kicker">Mouvement</p>
+              <h2 class="progress-title">Bouger cette semaine</h2>
+              <p class="progress-subtitle">
+                Ton bilan hebdo sans culte de la perf.
+              </p>
+            </div>
 
             <div class="progress-summary-key">
               <p class="progress-summary-main">
@@ -593,6 +791,17 @@ const moodHistorySeries = computed(() => {
                 de stress en moyenne.
               </p>
             </div>
+
+            <p
+              v-if="monthMovementStressNumbers"
+              class="progress-text progress-text--muted"
+            >
+              Sur le mois en cours, les jours avec seance ont un stress moyen de
+              <strong>{{ monthMovementStressNumbers.withMove ?? '\u2014' }}/5</strong>
+              contre
+              <strong>{{ monthMovementStressNumbers.withoutMove ?? '\u2014' }}/5</strong>
+              les jours sans seance.
+            </p>
 
             <!-- <button
               type="button"
@@ -752,6 +961,30 @@ const moodHistorySeries = computed(() => {
               </div>
             </section>
 
+            <section
+              v-if="sleepStressCorrelation.hasData"
+              class="stress-categories-section"
+            >
+              <h3 class="stress-categories-title">Sommeil et charge mentale</h3>
+              <p class="stress-categories-text">
+                On regarde comment la longueur de tes nuits se reflète dans ton stress du jour.
+              </p>
+              <p
+                v-if="sleepStressCorrelation.longAvg !== null"
+                class="stress-text stress-text--muted"
+              >
+                Apres des nuits de 7h ou plus, ton stress moyen est autour de
+                <strong>{{ sleepStressCorrelation.longAvg }}/5</strong>.
+              </p>
+              <p
+                v-if="sleepStressCorrelation.shortAvg !== null"
+                class="stress-text stress-text--muted"
+              >
+                Apres des nuits plus courtes, il monte plutot vers
+                <strong>{{ sleepStressCorrelation.shortAvg }}/5</strong>.
+              </p>
+            </section>
+
             <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
               <h3 class="stress-categories-title">Ce qui revient souvent</h3>
               <p class="stress-categories-text">
@@ -773,34 +1006,30 @@ const moodHistorySeries = computed(() => {
                 </div>
               </div>
             </section>
-          </section>
 
-          <section class="card progress-card">
-            <p class="progress-kicker">Mouvement x stress</p>
-            <h2 class="progress-title">Lien mouvement et stress</h2>
-            <p class="progress-subtitle">
-              Une vue simple du lien entre mouvement et stress cette semaine.
-            </p>
-
-            <p class="progress-text">
-              {{ movementStressInsight }}
-            </p>
-
-            <div
-              v-if="movementStressNumbers"
-              class="progress-summary progress-summary--linked"
+            <section
+              v-if="weekdayStressSummary.length"
+              class="stress-categories-section"
             >
-              <p class="progress-text progress-text--muted">
-                Jours avec seance :
-                <strong>{{ movementStressNumbers.withMove ?? '\u2014' }}/5</strong>
-                de stress en moyenne.
+              <h3 class="stress-categories-title">Jours qui reviennent</h3>
+              <p class="stress-categories-text">
+                Sur le mois en cours, certains jours de la semaine reviennent plus charges.
               </p>
-              <p class="progress-text progress-text--muted">
-                Jours sans seance :
-                <strong>{{ movementStressNumbers.withoutMove ?? '\u2014' }}/5</strong>
-                de stress en moyenne.
-              </p>
-            </div>
+              <div class="stress-categories-list">
+                <div
+                  v-for="item in weekdayStressSummary.slice(0, 3)"
+                  :key="item.weekday"
+                  class="stress-category-row"
+                >
+                  <div class="stress-category-main">
+                    <span class="stress-category-label">{{ item.label }}</span>
+                    <span class="stress-category-count">
+                      {{ item.avg.toFixed(1) }}/5 de stress moyen ({{ item.count }} check-in(s))
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
           </section>
         </div>
       </div>
@@ -816,6 +1045,33 @@ const moodHistorySeries = computed(() => {
   text-transform: uppercase;
   color: #e5e7eb;
   font-weight: 600;
+}
+
+.progress-card--highlight {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.18), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 60%),
+    #111111;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.progress-header {
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.progress-header::before {
+  content: '';
+  position: absolute;
+  inset: -1rem -0.75rem auto -0.75rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(20, 244, 209, 0.18), transparent 55%);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .progress-kicker {

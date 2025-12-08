@@ -7,15 +7,10 @@ defineProps<{
   profileInitial: string
   isProfileLoading: boolean
   isProfileSaving: boolean
-  isPushSupported: boolean
-  isLoadingNotifications: boolean
-  notificationsStatus: 'idle' | 'requesting' | 'enabled' | 'error'
-  notificationsError: string | null
   profileError: string | null
   onOpenWeekPlan: () => void
   onUpdateDisplayName: (value: string) => void
   onSaveDisplayName: () => void | Promise<void>
-  onEnableNotifications: () => void | Promise<void>
   onSignOut: () => void | Promise<void>
   onClose: () => void
 }>()
@@ -28,15 +23,10 @@ defineProps<{
     :profile-initial="profileInitial"
     :is-profile-loading="isProfileLoading"
     :is-profile-saving="isProfileSaving"
-    :is-push-supported="isPushSupported"
-    :is-loading-notifications="isLoadingNotifications"
-    :notifications-status="notificationsStatus"
-    :notifications-error="notificationsError"
     :profile-error="profileError"
     :on-open-week-plan="onOpenWeekPlan"
     @update:displayName="onUpdateDisplayName"
     @save-display-name="onSaveDisplayName"
-    @enable-notifications="onEnableNotifications"
     @sign-out="onSignOut"
     @close="onClose"
   />

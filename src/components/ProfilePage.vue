@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import NotificationSchedule from './NotificationSchedule.vue'
-import { saveNotificationPreferences } from '../notificationPreferences'
+import { computed } from 'vue'
 
 const props = defineProps<{
   displayName: string
@@ -9,10 +7,6 @@ const props = defineProps<{
   profileInitial: string
   isProfileLoading: boolean
   isProfileSaving: boolean
-  isPushSupported: boolean
-  isLoadingNotifications: boolean
-  notificationsStatus: 'idle' | 'requesting' | 'enabled' | 'error'
-  notificationsError: string | null
   profileError: string | null
   onOpenWeekPlan: () => void
 }>()
@@ -21,7 +15,6 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'update:displayName', value: string): void
   (e: 'save-display-name'): void
-  (e: 'enable-notifications'): void
   (e: 'sign-out'): void
 }>()
 
@@ -31,63 +24,9 @@ const heroName = computed(() => {
   return 'Athlete'
 })
 
-type NotificationSlot = {
-  id: string
-  label: string
-  description: string
-  time: string
-  enabled: boolean
-}
-
-const notificationSlots = ref<NotificationSlot[]>([
-  {
-    id: 'morning',
-    label: 'Matin',
-    description: 'Un rappel pour preparer calmement ta journee.',
-    time: '08:00',
-    enabled: true,
-  },
-  {
-    id: 'midday',
-    label: 'Milieu de journee',
-    description: 'Un rappel pour faire une pause ou bouger un peu.',
-    time: '12:00',
-    enabled: true,
-  },
-  {
-    id: 'evening',
-    label: 'Soir',
-    description: 'Un rappel pour faire ton check-in de fin de journee.',
-    time: '21:30',
-    enabled: true,
-  },
-])
-
-const isSavingNotificationPrefs = ref(false)
-const notificationPrefsError = ref<string | null>(null)
-
 function onInputDisplayName(event: Event) {
   const target = event.target as HTMLInputElement | null
   emit('update:displayName', target?.value ?? '')
-}
-
-async function onSaveNotificationSlots() {
-  if (!props.isPushSupported) {
-    return
-  }
-
-  isSavingNotificationPrefs.value = true
-  notificationPrefsError.value = null
-
-  try {
-    await saveNotificationPreferences(notificationSlots.value)
-  } catch (error) {
-    notificationPrefsError.value = "Impossible d'enregistrer tes horaires de notification."
-    // eslint-disable-next-line no-console
-    console.error('Error in onSaveNotificationSlots', error)
-  } finally {
-    isSavingNotificationPrefs.value = false
-  }
 }
 </script>
 
@@ -139,54 +78,6 @@ async function onSaveNotificationSlots() {
             <span v-if="isProfileSaving">Enregistrement...</span>
             <span v-else>Enregistrer le pseudo</span>
           </button>
-        </div>
-
-        <div class="profile-section">
-          <h4 class="profile-section-title">Notifications</h4>
-          <button
-            type="button"
-            class="secondary profile-notif"
-            :disabled="
-              !isPushSupported ||
-              isLoadingNotifications ||
-              notificationsStatus === 'enabled'
-            "
-            @click="emit('enable-notifications')"
-          >
-            <span v-if="notificationsStatus === 'enabled'">
-              Notifications activees
-            </span>
-            <span v-else-if="isLoadingNotifications">
-              Activation en cours...
-            </span>
-            <span v-else>Activer les notifications</span>
-          </button>
-          <p v-if="!isPushSupported" class="info">
-            Les notifications push ne sont pas supportees sur ce navigateur.
-          </p>
-          <p v-if="notificationsError" class="error">
-            {{ notificationsError }}
-          </p>
-
-          <NotificationSchedule
-            v-if="isPushSupported"
-            v-model="notificationSlots"
-          />
-
-          <button
-            v-if="isPushSupported"
-            type="button"
-            class="primary profile-save-notif"
-            :disabled="isSavingNotificationPrefs"
-            @click="onSaveNotificationSlots"
-          >
-            <span v-if="isSavingNotificationPrefs">Enregistrement...</span>
-            <span v-else>Enregistrer ces horaires</span>
-          </button>
-
-          <p v-if="notificationPrefsError" class="error">
-            {{ notificationPrefsError }}
-          </p>
         </div>
 
         <div class="profile-section">

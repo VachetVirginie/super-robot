@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { enablePushNotifications, isPushSupported } from './pushNotifications'
 import { useAuth } from './composables/useAuth'
 import { useTodayStats, type RecordSessionOptions } from './composables/useTodayStats'
 import { useWeeklySlots } from './composables/useWeeklySlots'
@@ -26,13 +25,8 @@ import MorningDialog from './components/MorningFlowDialog.vue'
 import EveningDialog from './components/EveningFlowDialog.vue'
 import MiddayDialog from './components/MiddayFlowDialog.vue'
 
-const status = ref<'idle' | 'requesting' | 'enabled' | 'error'>('idle')
-const errorMessage = ref<string | null>(null)
-
 const route = useRoute()
 const router = useRouter()
-
-const isLoadingNotifications = computed(() => status.value === 'requesting')
 
 const {
   session,
@@ -911,23 +905,6 @@ const todaysMotivation = computed(() => {
   return motivationMessages[index] ?? null
 })
 
-async function onEnableNotifications() {
-  if (!isPushSupported) {
-    status.value = 'error'
-    errorMessage.value = 'Notifications non supportees sur ce navigateur.'
-    return
-  }
-  status.value = 'requesting'
-  errorMessage.value = null
-  try {
-    const enabled = await enablePushNotifications()
-    status.value = enabled ? 'enabled' : 'idle'
-  } catch (error) {
-    status.value = 'error'
-    errorMessage.value = "Impossible d'activer les notifications."
-  }
-}
-
 async function onEveningConfirm(payload: { level: number; note?: string; question?: string }) {
   await submitCheckin(payload.level, payload.note, payload.question)
 
@@ -1354,13 +1331,8 @@ onBeforeUnmount(() => {
         :is-profile-loading="isProfileLoading"
         :is-profile-saving="isProfileSaving"
         :profile-error="profileError"
-        :is-push-supported="isPushSupported"
-        :is-loading-notifications="isLoadingNotifications"
-        :notifications-status="status"
-        :notifications-error="errorMessage"
         :on-update-display-name="(value: string) => { displayName = value }"
         :on-save-display-name="onSaveDisplayNameFromProfile"
-        :on-enable-notifications="onEnableNotifications"
         :on-sign-out="signOutAndRedirect"
         :on-close="() => router.push({ name: 'today' })"
         :on-open-week-plan="openPlanWeekDialog"
@@ -1502,10 +1474,6 @@ onBeforeUnmount(() => {
         :weekly-slots="weeklySlots"
         :is-weekly-slots-loading="isWeeklySlotsLoading"
         :weekly-slots-error="weeklySlotsError"
-        :is-push-supported="isPushSupported"
-        :is-loading-notifications="isLoadingNotifications"
-        :notifications-status="status"
-        :notifications-error="errorMessage"
         :todays-exercise="todaysExercise"
         :is-checkin-saving="isCheckinSaving"
         :checkin-error="checkinError"
@@ -1517,7 +1485,6 @@ onBeforeUnmount(() => {
         :on-forgot-password="requestPasswordReset"
         :toggle-auth-mode="toggleAuthMode"
         :on-today-row-click="onTodayRowClick"
-        :on-enable-notifications="onEnableNotifications"
         :start-wellbeing-exercise="startWellbeingExercise"
         :submit-checkin="submitCheckin"
         :on-open-week-plan="openPlanWeekDialog"

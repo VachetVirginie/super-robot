@@ -170,19 +170,6 @@ export function useTodayStats(session: Ref<Session | null>) {
         .update({ username: generatedUsername })
         .eq('id', userId)
     }
-
-    const { data: settings } = await supabase
-      .from('notification_settings')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    if (!settings) {
-      await supabase.from('notification_settings').insert({
-        user_id: userId,
-        max_per_day: 3,
-      })
-    }
   }
 
   async function loadTodayData(userId: string) {

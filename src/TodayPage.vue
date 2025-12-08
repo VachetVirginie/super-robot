@@ -26,10 +26,6 @@ const props = defineProps<{
   weeklySlots: WeeklySlot[]
   isWeeklySlotsLoading: boolean
   weeklySlotsError: string | null
-  isPushSupported: boolean
-  isLoadingNotifications: boolean
-  notificationsStatus: 'idle' | 'requesting' | 'enabled' | 'error'
-  notificationsError: string | null
   todaysExercise: WellbeingExercise | null
   isCheckinSaving: boolean
   checkinError: string | null
@@ -42,7 +38,6 @@ const props = defineProps<{
   onForgotPassword: () => void | Promise<void>
   toggleAuthMode: () => void
   onTodayRowClick: (key: string) => void
-  onEnableNotifications: () => void | Promise<void>
   startWellbeingExercise: () => void
   onOpenWeekPlan: () => void
   submitCheckin: (stressLevel: number, note?: string, question?: string) => void | Promise<void>

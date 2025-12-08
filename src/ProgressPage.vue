@@ -732,28 +732,6 @@ const equilibriumTag = computed(() => {
   }
 })
 
-const equilibriumTrendLabel = computed(() => {
-  const tone = equilibriumTag.value.tone
-
-  if (tone === 'good') {
-    return '<strong>Tendance</strong> tres solide'
-  }
-
-  if (tone === 'ok') {
-    return '<strong>Tendance</strong> stable'
-  }
-
-  if (tone === 'warn') {
-    return '<strong>Tendance</strong> stable mais fragile'
-  }
-
-  if (tone === 'alert') {
-    return '<strong>Tendance</strong> sous tension'
-  }
-
-  return ''
-})
-
 type FocusType = 'movement' | 'sleep' | 'days' | 'none'
 
 const focusBlock = computed(() => {
@@ -858,7 +836,7 @@ const focusBlock = computed(() => {
             <span class="progress-hero-score-number">
               {{ equilibriumScore !== null ? equilibriumScore : '–' }}
             </span>
-            <span class="progress-hero-score-unit">/100</span>
+            <span class="progress-hero-score-unit">%</span>
           </div>
         </div>
 
@@ -869,12 +847,6 @@ const focusBlock = computed(() => {
           >
             {{ equilibriumTag.label }}
           </span>
-
-          <span
-            v-if="equilibriumTrendLabel"
-            class="progress-hero-trend"
-            v-html="equilibriumTrendLabel"
-          ></span>
         </div>
 
         <div class="progress-hero-gauge">
@@ -1337,24 +1309,10 @@ const focusBlock = computed(() => {
   overflow: hidden;
   padding: 1.25rem 1.1rem 1.3rem;
   background:
-    radial-gradient(circle at top left, rgba(20, 244, 209, 0.2), transparent 60%),
-    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 60%),
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.16), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 60%),
     #111111;
   border-color: rgba(255, 255, 255, 0.09);
-  box-shadow:
-    inset 0 0 26px rgba(15, 23, 42, 0.9),
-    0 18px 42px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.95);
-}
-
-.progress-hero::before {
-  content: '';
-  position: absolute;
-  inset: -30% 35% auto -30%;
-  background: radial-gradient(circle at 0% 0%, rgba(148, 163, 184, 0.5), transparent 70%);
-  opacity: 0.4;
-  filter: blur(10px);
-  pointer-events: none;
 }
 
 .progress-hero-top {
@@ -1365,68 +1323,29 @@ const focusBlock = computed(() => {
 .progress-hero-main {
   position: relative;
   z-index: 1;
-  margin-top: 0.9rem;
-  margin-bottom: 0.9rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.85rem;
 }
 
 .progress-hero-score-orbit {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 5.5rem;
-  height: 5.5rem;
-  margin: 0.35rem auto 0.1rem;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(34, 197, 94, 0.4), transparent 60%),
-    radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.28), transparent 72%);
-  box-shadow:
-    0 0 0 1px rgba(15, 23, 42, 0.9),
-    0 18px 50px rgba(15, 23, 42, 0.9);
-}
-
-.progress-hero-score-orbit::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.95), transparent 65%),
-    radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.8), transparent 70%);
-  opacity: 0.9;
-  filter: blur(4px);
-  animation: hero-score-glow 11s ease-in-out infinite;
-}
-
-.progress-hero-score-orbit::after {
-  content: '';
-  position: absolute;
-  inset: -10px;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(34, 197, 94, 0.22), transparent 72%),
-    radial-gradient(circle at 50% 90%, rgba(56, 189, 248, 0.18), transparent 82%);
-  opacity: 0.5;
-  filter: blur(10px);
-  animation: hero-score-glow 13s ease-in-out infinite;
+  justify-content: flex-start;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .progress-hero-score-pill {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35rem;
-  padding: 0.55rem 0.9rem;
+  padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.6), transparent 55%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
-  border: 1px solid rgba(148, 163, 184, 0.55);
-  backdrop-filter: blur(14px);
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    inset 0 0 22px rgba(15, 23, 42, 0.95),
-    0 0 0 1px rgba(148, 163, 184, 0.55),
-    0 14px 30px rgba(34, 197, 94, 0.38);
+    0 -1px 2px rgba(255, 255, 255, 0.08),
+    0 8px 20px rgba(0, 0, 0, 0.75);
 }
 
 .progress-hero-score-number {
@@ -1526,7 +1445,7 @@ const focusBlock = computed(() => {
 .progress-hero-gauge-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #22c55e, #a3e635, #f97316);
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.9), rgba(34, 197, 94, 0.65));
   transition: width 0.35s ease-out;
 }
 
@@ -1547,10 +1466,10 @@ const focusBlock = computed(() => {
   width: 0.95rem;
   height: 0.95rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 20%, #f9fafb, #22c55e 55%, #0f172a 100%);
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #22c55e 55%, #020617 100%);
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 0.9),
-    0 0 12px rgba(34, 197, 94, 0.75);
+    0 4px 10px rgba(15, 23, 42, 0.9);
 }
 
 .insight-block {
@@ -1559,22 +1478,17 @@ const focusBlock = computed(() => {
   padding: 0.6rem 0.7rem;
   border-radius: 0.9rem;
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 65%),
-    rgba(15, 23, 42, 0.92);
+ rgba(15, 23, 42, 0.92);
   border: 1px solid rgba(148, 163, 184, 0.55);
 }
 
 .insight-block--stress {
-  background:
-    radial-gradient(circle at top left, rgba(248, 113, 113, 0.22), transparent 65%),
-    rgba(15, 23, 42, 0.92);
+  background: #111111;
   border-color: rgba(248, 113, 113, 0.75);
 }
 
 .insight-block--sleep {
-  background:
-    radial-gradient(circle at top left, rgba(129, 140, 248, 0.22), transparent 65%),
-    rgba(15, 23, 42, 0.92);
+  background: #111111;;
   border-color: rgba(129, 140, 248, 0.65);
 }
 
@@ -2123,15 +2037,5 @@ const focusBlock = computed(() => {
 .mood-history-value {
   font-size: 0.75rem;
   opacity: 0.85;
-}
-
-@keyframes hero-score-glow {
-  0%,
-  100% {
-    opacity: 0.92;
-  }
-  50% {
-    opacity: 0.97;
-  }
 }
 </style>

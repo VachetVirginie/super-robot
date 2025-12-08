@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { WellbeingExercise, TodaySection } from './types'
-import type { WeeklySlot } from './composables/useWeeklySlots'
 
 const props = defineProps<{
   isAuthenticated: boolean
@@ -23,9 +22,6 @@ const props = defineProps<{
   weeklySessions: number | null
   weeklyProgressPercent: number
   weeklyStatusLabel: string
-  weeklySlots: WeeklySlot[]
-  isWeeklySlotsLoading: boolean
-  weeklySlotsError: string | null
   todaysExercise: WellbeingExercise | null
   isCheckinSaving: boolean
   checkinError: string | null
@@ -39,7 +35,6 @@ const props = defineProps<{
   toggleAuthMode: () => void
   onTodayRowClick: (key: string) => void
   startWellbeingExercise: () => void
-  onOpenWeekPlan: () => void
   submitCheckin: (stressLevel: number, note?: string, question?: string) => void | Promise<void>
 }>()
 

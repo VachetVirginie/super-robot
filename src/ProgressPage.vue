@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import type { WeeklySlot, TimeOfDay } from './composables/useWeeklySlots'
 
 const props = defineProps<{
   isAuthenticated: boolean
@@ -15,9 +14,6 @@ const props = defineProps<{
   weeklyAverageStress: number | null
   weeklyCheckinsCount: number
   weekSessionDates: string[]
-  weeklySlots: WeeklySlot[]
-  isWeeklySlotsLoading: boolean
-  weeklySlotsError: string | null
   stressReasons: { id: string; created_at: string; reason: string | null; category: string | null }[]
   weeklyStressByDay: Record<string, { avg: number; count: number }>
   weeklyMorningMood: number | null
@@ -27,7 +23,6 @@ const props = defineProps<{
   weeklyAverageStressEvening: number | null
   weeklySleepBedTime: string | null
   weeklySleepWakeTime: string | null
-  onOpenWeekPlan: () => void
   onOpenWeeklySessions: () => void
 }>()
 
@@ -365,19 +360,6 @@ const progressCoachSuggestion = computed(() => {
   return "Garde 1 ou 2 moments fixes qui te font du bien et accepte que certaines semaines soient plus legeres sans que ce soit un echec."
 })
 
-const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-const timeSlots: { key: TimeOfDay; label: string }[] = [
-  { key: 'morning', label: 'Matin' },
-  { key: 'afternoon', label: 'Ap.midi' },
-  { key: 'evening', label: 'Soir' },
-]
-
-function hasSlot(dayIndex: number, timeOfDay: TimeOfDay) {
-  return props.weeklySlots.some(
-    (slot) => slot.dayIndex === dayIndex && slot.timeOfDay === timeOfDay,
-  )
-}
-
 const movementStressCorrelation = computed(() => {
   const stressByDay = props.weeklyStressByDay ?? {}
   const sessionDays = new Set(props.weekSessionDates ?? [])
@@ -566,13 +548,13 @@ const moodHistorySeries = computed(() => {
               Voir toutes tes seances
             </button>
 
-            <button
+            <!-- <button
               type="button"
               class="secondary"
               @click="props.onOpenWeeklySessions()"
             >
               Modifier mes seances
-            </button>
+            </button> -->
 
             <div v-if="kindTags.length" class="progress-tags">
               <span
@@ -583,56 +565,6 @@ const moodHistorySeries = computed(() => {
                 {{ tag.label }}
               </span>
             </div>
-          </section>
-
-          <section class="card progress-card">
-            <p class="progress-kicker">Planning</p>
-            <h2 class="progress-title">Tes moments pour bouger cette semaine</h2>
-            <p class="progress-subtitle">
-              Un coup d'oeil rapide sur les moments que tu as bloques pour toi.
-            </p>
-            <p class="progress-text progress-text--muted">
-              {{ progressCoachSuggestion }}
-            </p>
-
-            <section class="planstrip">
-              <p v-if="isWeeklySlotsLoading" class="planstrip-text">
-                Chargement de ton planning...
-              </p>
-              <p v-else-if="weeklySlotsError" class="planstrip-text planstrip-text--error">
-                {{ weeklySlotsError }}
-              </p>
-              <p
-                v-else-if="!weeklySlots.length"
-                class="planstrip-text planstrip-text--muted"
-              >
-                Tu n'as pas encore prevu de moments pour bouger cette semaine. Tu peux les
-                choisir depuis la page Aujourd'hui.
-              </p>
-
-              <div v-else class="planstrip-grid">
-                <div
-                  v-for="(day, dayIndex) in days"
-                  :key="day"
-                  class="planstrip-day"
-                >
-                  <div class="planstrip-day-label">
-                    {{ day }}
-                  </div>
-                  <div class="planstrip-day-slots">
-                    <span
-                      v-for="slot in timeSlots"
-                      :key="slot.key"
-                      class="planstrip-dot"
-                      :class="[
-                        'planstrip-dot--' + slot.key,
-                        { 'is-active': hasSlot(dayIndex, slot.key) },
-                      ]"
-                    ></span>
-                  </div>
-                </div>
-              </div>
-            </section>
           </section>
 
           <section class="card progress-card">
@@ -869,14 +801,6 @@ const moodHistorySeries = computed(() => {
                 de stress en moyenne.
               </p>
             </div>
-
-            <button
-              type="button"
-              class="stress-link-button"
-              @click="props.onOpenWeekPlan()"
-            >
-              Planifier ma semaine
-            </button>
           </section>
         </div>
       </div>

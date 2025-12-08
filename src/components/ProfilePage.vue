@@ -8,7 +8,6 @@ const props = defineProps<{
   isProfileLoading: boolean
   isProfileSaving: boolean
   profileError: string | null
-  onOpenWeekPlan: () => void
 }>()
 
 const emit = defineEmits<{
@@ -77,17 +76,6 @@ function onInputDisplayName(event: Event) {
           >
             <span v-if="isProfileSaving">Enregistrement...</span>
             <span v-else>Enregistrer le pseudo</span>
-          </button>
-        </div>
-
-        <div class="profile-section">
-          <h4 class="profile-section-title">Mes créneaux d’entraînement</h4>
-          <button
-            type="button"
-            class="secondary profile-planning"
-            @click="props.onOpenWeekPlan()"
-          >
-            Configurer ma semaine
           </button>
         </div>
 

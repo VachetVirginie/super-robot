@@ -7,7 +7,6 @@ import AlertPage from './AlertPage.vue'
 import StressReasonsPage from './StressReasonsPage.vue'
 import SessionsPage from './SessionsPage.vue'
 import RituelsPage from './RituelsPage.vue'
-import WeekConfigPage from './WeekConfigPage.vue'
 import ResetPasswordPage from './ResetPasswordPage.vue'
 import DayDetailsPage from './DayDetailsPage.vue'
 import CalendarPage from './CalendarPage.vue'
@@ -32,11 +31,6 @@ const routes = [
         path: 'reset-password',
         name: 'reset-password',
         component: ResetPasswordPage,
-      },
-      {
-        path: 'semaine',
-        name: 'semaine',
-        component: WeekConfigPage,
       },
       {
         path: 'profile',

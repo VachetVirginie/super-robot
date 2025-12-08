@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from './composables/useAuth'
 import { useTodayStats, type RecordSessionOptions } from './composables/useTodayStats'
-import { useWeeklySlots } from './composables/useWeeklySlots'
 import { useProfile } from './composables/useProfile'
 import { useCheckins } from './composables/useCheckins'
 import type { CalendarCell } from './types'
@@ -19,7 +18,6 @@ import WeeklySessionsDialog from './components/WeeklySessionsDialog.vue'
 import WellbeingDialog from './components/WellbeingDialog.vue'
 import WellbeingPlayerDialog from './components/WellbeingPlayerDialog.vue'
 import AdjustGoalDialog from './components/AdjustGoalDialog.vue'
-import PlanWeekDialog from './components/PlanWeekDialog.vue'
 import WorkoutPlayerDialog from './components/WorkoutPlayerDialog.vue'
 import MorningDialog from './components/MorningFlowDialog.vue'
 import EveningDialog from './components/EveningFlowDialog.vue'
@@ -70,13 +68,6 @@ const selectedDuration = ref<5 | 10 | 15 | 20 | 30>(10)
 const selectedKind = ref<WorkoutKind | 'auto'>('mixed')
 const isWorkoutPlayerOpen = ref(false)
 const activeWorkoutTemplateKey = ref<string | null>(null)
-
-const {
-  slots: weeklySlots,
-  isWeeklySlotsLoading,
-  weeklySlotsError,
-  saveWeeklySlots,
-} = useWeeklySlots(session)
 
 const {
   displayName,
@@ -502,17 +493,13 @@ const weekStrip = computed(() => {
       .replace('.', '')
 
     const actualCount = sessionCountsByDate.get(isoDate) ?? 0
-    const plannedForDay = weeklySlots.value.filter((slot) => slot.dayIndex === i).length
 
-    let plannedCount = plannedForDay
+    let plannedCount = 0
     let doneCount = 0
 
-    if (plannedForDay > 0) {
-      doneCount = Math.min(plannedForDay, actualCount)
-    } else if (actualCount > 0) {
-      // Pas de planning formel pour ce jour, mais des seances :
-      plannedCount = 1
-      doneCount = 1
+    if (actualCount > 0) {
+      plannedCount = actualCount
+      doneCount = actualCount
     }
 
     const hasSession = actualCount > 0 && isoDate <= todayIso
@@ -575,32 +562,16 @@ const todaySections = computed(() => {
 
   const sessionsTodayCount = weekSessionDates.value.filter((iso) => iso === todayIso).length
 
-  const dayOfWeek = today.getDay()
-  const todayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-  const plannedToday = weeklySlots.value.filter((slot) => slot.dayIndex === todayIndex).length
-
   let todayProgress = 0
-  if (plannedToday > 0) {
-    const ratio = Math.max(0, Math.min(1, sessionsTodayCount / plannedToday))
-    todayProgress = Math.round(ratio * 100)
-  } else if (sessionsTodayCount > 0) {
+  if (sessionsTodayCount > 0) {
     todayProgress = 100
   }
 
   let todaySubtitle: string
-  if (plannedToday > 0) {
-    if (sessionsTodayCount === 0) {
-      todaySubtitle = `Tu as prevu ${plannedToday} seance(s) pour aujourd'hui. On peut en faire une petite quand tu veux.`
-    } else {
-      const done = Math.min(sessionsTodayCount, plannedToday)
-      todaySubtitle = `${done}/${plannedToday} seance(s) prevue(s) deja faites aujourd'hui.`
-    }
-  } else {
-    todaySubtitle =
-      sessionsTodayCount > 0
-        ? `${sessionsTodayCount} seance(s) deja faites aujourd'hui, bravo.`
-        : "Pas encore de seance aujourd'hui. On peut toujours commencer par quelque chose de tres court."
-  }
+  todaySubtitle =
+    sessionsTodayCount > 0
+      ? `${sessionsTodayCount} seance(s) deja faites aujourd'hui, bravo.`
+      : "Pas encore de seance aujourd'hui. On peut toujours commencer par quelque chose de tres court."
 
   sections.push({
     key: 'today-sessions',
@@ -650,35 +621,9 @@ const snackbarMessage = ref<string | null>(null)
 const snackbarType = ref<'success' | 'error' | null>(null)
 let snackbarTimeout: number | null = null
 
-const isPlanWeekDialogOpen = ref(false)
-
-function openPlanWeekDialog() {
-  if (!isAuthenticated) return
-  isPlanWeekDialogOpen.value = true
-}
-
 function openWeeklySessionsDialog() {
   if (!isAuthenticated) return
   isWeeklySessionsDialogOpen.value = true
-}
-
-async function savePlanWeekDialog(slots: { dayIndex: number; timeOfDay: 'morning' | 'afternoon' | 'evening' }[]) {
-  await saveWeeklySlots(slots)
-
-  const target = slots.length
-  const current = perWeekGoal.value ?? 0
-  const delta = target - current
-
-  if (delta > 0) {
-    await changeGoal(delta)
-  } else if (delta < 0 && current > 0) {
-    showSnackbar(
-      "Tu as reduit tes moments cette semaine. Ton objectif reste le meme, tu pourras l'ajuster depuis le Bilan si tu veux.",
-      'success',
-    )
-  }
-
-  isPlanWeekDialogOpen.value = false
 }
 
 const weeklySessionDays = computed(() => {
@@ -1335,7 +1280,6 @@ onBeforeUnmount(() => {
         :on-save-display-name="onSaveDisplayNameFromProfile"
         :on-sign-out="signOutAndRedirect"
         :on-close="() => router.push({ name: 'today' })"
-        :on-open-week-plan="openPlanWeekDialog"
       />
       <component
         v-else-if="route.name === 'bilan'"
@@ -1349,9 +1293,6 @@ onBeforeUnmount(() => {
         :weekly-active-days="weeklyActiveDays"
         :weekly-by-kind="weeklyByKind"
         :week-session-dates="weekSessionDates"
-        :weekly-slots="weeklySlots"
-        :is-weekly-slots-loading="isWeeklySlotsLoading"
-        :weekly-slots-error="weeklySlotsError"
         :weekly-average-stress="weeklyAverageStress"
         :weekly-checkins-count="weeklyCheckinsCount"
         :weekly-stress-by-day="weeklyStressByDay"
@@ -1363,19 +1304,6 @@ onBeforeUnmount(() => {
         :weekly-sleep-wake-time="weeklyAverageSleepWakeTime"
         :weekly-average-stress-midday="weeklyAverageStressMidday"
         :weekly-average-stress-evening="weeklyAverageStressEvening"
-        :on-open-week-plan="openPlanWeekDialog"
-        :on-open-weekly-sessions="openWeeklySessionsDialog"
-      />
-      <component
-        v-else-if="route.name === 'semaine'"
-        :is="Component"
-        :is-authenticated="isAuthenticated"
-        :per-week-goal="perWeekGoal"
-        :weekly-slots="weeklySlots"
-        :is-weekly-slots-loading="isWeeklySlotsLoading"
-        :weekly-slots-error="weeklySlotsError"
-        :weekly-sessions="weeklySessions"
-        :on-open-week-plan="openPlanWeekDialog"
         :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
       <component
@@ -1471,9 +1399,6 @@ onBeforeUnmount(() => {
         :weekly-sessions="weeklySessions"
         :weekly-progress-percent="weeklyProgressPercent"
         :weekly-status-label="weeklyStatusLabel"
-        :weekly-slots="weeklySlots"
-        :is-weekly-slots-loading="isWeeklySlotsLoading"
-        :weekly-slots-error="weeklySlotsError"
         :todays-exercise="todaysExercise"
         :is-checkin-saving="isCheckinSaving"
         :checkin-error="checkinError"
@@ -1487,7 +1412,6 @@ onBeforeUnmount(() => {
         :on-today-row-click="onTodayRowClick"
         :start-wellbeing-exercise="startWellbeingExercise"
         :submit-checkin="submitCheckin"
-        :on-open-week-plan="openPlanWeekDialog"
         :today-morning-summary="todayMorningSummary"
         :today-midday-summary="todayMiddaySummary"
         :has-today-midday-checkin="hasTodayMiddayCheckin"
@@ -1514,13 +1438,6 @@ onBeforeUnmount(() => {
       @close="isWeeklySessionsDialogOpen = false"
       @add-for-date="addSessionForDateFromWeeklyDialog"
       @remove-for-date="removeSessionForDateFromWeeklyDialog"
-    />
-
-    <PlanWeekDialog
-      v-if="isPlanWeekDialogOpen"
-      :initial-slots="weeklySlots"
-      @close="isPlanWeekDialogOpen = false"
-      @save="savePlanWeekDialog"
     />
 
     <MorningDialog

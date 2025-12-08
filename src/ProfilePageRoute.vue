@@ -8,7 +8,6 @@ defineProps<{
   isProfileLoading: boolean
   isProfileSaving: boolean
   profileError: string | null
-  onOpenWeekPlan: () => void
   onUpdateDisplayName: (value: string) => void
   onSaveDisplayName: () => void | Promise<void>
   onSignOut: () => void | Promise<void>
@@ -24,7 +23,6 @@ defineProps<{
     :is-profile-loading="isProfileLoading"
     :is-profile-saving="isProfileSaving"
     :profile-error="profileError"
-    :on-open-week-plan="onOpenWeekPlan"
     @update:displayName="onUpdateDisplayName"
     @save-display-name="onSaveDisplayName"
     @sign-out="onSignOut"

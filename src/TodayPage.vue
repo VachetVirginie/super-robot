@@ -191,7 +191,7 @@ watch(
       <div class="planweek-header">
         <div>
           <div class="planweek-label-row">
-            <span class="planweek-label">Matin</span>
+            <span class="planweek-label section-title">Matin</span>
             <span class="planweek-kicker">Routine du matin</span>
           </div>
           <h2 class="planweek-title">Poser ton matin en 1 minute</h2>
@@ -219,7 +219,7 @@ watch(
 
     <section class="card checkin-card mini-action-card">
       <div class="planweek-label-row">
-        <span class="planweek-label">Midi</span>
+        <span class="planweek-label section-title">Midi</span>
         <span class="planweek-kicker">Pause du milieu de journee</span>
       </div>
       <h2 class="checkin-title">Ma pause du milieu de journee</h2>
@@ -255,7 +255,7 @@ watch(
 
     <section class="card checkin-card">
       <div class="planweek-label-row">
-        <span class="planweek-label">Soir</span>
+        <span class="planweek-label section-title">Soir</span>
         <span class="planweek-kicker">Bilan du soir</span>
       </div>
       <h2 class="checkin-title">Terminer ma journee</h2>
@@ -418,11 +418,7 @@ watch(
 }
 
 .planweek-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent-soft);
-  opacity: 0.9;
+  color: #7efac8;
 }
 
 .planweek-kicker {

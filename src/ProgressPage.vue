@@ -816,7 +816,7 @@ const focusBlock = computed(() => {
 
 <template>
   <section v-if="!isAuthenticated" class="card progress-card">
-    <p class="progress-kicker">Bilan</p>
+    <p class="progress-kicker section-title">Bilan</p>
     <h2 class="progress-title">Mon equilibre</h2>
     <p class="progress-text">
       Connecte-toi pour suivre ta progression hebdomadaire et tes objectifs.
@@ -826,7 +826,7 @@ const focusBlock = computed(() => {
   <template v-else>
     <section class="card progress-card progress-hero">
       <div class="progress-hero-top">
-        <p class="progress-kicker">Bilan</p>
+        <p class="progress-kicker section-title">Bilan</p>
         <h2 class="progress-title">Ton equilibre du moment</h2>
       </div>
 
@@ -919,7 +919,7 @@ const focusBlock = computed(() => {
       >
           <section class="card progress-card progress-card--highlight">
             <div class="progress-header">
-              <p class="progress-kicker">Mouvement</p>
+              <p class="progress-kicker section-title">Mouvement</p>
               <h2 class="progress-title">Bouger cette semaine</h2>
               <p class="progress-subtitle">
                 Ton bilan hebdo sans culte de la perf.
@@ -990,7 +990,7 @@ const focusBlock = computed(() => {
           </section>
 
           <section class="card progress-card">
-            <p class="progress-kicker">Mouvement x stress</p>
+            <p class="progress-kicker section-title">Mouvement x stress</p>
             <h2 class="progress-title">Lien mouvement et stress</h2>
             <p class="progress-subtitle">
               Ce que montre ta semaine entre seances et stress.
@@ -1052,7 +1052,7 @@ const focusBlock = computed(() => {
           class="progress-tab-panel"
         >
           <section class="card progress-card">
-            <p class="progress-kicker">Routines du jour</p>
+            <p class="progress-kicker section-title">Routines du jour</p>
             <h2 class="progress-title">Tes matins cette semaine</h2>
             <p class="progress-subtitle">
               Comment tu demarres tes journees (sur les 7 derniers jours).
@@ -1108,7 +1108,7 @@ const focusBlock = computed(() => {
           </section>
 
           <section class="card progress-card progress-card--highlight">
-            <p class="progress-kicker">Stress</p>
+            <p class="progress-kicker section-title">Stress</p>
             <h2 class="progress-title">Stress et declencheurs</h2>
             <p class="progress-subtitle">
               Comment tu as vecu la semaine du point de vue du stress.
@@ -1276,7 +1276,7 @@ const focusBlock = computed(() => {
       </div>
 
     <section class="card progress-card">
-      <p class="progress-kicker">Focus</p>
+      <p class="progress-kicker section-title">Focus</p>
       <h2 class="progress-title">Ton focus pour les prochains jours</h2>
       <p class="progress-subtitle">
         On choisit ensemble un seul geste simple a tester.
@@ -1556,11 +1556,6 @@ const focusBlock = computed(() => {
 
 .progress-kicker {
   margin: 0 0 0.35rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--accent-soft);
-  opacity: 0.9;
 }
 
 .progress-tabs {

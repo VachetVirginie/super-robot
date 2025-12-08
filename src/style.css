@@ -51,6 +51,14 @@ h3 {
     sans-serif;
 }
 
+.section-title {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #7efac8;
+}
+
 #app {
   width: 100%;
   max-width: 420px;

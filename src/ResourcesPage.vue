@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
   <div class="resources-root">
     <section class="card resources-section resources-section--highlight">
       <div class="resources-section-header">
-        <p class="resources-kicker">Ressources</p>
+        <p class="resources-kicker section-title">Ressources</p>
         <h2 class="resources-title">Sons et ambiances</h2>
         <p class="resources-text">
           Pour apaiser ton systeme nerveux en quelques secondes.
@@ -204,7 +204,7 @@ onBeforeUnmount(() => {
 
     <section class="card resources-section">
       <div class="resources-section-header">
-        <p class="resources-kicker">Respirations</p>
+        <p class="resources-kicker section-title">Respirations</p>
         <h2 class="resources-title">Respirations guidees</h2>
         <p class="resources-text">
           Des protocoles simples que tu peux utiliser a tout moment de la journee.
@@ -228,7 +228,7 @@ onBeforeUnmount(() => {
 
     <section class="card resources-section">
       <div class="resources-section-header">
-        <p class="resources-kicker">Anti-stress express</p>
+        <p class="resources-kicker section-title">Anti-stress express</p>
         <h2 class="resources-title">1 minute pour relacher</h2>
         <p class="resources-text">
           Des micro-gestes pour detendre ton corps sans changer de piece.
@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
 
     <section class="card resources-section">
       <div class="resources-section-header">
-        <p class="resources-kicker">Mouvement doux</p>
+        <p class="resources-kicker section-title">Mouvement doux</p>
         <h2 class="resources-title">Bouger sans performance</h2>
         <p class="resources-text">
           Des mini-seances pour remettre un peu de mouvement dans la journee.
@@ -277,7 +277,7 @@ onBeforeUnmount(() => {
 
     <section class="card resources-section resources-mindset resources-section--highlight">
       <div class="resources-section-header">
-        <p class="resources-kicker">Mindset</p>
+        <p class="resources-kicker section-title">Mindset</p>
         <h2 class="resources-title">Changer de regard</h2>
         <p class="resources-text">
           Une question, une perspective, un espace pour deposer ce qui tourne en boucle.
@@ -333,7 +333,7 @@ onBeforeUnmount(() => {
 
     <section class="card resources-section resources-section">
       <div class="resources-section-header">
-        <p class="resources-kicker">Gratitude</p>
+        <p class="resources-kicker section-title">Gratitude</p>
         <h2 class="resources-title">Changer de regard par la gratitude</h2>
         <p class="resources-text">
           Prendre une minute pour remarquer ce qui te soutient deja aujourd'hui.
@@ -434,11 +434,6 @@ onBeforeUnmount(() => {
 
 .resources-kicker {
   margin: 0 0 0.25rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent-soft);
-  opacity: 0.9;
 }
 
 .resources-title {

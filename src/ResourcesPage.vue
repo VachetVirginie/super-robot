@@ -11,6 +11,12 @@ interface ResourcesPageProps {
   isReflectionsSaving: boolean
   reflectionsError: string | null
   saveReflections: (payload: { mindsetNote?: string; gratitudeNote?: string }) => void | Promise<void>
+  logResourceUsage: (payload: {
+    source: string
+    resourceType: 'sound' | 'breath' | 'express' | 'movement'
+    resourceKey: string
+    durationSeconds?: number | null
+  }) => void | Promise<void>
 }
 
 const props = defineProps<ResourcesPageProps>()
@@ -67,11 +73,47 @@ const movementPresets = [
 ]
 
 function openBreathingFlow(id: string) {
+  if (props.isAuthenticated) {
+    void props.logResourceUsage({
+      source: 'resources',
+      resourceType: 'breath',
+      resourceKey: id,
+    })
+  }
   router.push({ name: 'breath', params: { id } })
 }
 
 function openSound(id: string) {
+  if (props.isAuthenticated) {
+    void props.logResourceUsage({
+      source: 'resources',
+      resourceType: 'sound',
+      resourceKey: id,
+    })
+  }
   router.push({ name: 'pause', query: { sound: id } })
+}
+
+function onExpressClick(key: string) {
+  if (!props.isAuthenticated) {
+    return
+  }
+  void props.logResourceUsage({
+    source: 'resources',
+    resourceType: 'express',
+    resourceKey: key,
+  })
+}
+
+function onMovementClick(key: string) {
+  if (!props.isAuthenticated) {
+    return
+  }
+  void props.logResourceUsage({
+    source: 'resources',
+    resourceType: 'movement',
+    resourceKey: key,
+  })
 }
 
 const showMindsetDetails = ref(false)
@@ -199,6 +241,7 @@ onBeforeUnmount(() => {
           :key="item.key"
           type="button"
           class="resources-chip"
+          @click="onExpressClick(item.key)"
         >
           {{ item.label }}
         </button>
@@ -219,6 +262,7 @@ onBeforeUnmount(() => {
           v-for="item in movementPresets"
           :key="item.key"
           class="resources-move-card"
+          @click="onMovementClick(item.key)"
         >
           <div class="resources-move-icon-circle"></div>
           <div class="resources-move-content">

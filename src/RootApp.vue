@@ -11,6 +11,7 @@ import { useRituals } from './composables/useRituals'
 import { useDailyPlan, type TodaySlot, type DailyIntention } from './composables/useDailyPlan'
 import { useMorningState } from './composables/useMorningState'
 import { useDailyReflections } from './composables/useDailyReflections'
+import { useResourceUsage } from './composables/useResourceUsage'
 import { pickWorkoutTemplate, type WorkoutKind, WORKOUT_TEMPLATES } from './workoutCatalog'
 import WeekStrip from './components/WeekStrip.vue'
 import AddSessionDialog from './components/AddSessionDialog.vue'
@@ -137,6 +138,10 @@ const {
   reflectionsError,
   saveDailyReflections,
 } = useDailyReflections(session)
+
+const {
+  logResourceUsage,
+} = useResourceUsage(session)
 
 const pendingMiddayMoodLevel = ref<number | null>(null)
 const pendingMiddayPath = ref<'move' | 'breathe' | null>(null)
@@ -1408,6 +1413,7 @@ onBeforeUnmount(() => {
         :is-reflections-saving="isReflectionsSaving"
         :reflections-error="reflectionsError"
         :save-reflections="saveDailyReflections"
+        :log-resource-usage="logResourceUsage"
       />
       <component
         v-else-if="route.name === 'breath'"

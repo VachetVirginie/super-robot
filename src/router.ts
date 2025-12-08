@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import TodayPage from './TodayPage.vue'
 import ProfilePageRoute from './ProfilePageRoute.vue'
 import ProgressPage from './ProgressPage.vue'
@@ -13,14 +13,11 @@ import CalendarPage from './CalendarPage.vue'
 import ResourcesPage from './ResourcesPage.vue'
 import BreathPlayerPage from './BreathPlayerPage.vue'
 
-const routes = [
-  {
-    path: '/',
-    redirect: '/today',
-  },
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: RootApp,
+    redirect: { name: 'today' },
     children: [
       {
         path: 'today',

@@ -264,7 +264,7 @@ const stressWeekSummary = computed(() => {
     return 'Semaine plutot calme.'
   }
   if (avg <= 3.5) {
-    return 'Semaine chargee mais sous controle.'
+    return 'Semaine chargee mais <strong>sous controle</strong>.'
   }
   return 'Semaine plutot tendue.'
 })
@@ -286,7 +286,7 @@ const summaryPercentLabel = computed(() => {
   if (!Number.isFinite(safePercent.value) || safePercent.value <= 0) {
     return null as string | null
   }
-  return `${safePercent.value}% de ton objectif`
+  return `<strong>${safePercent.value}%</strong> de ton <strong>objectif</strong>`
 })
 
 const minutesLabel = computed(() => {
@@ -424,7 +424,7 @@ const movementStressInsight = computed(() => {
     if (!Object.keys(props.weeklyStressByDay ?? {}).length) {
       return "Des que tu notes ton stress quelques jours, on pourra te montrer l'effet de tes seances sur ta semaine."
     }
-    return "On a encore peu de jours avec seance et check-in cette semaine. On affinera ce lien au fil du temps."
+    return "On a encore <strong>peu de jours</strong> avec seance et check-in cette semaine. On affinera ce lien au fil du temps."
   }
 
   const diffRaw = avgWithoutMove! - avgWithMove!
@@ -438,7 +438,7 @@ const movementStressInsight = computed(() => {
   }
 
   if (diffRaw >= 0) {
-    return 'Tu peux observer ton stress avec ou sans mouvement, sans pression.'
+    return 'Tu peux <strong>observer</strong> ton stress avec ou sans mouvement, <strong>sans pression</strong>.'
   }
 
   return "Tu peux continuer a explorer ce qui taide le plus, a ton rythme." 
@@ -732,6 +732,28 @@ const equilibriumTag = computed(() => {
   }
 })
 
+const equilibriumTrendLabel = computed(() => {
+  const tone = equilibriumTag.value.tone
+
+  if (tone === 'good') {
+    return '<strong>Tendance</strong> tres solide'
+  }
+
+  if (tone === 'ok') {
+    return '<strong>Tendance</strong> stable'
+  }
+
+  if (tone === 'warn') {
+    return '<strong>Tendance</strong> stable mais fragile'
+  }
+
+  if (tone === 'alert') {
+    return '<strong>Tendance</strong> sous tension'
+  }
+
+  return ''
+})
+
 type FocusType = 'movement' | 'sleep' | 'days' | 'none'
 
 const focusBlock = computed(() => {
@@ -847,6 +869,12 @@ const focusBlock = computed(() => {
           >
             {{ equilibriumTag.label }}
           </span>
+
+          <span
+            v-if="equilibriumTrendLabel"
+            class="progress-hero-trend"
+            v-html="equilibriumTrendLabel"
+          ></span>
         </div>
 
         <div class="progress-hero-gauge">
@@ -854,6 +882,10 @@ const focusBlock = computed(() => {
             <div
               class="progress-hero-gauge-fill"
               :style="{ width: (equilibriumScore ?? 0) + '%' }"
+            ></div>
+            <div
+              class="progress-hero-gauge-thumb"
+              :style="{ left: (equilibriumScore ?? 0) + '%' }"
             ></div>
           </div>
         </div>
@@ -864,63 +896,49 @@ const focusBlock = computed(() => {
       </div>
 
       <div class="progress-hero-messages">
-        <p class="progress-text">
-          {{ coachMovementMessage }}
-        </p>
+        <div class="insight-block">
+          <p class="insight-label">🏃 Mouvement → Stress</p>
+          <p class="insight-text">
+            {{ coachMovementMessage }}
+          </p>
+        </div>
 
-        <p
-          v-if="movementStressNumbers"
-          class="progress-text progress-text--muted"
-        >
-          Jours avec seance :
-          <strong>{{ movementStressNumbers.withMove ?? '–' }}/5</strong>
-          sans seance :
-          <strong>{{ movementStressNumbers.withoutMove ?? '–' }}/5</strong>
-        </p>
-
-        <p class="progress-text">
-          {{ coachSleepMessage }}
-        </p>
-
-        <p
-          v-if="sleepStressCorrelation.hasData"
-          class="progress-text progress-text--muted"
-        >
-          Apres des nuits de 7h ou plus :
-          <strong>{{ sleepStressCorrelation.longAvg ?? '–' }}/5</strong>
-          nuits plus courtes :
-          <strong>{{ sleepStressCorrelation.shortAvg ?? '–' }}/5</strong>
-        </p>
+        <div class="insight-block insight-block--sleep">
+          <p class="insight-label">🌙 Sommeil → Stress</p>
+          <p class="insight-text">
+            {{ coachSleepMessage }}
+          </p>
+        </div>
 
         <p class="progress-status progress-status--muted">
           {{ coachPeriodLabel }}
         </p>
       </div>
+
+      <div class="progress-tabs">
+        <div
+          class="progress-tabs-highlight"
+          :class="activeTab === 'stress' ? 'is-right' : 'is-left'"
+        ></div>
+
+        <button
+          type="button"
+          class="progress-tab"
+          :class="{ 'is-active': activeTab === 'sessions' }"
+          @click="activeTab = 'sessions'"
+        >
+          Bouger
+        </button>
+        <button
+          type="button"
+          class="progress-tab"
+          :class="{ 'is-active': activeTab === 'stress' }"
+          @click="activeTab = 'stress'"
+        >
+          Stress et declencheurs
+        </button>
+      </div>
     </section>
-
-    <div class="progress-tabs">
-      <div
-        class="progress-tabs-highlight"
-        :class="activeTab === 'stress' ? 'is-right' : 'is-left'"
-      ></div>
-
-      <button
-        type="button"
-        class="progress-tab"
-        :class="{ 'is-active': activeTab === 'sessions' }"
-        @click="activeTab = 'sessions'"
-      >
-        Bouger
-      </button>
-      <button
-        type="button"
-        class="progress-tab"
-        :class="{ 'is-active': activeTab === 'stress' }"
-        @click="activeTab = 'stress'"
-      >
-        Stress et declencheurs
-      </button>
-    </div>
 
     <div class="progress-tabs-panels">
       <div
@@ -937,16 +955,15 @@ const focusBlock = computed(() => {
             </div>
 
             <div class="progress-summary-key">
-              <p class="progress-summary-main">
-                <strong>{{ summarySessionsLabel }}</strong>
-              </p>
-              <p
-                v-if="summaryPercentLabel"
-                class="progress-summary-secondary"
-              >
-                {{ summaryPercentLabel }}
-              </p>
-            </div>
+          <p class="progress-summary-main">
+            <strong>{{ summarySessionsLabel }}</strong>
+          </p>
+          <p
+            v-if="summaryPercentLabel"
+            class="progress-summary-secondary"
+            v-html="summaryPercentLabel"
+          ></p>
+        </div>
 
             <div class="progress-summary">
               <p v-if="minutesLabel" class="progress-text progress-text--muted">
@@ -1009,9 +1026,7 @@ const focusBlock = computed(() => {
 
             <div class="insight-block">
               <p class="insight-label">Insight</p>
-              <p class="insight-text">
-                {{ movementStressInsight }}
-              </p>
+              <p class="insight-text" v-html="movementStressInsight"></p>
             </div>
 
             <div
@@ -1120,7 +1135,7 @@ const focusBlock = computed(() => {
             </div>
           </section>
 
-          <section class="card progress-card">
+          <section class="card progress-card progress-card--highlight">
             <p class="progress-kicker">Stress</p>
             <h2 class="progress-title">Stress et declencheurs</h2>
             <p class="progress-subtitle">
@@ -1129,9 +1144,7 @@ const focusBlock = computed(() => {
 
             <div class="insight-block insight-block--stress">
               <p class="insight-label">Insight</p>
-              <p class="insight-text">
-                <strong>{{ stressWeekSummary }}</strong>
-              </p>
+              <p class="insight-text" v-html="`<strong>${stressWeekSummary}</strong>`"></p>
             </div>
 
             <section class="stress-section">
@@ -1323,20 +1336,24 @@ const focusBlock = computed(() => {
   position: relative;
   overflow: hidden;
   padding: 1.25rem 1.1rem 1.3rem;
-  background: #111111;
-  border-color: rgba(148, 163, 184, 0.45);
+  background:
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.2), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.18), transparent 60%),
+    #111111;
+  border-color: rgba(255, 255, 255, 0.09);
   box-shadow:
-    0 18px 60px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
+    inset 0 0 26px rgba(15, 23, 42, 0.9),
+    0 18px 42px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.95);
 }
 
 .progress-hero::before {
   content: '';
   position: absolute;
-  inset: -80% -40% auto auto;
-  background: radial-gradient(circle at top, rgba(34, 197, 94, 0.7), transparent 65%);
-  opacity: 0.32;
-  filter: blur(8px);
+  inset: -30% 35% auto -30%;
+  background: radial-gradient(circle at 0% 0%, rgba(148, 163, 184, 0.5), transparent 70%);
+  opacity: 0.4;
+  filter: blur(10px);
   pointer-events: none;
 }
 
@@ -1353,14 +1370,46 @@ const focusBlock = computed(() => {
 }
 
 .progress-hero-score-orbit {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 0;
+  width: 5.5rem;
+  height: 5.5rem;
+  margin: 0.35rem auto 0.1rem;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 50% 10%, rgba(45, 212, 191, 0.55), transparent 60%),
-    radial-gradient(circle at 50% 120%, rgba(56, 189, 248, 0.4), transparent 70%);
+    radial-gradient(circle at 50% 35%, rgba(34, 197, 94, 0.4), transparent 60%),
+    radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.28), transparent 72%);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 18px 50px rgba(15, 23, 42, 0.9);
+}
+
+.progress-hero-score-orbit::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.95), transparent 65%),
+    radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.8), transparent 70%);
+  opacity: 0.9;
+  filter: blur(4px);
+  animation: hero-score-glow 11s ease-in-out infinite;
+}
+
+.progress-hero-score-orbit::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(34, 197, 94, 0.22), transparent 72%),
+    radial-gradient(circle at 50% 90%, rgba(56, 189, 248, 0.18), transparent 82%);
+  opacity: 0.5;
+  filter: blur(10px);
+  animation: hero-score-glow 13s ease-in-out infinite;
 }
 
 .progress-hero-score-pill {
@@ -1373,10 +1422,11 @@ const focusBlock = computed(() => {
     radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.6), transparent 55%),
     linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
   border: 1px solid rgba(148, 163, 184, 0.55);
-  box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.85),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 0 22px rgba(15, 23, 42, 0.95),
+    0 0 0 1px rgba(148, 163, 184, 0.55),
+    0 14px 30px rgba(34, 197, 94, 0.38);
 }
 
 .progress-hero-score-number {
@@ -1421,7 +1471,7 @@ const focusBlock = computed(() => {
 .progress-hero-tag {
   display: inline-flex;
   align-items: center;
-  padding: 0.14rem 0.6rem;
+  padding: 0.16rem 0.85rem;
   border-radius: 999px;
   font-size: 0.7rem;
   letter-spacing: 0.12em;
@@ -1441,13 +1491,23 @@ const focusBlock = computed(() => {
 }
 
 .progress-hero-tag.is-warn {
-  border-color: rgba(251, 191, 36, 0.9);
+  border-color: rgba(251, 191, 36, 1);
   color: #fef3c7;
+  background: radial-gradient(circle at 20% 0%, rgba(253, 224, 71, 0.18), transparent 60%),
+    rgba(30, 64, 175, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 0 14px rgba(251, 191, 36, 0.65);
 }
 
 .progress-hero-tag.is-alert {
   border-color: rgba(248, 113, 113, 0.9);
   color: #fee2e2;
+}
+
+.progress-hero-trend {
+  font-size: 0.7rem;
+  opacity: 0.75;
 }
 
 .progress-hero-gauge {
@@ -1456,10 +1516,11 @@ const focusBlock = computed(() => {
 
 .progress-hero-gauge-track {
   width: 100%;
-  height: 0.45rem;
+  height: 0.5rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.2), rgba(248, 250, 252, 0.05));
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.92));
   overflow: hidden;
+  position: relative;
 }
 
 .progress-hero-gauge-fill {
@@ -1467,6 +1528,29 @@ const focusBlock = computed(() => {
   border-radius: 999px;
   background: linear-gradient(90deg, #22c55e, #a3e635, #f97316);
   transition: width 0.35s ease-out;
+}
+
+.progress-hero-gauge-track::before {
+  content: '';
+  position: absolute;
+  inset: -3px 0 auto 0;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.4), transparent 60%);
+  opacity: 0.85;
+}
+
+.progress-hero-gauge-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #22c55e 55%, #0f172a 100%);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 0 12px rgba(34, 197, 94, 0.75);
 }
 
 .insight-block {
@@ -1516,11 +1600,27 @@ const focusBlock = computed(() => {
   font-weight: 600;
 }
 
+.progress-card:not(.progress-hero):not(.progress-card--highlight)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 30%;
+  width: 40%;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(56, 189, 248, 0.02));
+  pointer-events: none;
+}
+
 .progress-card--highlight {
   position: relative;
   overflow: hidden;
+  border-radius: 1.25rem;
   background:#111111;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
 }
 
 .progress-header {
@@ -2023,5 +2123,15 @@ const focusBlock = computed(() => {
 .mood-history-value {
   font-size: 0.75rem;
   opacity: 0.85;
+}
+
+@keyframes hero-score-glow {
+  0%,
+  100% {
+    opacity: 0.92;
+  }
+  50% {
+    opacity: 0.97;
+  }
 }
 </style>

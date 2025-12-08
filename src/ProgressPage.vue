@@ -1480,6 +1480,18 @@ const focusBlock = computed(() => {
   background:
  rgba(15, 23, 42, 0.92);
   border: 1px solid rgba(148, 163, 184, 0.55);
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    transform 0.12s ease-out;
+}
+
+.insight-block:hover {
+  border-color: rgba(20, 244, 209, 0.6);
+  box-shadow:
+    0 0 0 1px rgba(20, 244, 209, 0.25),
+    0 14px 32px rgba(20, 244, 209, 0.22);
+  transform: translateY(-1px);
 }
 
 .insight-block--stress {

@@ -1781,12 +1781,12 @@ onBeforeUnmount(() => {
 .card {
   max-width: 100%;
   width: 100%;
-  padding: 1.5rem 1.5rem 1.25rem;
-  border-radius: 1rem;
   margin: 0 auto;
-  background: #111111;
-  border: 1px solid #27272a;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+  padding: 24px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #0c0f12 0%, #10161b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.35);
 }
 .week-strip {
   display: flex;

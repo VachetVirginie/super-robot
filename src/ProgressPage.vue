@@ -1611,6 +1611,7 @@ const focusBlock = computed(() => {
 
 .progress-tabs-panels {
   overflow: hidden;
+  margin: 1rem 0;
 }
 
 .progress-tabs-inner {

@@ -668,30 +668,95 @@ const coachPeriodLabel = computed(() => {
 const equilibriumScore = computed(() => {
   const stress = props.weeklyAverageStress
   const activeDays = props.weeklyActiveDays ?? 0
+  const checkins = props.weeklyCheckinsCount
+  const threeAvg = threeMomentsAverage.value
+  const movementPercent = safePercent.value
+  const sleep = sleepStressCorrelation.value
+  const hasMorning = hasMorningData.value
 
-  const hasStress = typeof stress === 'number'
-  const hasMovement = activeDays > 0
+  const hasAnyData =
+    typeof stress === 'number' ||
+    typeof threeAvg === 'number' ||
+    activeDays > 0 ||
+    checkins > 0
 
-  if (!hasStress && !hasMovement) {
+  if (!hasAnyData) {
     return null as number | null
   }
 
-  let score: number
-
-  if (hasStress) {
-    const moodLike = 6 - (stress as number)
+  // 1) Composante stress / ressenti (0–100)
+  let stressComponent = 50
+  if (typeof threeAvg === 'number') {
+    const bounded = Math.max(1, Math.min(5, threeAvg))
+    stressComponent = (bounded / 5) * 100
+  } else if (typeof stress === 'number') {
+    const moodLike = 6 - stress
     const bounded = Math.max(1, Math.min(5, moodLike))
-    score = (bounded / 5) * 70
-  } else {
-    score = 40
+    stressComponent = (bounded / 5) * 100
   }
 
-  if (hasMovement) {
+  // 2) Composante mouvement (0–100)
+  let movementComponent: number
+  if (Number.isFinite(movementPercent) && movementPercent > 0) {
+    // 0% -> ~20, 100% -> 100
+    movementComponent = Math.min(100, Math.max(0, 20 + movementPercent * 0.8))
+  } else if (activeDays > 0) {
     const factor = Math.min(activeDays, 5) / 5
-    score += factor * 20
+    movementComponent = 40 + factor * 60
+  } else {
+    movementComponent = 30
   }
 
-  const clamped = Math.max(0, Math.min(100, Math.round(score)))
+  // 3) Composante sommeil / energie (0–100)
+  let sleepComponent = 50
+  if (sleep.hasData && sleep.shortAvg != null && sleep.longAvg != null) {
+    const diff = sleep.shortAvg - sleep.longAvg
+    if (diff > 0.6) {
+      sleepComponent = 90
+    } else if (diff > 0.3) {
+      sleepComponent = 80
+    } else if (diff > 0.1) {
+      sleepComponent = 70
+    } else if (diff >= -0.1) {
+      sleepComponent = 60
+    } else {
+      sleepComponent = 45
+    }
+  }
+
+  const energy = props.weeklyMorningEnergy
+  if (typeof energy === 'number') {
+    const boundedEnergy = Math.max(1, Math.min(5, energy))
+    const normalizedEnergy = ((boundedEnergy - 1) / 4) * 40 + 40
+    sleepComponent = (sleepComponent + normalizedEnergy) / 2
+  }
+
+  // 4) Composante qualite des donnees (0–100)
+  let dataQualityComponent: number
+  if (checkins <= 0) {
+    dataQualityComponent = 30
+  } else if (checkins < 3) {
+    dataQualityComponent = 45
+  } else if (checkins < 7) {
+    dataQualityComponent = 70
+  } else {
+    dataQualityComponent = 90
+  }
+
+  if (hasMorning) {
+    dataQualityComponent = Math.min(100, dataQualityComponent + 10)
+  }
+
+  const rawScore =
+    stressComponent * 0.4 +
+    movementComponent * 0.3 +
+    sleepComponent * 0.2 +
+    dataQualityComponent * 0.1
+
+  const qualityFactor = 0.6 + (dataQualityComponent / 100) * 0.4
+  const adjustedScore = rawScore * Math.min(1, Math.max(0.6, qualityFactor))
+
+  const clamped = Math.max(0, Math.min(100, Math.round(adjustedScore)))
   return clamped
 })
 
@@ -824,7 +889,10 @@ const focusBlock = computed(() => {
   </section>
 
   <template v-else>
-    <section class="card progress-card progress-hero">
+    <section
+      class="card progress-card progress-hero"
+      :class="`is-${equilibriumTag.tone}`"
+    >
       <div class="progress-hero-top">
         <p class="progress-kicker section-title">Bilan</p>
         <h2 class="progress-title">Ton equilibre du moment</h2>
@@ -853,10 +921,12 @@ const focusBlock = computed(() => {
           <div class="progress-hero-gauge-track">
             <div
               class="progress-hero-gauge-fill"
+              :class="`is-${equilibriumTag.tone}`"
               :style="{ width: (equilibriumScore ?? 0) + '%' }"
             ></div>
             <div
               class="progress-hero-gauge-thumb"
+              :class="`is-${equilibriumTag.tone}`"
               :style="{ left: (equilibriumScore ?? 0) + '%' }"
             ></div>
           </div>
@@ -1313,6 +1383,72 @@ const focusBlock = computed(() => {
     radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 60%),
     #111111;
   border-color: rgba(255, 255, 255, 0.09);
+  transition: background 0.35s ease-out;
+}
+
+.progress-hero.is-neutral {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15, 23, 42, 0.94),
+      rgba(15, 23, 42, 0.55) 48%,
+      transparent 100%
+    ),
+    radial-gradient(circle at top left, rgba(148, 163, 184, 0.22), transparent 60%),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 60%),
+    #020617;
+}
+
+.progress-hero.is-good {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15, 23, 42, 0.94),
+      rgba(15, 23, 42, 0.55) 48%,
+      transparent 100%
+    ),
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.28), transparent 60%),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 60%),
+    #020617;
+}
+
+.progress-hero.is-ok {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15, 23, 42, 0.94),
+      rgba(15, 23, 42, 0.55) 48%,
+      transparent 100%
+    ),
+    radial-gradient(circle at top left, rgba(20, 244, 209, 0.2), transparent 60%),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 60%),
+    #020617;
+}
+
+.progress-hero.is-warn {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15, 23, 42, 0.94),
+      rgba(15, 23, 42, 0.55) 48%,
+      transparent 100%
+    ),
+    radial-gradient(circle at top left, rgba(253, 224, 71, 0.26), transparent 60%),
+    radial-gradient(circle at top left, rgba(249, 115, 22, 0.36), transparent 60%),
+    #111827;
+}
+
+.progress-hero.is-alert {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15, 23, 42, 0.94),
+      rgba(15, 23, 42, 0.55) 48%,
+      transparent 100%
+    ),
+    radial-gradient(circle at top left, rgba(248, 113, 113, 0.32), transparent 60%),
+    radial-gradient(circle at top left, rgba(30, 64, 175, 0.32), transparent 60%),
+    #020617;
 }
 
 .progress-hero-top {
@@ -1445,8 +1581,30 @@ const focusBlock = computed(() => {
 .progress-hero-gauge-fill {
   height: 100%;
   border-radius: 999px;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.9), rgba(148, 163, 184, 0.65));
+  transition:
+    width 0.35s ease-out,
+    background 0.35s ease-out;
+}
+
+.progress-hero-gauge-fill.is-neutral {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.9), rgba(148, 163, 184, 0.65));
+}
+
+.progress-hero-gauge-fill.is-good {
   background: linear-gradient(90deg, rgba(34, 197, 94, 0.9), rgba(34, 197, 94, 0.65));
-  transition: width 0.35s ease-out;
+}
+
+.progress-hero-gauge-fill.is-ok {
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.9), rgba(59, 130, 246, 0.75));
+}
+
+.progress-hero-gauge-fill.is-warn {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.95), rgba(249, 115, 22, 0.9));
+}
+
+.progress-hero-gauge-fill.is-alert {
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.95), rgba(239, 68, 68, 0.9));
 }
 
 .progress-hero-gauge-track::before {
@@ -1466,10 +1624,26 @@ const focusBlock = computed(() => {
   width: 0.95rem;
   height: 0.95rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 20%, #f9fafb, #22c55e 55%, #020617 100%);
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #9ca3af 55%, #020617 100%);
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 0.9),
     0 4px 10px rgba(15, 23, 42, 0.9);
+}
+
+.progress-hero-gauge-thumb.is-good {
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #22c55e 55%, #020617 100%);
+}
+
+.progress-hero-gauge-thumb.is-ok {
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #2dd4bf 55%, #020617 100%);
+}
+
+.progress-hero-gauge-thumb.is-warn {
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #fbbf24 55%, #020617 100%);
+}
+
+.progress-hero-gauge-thumb.is-alert {
+  background: radial-gradient(circle at 30% 20%, #f9fafb, #f97373 55%, #020617 100%);
 }
 
 .insight-block {

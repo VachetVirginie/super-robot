@@ -899,7 +899,8 @@ const todaysMotivation = computed(() => {
 })
 
 async function onEveningConfirm(payload: { level: number; note?: string; question?: string }) {
-  await submitCheckin(payload.level, payload.note, payload.question)
+  const stressLevel = 6 - payload.level
+  await submitCheckin(stressLevel, payload.note, payload.question)
 
   if (!checkinError.value) {
     isEveningDialogOpen.value = false

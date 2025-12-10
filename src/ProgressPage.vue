@@ -200,6 +200,215 @@ const morningSleepLabel = computed(() => {
   return (bed || wake) ?? null
 })
 
+const averageSleepDurationLabel = computed(() => {
+  const rows = props.recentMorningStates ?? []
+
+  const toMinutes = (value: string | null) => {
+    if (typeof value !== 'string' || value.length < 4) return null
+    const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+    const hour = Number(hourStr)
+    const minute = Number(minuteStr)
+    if (Number.isNaN(hour) || Number.isNaN(minute)) {
+      return null as number | null
+    }
+    return hour * 60 + minute
+  }
+
+  const now = new Date()
+  const sevenDaysAgo = new Date(now)
+  sevenDaysAgo.setDate(now.getDate() - 7)
+
+  let total = 0
+  let count = 0
+
+  for (const row of rows) {
+    const dateStr =
+      typeof row.day_date === 'string' && row.day_date.length >= 10
+        ? row.day_date.slice(0, 10)
+        : row.created_at.slice(0, 10)
+
+    const year = Number(dateStr.slice(0, 4))
+    const month = Number(dateStr.slice(5, 7)) - 1
+    const day = Number(dateStr.slice(8, 10))
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) continue
+
+    const d = new Date(year, month, day)
+    if (d < sevenDaysAgo || d > now) continue
+
+    const bed = toMinutes(row.sleep_bed_time)
+    const wake = toMinutes(row.sleep_wake_time)
+    if (bed == null || wake == null) continue
+
+    let duration = wake - bed
+    if (duration <= 0) {
+      duration = 24 * 60 - bed + wake
+    }
+
+    total += duration
+    count += 1
+  }
+
+  // Fallback : si aucune nuit exploitable dans recentMorningStates, tenter avec
+  // les horaires moyens de la semaine quand ils existent deja.
+  if (!count && props.weeklySleepBedTime && props.weeklySleepWakeTime) {
+    const bed = toMinutes(props.weeklySleepBedTime)
+    const wake = toMinutes(props.weeklySleepWakeTime)
+    if (bed != null && wake != null) {
+      let duration = wake - bed
+      if (duration <= 0) {
+        duration = 24 * 60 - bed + wake
+      }
+      total = duration
+      count = 1
+    }
+  }
+
+  if (count < 2) {
+    return null as string | null
+  }
+
+  const avgMinutes = Math.round(total / count)
+  const hours = Math.floor(avgMinutes / 60)
+  const minutes = avgMinutes % 60
+
+  if (minutes === 0) {
+    const hoursLabel = `${hours} h`
+    return `${hoursLabel} 00`
+  }
+
+  const minutesLabel = String(minutes).padStart(2, '0')
+
+  return `${hours} h ${minutesLabel}`
+})
+
+const averageBedTimeLabel = computed(() => {
+  const rows = props.recentMorningStates ?? []
+
+  const toMinutes = (value: string | null) => {
+    if (typeof value !== 'string' || value.length < 4) return null
+    const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+    const hour = Number(hourStr)
+    const minute = Number(minuteStr)
+    if (Number.isNaN(hour) || Number.isNaN(minute)) {
+      return null as number | null
+    }
+    return hour * 60 + minute
+  }
+
+  const now = new Date()
+  const sevenDaysAgo = new Date(now)
+  sevenDaysAgo.setDate(now.getDate() - 7)
+
+  let total = 0
+  let count = 0
+
+  for (const row of rows) {
+    const dateStr =
+      typeof row.day_date === 'string' && row.day_date.length >= 10
+        ? row.day_date.slice(0, 10)
+        : row.created_at.slice(0, 10)
+
+    const year = Number(dateStr.slice(0, 4))
+    const month = Number(dateStr.slice(5, 7)) - 1
+    const day = Number(dateStr.slice(8, 10))
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) continue
+
+    const d = new Date(year, month, day)
+    if (d < sevenDaysAgo || d > now) continue
+
+    const bed = toMinutes(row.sleep_bed_time)
+    if (bed == null) continue
+
+    total += bed
+    count += 1
+  }
+
+  if (!count && props.weeklySleepBedTime) {
+    const bed = toMinutes(props.weeklySleepBedTime)
+    if (bed != null) {
+      total = bed
+      count = 1
+    }
+  }
+
+  if (!count) {
+    return null as string | null
+  }
+
+  const avgMinutes = Math.round(total / count)
+  const hours = Math.floor(avgMinutes / 60) % 24
+  const minutes = avgMinutes % 60
+
+  const hoursLabel = String(hours).padStart(2, '0')
+  const minutesLabel = String(minutes).padStart(2, '0')
+
+  return `${hoursLabel} h ${minutesLabel}`
+})
+
+const averageWakeTimeLabel = computed(() => {
+  const rows = props.recentMorningStates ?? []
+
+  const toMinutes = (value: string | null) => {
+    if (typeof value !== 'string' || value.length < 4) return null
+    const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+    const hour = Number(hourStr)
+    const minute = Number(minuteStr)
+    if (Number.isNaN(hour) || Number.isNaN(minute)) {
+      return null as number | null
+    }
+    return hour * 60 + minute
+  }
+
+  const now = new Date()
+  const sevenDaysAgo = new Date(now)
+  sevenDaysAgo.setDate(now.getDate() - 7)
+
+  let total = 0
+  let count = 0
+
+  for (const row of rows) {
+    const dateStr =
+      typeof row.day_date === 'string' && row.day_date.length >= 10
+        ? row.day_date.slice(0, 10)
+        : row.created_at.slice(0, 10)
+
+    const year = Number(dateStr.slice(0, 4))
+    const month = Number(dateStr.slice(5, 7)) - 1
+    const day = Number(dateStr.slice(8, 10))
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) continue
+
+    const d = new Date(year, month, day)
+    if (d < sevenDaysAgo || d > now) continue
+
+    const wake = toMinutes(row.sleep_wake_time)
+    if (wake == null) continue
+
+    total += wake
+    count += 1
+  }
+
+  if (!count && props.weeklySleepWakeTime) {
+    const wake = toMinutes(props.weeklySleepWakeTime)
+    if (wake != null) {
+      total = wake
+      count = 1
+    }
+  }
+
+  if (!count) {
+    return null as string | null
+  }
+
+  const avgMinutes = Math.round(total / count)
+  const hours = Math.floor(avgMinutes / 60) % 24
+  const minutes = avgMinutes % 60
+
+  const hoursLabel = String(hours).padStart(2, '0')
+  const minutesLabel = String(minutes).padStart(2, '0')
+
+  return `${hoursLabel} h ${minutesLabel}`
+})
+
 const morningPriorityLabels = computed(() => {
   const labels: Record<string, string> = {
     work: 'Travail',
@@ -1143,6 +1352,28 @@ const focusBlock = computed(() => {
               >
                 Sommeil moyen (coucher-lever) :
                 <strong>{{ morningSleepLabel }}</strong>
+              </p>
+              <p
+                v-if="averageBedTimeLabel"
+                class="progress-text progress-text--muted"
+              >
+                Heure moyenne de coucher :
+                <strong>{{ averageBedTimeLabel }}</strong>
+              </p>
+              <p
+                v-if="averageWakeTimeLabel"
+                class="progress-text progress-text--muted"
+              >
+                Heure moyenne de reveil :
+                <strong>{{ averageWakeTimeLabel }}</strong>
+              </p>
+              <p
+                v-if="averageSleepDurationLabel"
+                class="progress-text progress-text--muted"
+              >
+                Soit environ
+                <strong>{{ averageSleepDurationLabel }}</strong>
+                par nuit.
               </p>
               <p v-if="morningMoodLabel" class="progress-text progress-text--muted">
                 Humeur moyenne au reveil : <strong>{{ morningMoodLabel }}</strong>

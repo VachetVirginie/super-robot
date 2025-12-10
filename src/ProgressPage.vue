@@ -1441,7 +1441,7 @@ const focusTypeLabel = computed(() => {
             >
               <h3 class="stress-categories-title">Jours qui reviennent</h3>
               <p class="stress-categories-text">
-                Sur le mois en cours, certains jours de la semaine reviennent plus charges.
+                Ce mois-ci, ces jours ressortent comme ceux ou ton stress est le plus present.
               </p>
               <div class="weekday-stress-grid">
                 <div
@@ -2543,6 +2543,47 @@ const focusTypeLabel = computed(() => {
 }
 
 .sleep-stat-hint {
+  margin: 0.18rem 0 0;
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
+.weekday-stress-grid {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.weekday-stress-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 4.6rem;
+  border-radius: 0.85rem;
+  padding: 0.5rem 0.55rem 0.55rem;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.9);
+}
+
+.weekday-stress-label {
+  margin: 0 0 0.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.weekday-stress-value {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.weekday-stress-hint {
   margin: 0.18rem 0 0;
   font-size: 0.72rem;
   opacity: 0.78;

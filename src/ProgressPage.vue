@@ -339,22 +339,9 @@ const stressWeekSummary = computed(() => {
 
 const summarySessionsLabel = computed(() => {
   const done = props.weeklySessions ?? 0
-  const goal = props.perWeekGoal
-
-  if (goal != null && goal > 0) {
-    return `${done} seance(s) / ${goal}`
-  }
-
   if (done === 0) return '0 seance cette semaine'
   if (done === 1) return '1 seance cette semaine'
   return `${done} seances cette semaine`
-})
-
-const summaryPercentLabel = computed(() => {
-  if (!Number.isFinite(safePercent.value) || safePercent.value <= 0) {
-    return null as string | null
-  }
-  return `<strong>${safePercent.value}%</strong> de ton <strong>objectif</strong>`
 })
 
 const minutesLabel = computed(() => {
@@ -375,6 +362,12 @@ const activeDaysLabel = computed(() => {
   }
   return `Tu as bouge ${days} jour(s) cette semaine. Tu construis ton "jamais zero" en douceur.`
 })
+
+const weeklyActiveDaysCount = computed(() => props.weeklyActiveDays ?? 0)
+
+const weeklySessionsCount = computed(() => props.weeklySessions ?? 0)
+
+const weeklyMinutesCount = computed(() => props.weeklyMinutes ?? 0)
 
 const kindTags = computed(() => {
   const entries = Object.entries(props.weeklyByKind || {})
@@ -402,28 +395,6 @@ const kindTags = computed(() => {
       label: `${base} (${minutes} min)`,
     }
   })
-})
-
-const progressCoachLevel = computed(() => {
-  const value = safePercent.value
-  if (value === 0) return 'start' as const
-  if (value < 40) return 'low' as const
-  if (value < 90) return 'medium' as const
-  return 'high' as const
-})
-
-const progressCoachMessage = computed(() => {
-  const level = progressCoachLevel.value
-  if (level === 'start') {
-    return "On commence doucement : l'objectif est surtout de planifier 1 premiere seance cette semaine."
-  }
-  if (level === 'low') {
-    return "Tu as deja mis quelques pas en mouvement. On cherche juste a consolider 1 ou 2 moments simples."
-  }
-  if (level === 'medium') {
-    return "Tu es en bon mouvement. L'idee est de garder ce rythme sans te mettre plus de pression."
-  }
-  return "Tu es tres proche ou deja sur ton objectif. Pense aussi a te feliciter et a garder des jours plus legers quand tu en as besoin."
 })
 
 // const progressCoachSuggestion = computed(() => {
@@ -715,23 +686,23 @@ const coachSleepMessage = computed(() => {
   return "Tu peux explorer a ton rythme ce qui, cote sommeil, te fait le plus de bien."
 })
 
-const coachPeriodLabel = computed(() => {
-  const avg = props.weeklyAverageStress
+// const coachPeriodLabel = computed(() => {
+//   const avg = props.weeklyAverageStress
 
-  if (avg == null) {
-    return "On commence a peine a suivre ton stress. Plus tu feras de check-ins, plus ce bilan sera parlant."
-  }
+//   if (avg == null) {
+//     return "On commence a peine a suivre ton stress. Plus tu feras de check-ins, plus ce bilan sera parlant."
+//   }
 
-  if (avg <= 2) {
-    return 'Globalement, tu traverses une periode plutot calme.'
-  }
+//   if (avg <= 2) {
+//     return 'Globalement, tu traverses une periode plutot calme.'
+//   }
 
-  if (avg <= 3.5) {
-    return "Globalement, c'est une periode chargee mais tu sembles garder le cap."
-  }
+//   if (avg <= 3.5) {
+//     return "Globalement, c'est une periode chargee mais tu sembles garder le cap."
+//   }
 
-  return "Globalement, tu traverses une periode assez intense. L'idee n'est pas de tout changer, mais de proteger un peu plus ton energie."
-})
+//   return "Globalement, tu traverses une periode assez intense. L'idee n'est pas de tout changer, mais de proteger un peu plus ton energie."
+// })
 
 const equilibriumScore = computed(() => {
   const stress = props.weeklyAverageStress
@@ -945,6 +916,24 @@ const focusBlock = computed(() => {
 
   return base
 })
+
+const focusTypeLabel = computed(() => {
+  const type = focusBlock.value.type
+
+  if (type === 'movement') {
+    return 'Mouvement'
+  }
+
+  if (type === 'sleep') {
+    return 'Sommeil'
+  }
+
+  if (type === 'days') {
+    return 'Jours charges'
+  }
+
+  return 'Observation'
+})
 </script>
 
 <template>
@@ -965,12 +954,11 @@ const focusBlock = computed(() => {
         <p class="progress-kicker section-title">Bilan</p>
         <h2 class="progress-title">Ton equilibre du moment</h2>
       </div>
-
       <div class="progress-hero-main">
         <div class="progress-hero-score-orbit">
           <div class="progress-hero-score-pill">
             <span class="progress-hero-score-number">
-              {{ equilibriumScore !== null ? equilibriumScore : '–' }}
+              {{ equilibriumScore !== null ? equilibriumScore : '—' }}
             </span>
             <span class="progress-hero-score-unit">%</span>
           </div>
@@ -985,24 +973,32 @@ const focusBlock = computed(() => {
           </span>
         </div>
 
-        <div class="progress-hero-gauge">
-          <div class="progress-hero-gauge-track">
-            <div
-              class="progress-hero-gauge-fill"
-              :class="`is-${equilibriumTag.tone}`"
-              :style="{ width: (equilibriumScore ?? 0) + '%' }"
-            ></div>
-            <div
-              class="progress-hero-gauge-thumb"
-              :class="`is-${equilibriumTag.tone}`"
-              :style="{ left: (equilibriumScore ?? 0) + '%' }"
-            ></div>
+        <div class="hero-mini-stats">
+          <div class="hero-mini-stat">
+            <span class="hero-mini-label">Stress</span>
+            <span class="hero-mini-value">
+              {{ weeklyAverageStress !== null ? `${weeklyAverageStress}/5` : '—' }}
+            </span>
+          </div>
+
+          <div class="hero-mini-stat">
+            <span class="hero-mini-label">Mouvement</span>
+            <span class="hero-mini-value">
+              {{ weeklyActiveDays ?? 0 }} j actifs
+            </span>
+          </div>
+
+          <div
+            v-if="averageSleepDurationLabel"
+            class="hero-mini-stat"
+          >
+            <span class="hero-mini-label">Sommeil</span>
+            <span class="hero-mini-value">
+              {{ averageSleepDurationLabel }}
+            </span>
           </div>
         </div>
 
-        <p class="progress-hero-caption">
-          Base sur ton stress et ton mouvement recents.
-        </p>
       </div>
 
       <div class="progress-hero-messages">
@@ -1020,11 +1016,13 @@ const focusBlock = computed(() => {
           </p>
         </div>
 
-        <p class="progress-status progress-status--muted">
+        <!-- <p class="progress-status progress-status--muted">
           {{ coachPeriodLabel }}
-        </p>
+        </p> -->
       </div>
 
+
+    </section>
       <div class="progress-tabs">
         <div
           class="progress-tabs-highlight"
@@ -1048,8 +1046,6 @@ const focusBlock = computed(() => {
           Stress et declencheurs
         </button>
       </div>
-    </section>
-
     <div class="progress-tabs-panels">
       <div
         v-if="activeTab === 'sessions'"
@@ -1060,61 +1056,46 @@ const focusBlock = computed(() => {
               <p class="progress-kicker section-title">Mouvement</p>
               <h2 class="progress-title">Bouger cette semaine</h2>
               <p class="progress-subtitle">
-                Ton bilan hebdo sans culte de la perf.
+                Ton bilan hebdo sans objectif, juste ton "jamais zero".
               </p>
             </div>
 
-            <div class="progress-summary-key">
-          <p class="progress-summary-main">
-            <strong>{{ summarySessionsLabel }}</strong>
-          </p>
-          <p
-            v-if="summaryPercentLabel"
-            class="progress-summary-secondary"
-            v-html="summaryPercentLabel"
-          ></p>
-        </div>
+            <div class="movement-stats-grid">
+              <div class="movement-stat-card">
+                <p class="movement-stat-label">Jours avec mouvement</p>
+                <p class="movement-stat-value">
+                  {{ weeklyActiveDaysCount }}
+                  <span class="movement-stat-unit">/ 7 j</span>
+                </p>
+                <p class="movement-stat-hint">Cette semaine</p>
+              </div>
+
+              <div class="movement-stat-card">
+                <p class="movement-stat-label">Seances cette semaine</p>
+                <p class="movement-stat-value">
+                  {{ weeklySessionsCount }}
+                </p>
+                <p class="movement-stat-hint">{{ summarySessionsLabel }}</p>
+              </div>
+
+              <div class="movement-stat-card">
+                <p class="movement-stat-label">Temps de mouvement</p>
+                <p class="movement-stat-value">
+                  {{ weeklyMinutesCount }}
+                  <span class="movement-stat-unit">min</span>
+                </p>
+                <p class="movement-stat-hint">Sport maison en cumule</p>
+              </div>
+            </div>
 
             <div class="progress-summary">
-              <p v-if="minutesLabel" class="progress-text progress-text--muted">
-                {{ minutesLabel }}
-              </p>
               <p v-if="activeDaysLabel" class="progress-text progress-text--muted">
                 {{ activeDaysLabel }}
               </p>
+              <p v-if="minutesLabel" class="progress-text progress-text--muted">
+                {{ minutesLabel }}
+              </p>
             </div>
-
-            <div class="progress-bar-wrapper">
-              <div class="progress-bar-track">
-                <div class="progress-bar-fill" :style="{ width: safePercent + '%' }"></div>
-              </div>
-              <span class="progress-bar-label">
-                Tu es a {{ safePercent }}% de ton objectif de la semaine.
-              </span>
-            </div>
-
-            <p class="progress-status">
-              {{ weeklyStatusLabel }}
-            </p>
-            <p class="progress-status progress-status--muted">
-              {{ progressCoachMessage }}
-            </p>
-
-            <button
-              type="button"
-              class="secondary stress-link-button"
-              @click="router.push({ name: 'seances' })"
-            >
-              Voir toutes tes seances
-            </button>
-
-            <!-- <button
-              type="button"
-              class="secondary"
-              @click="props.onOpenWeeklySessions()"
-            >
-              Modifier mes seances
-            </button> -->
 
             <div v-if="kindTags.length" class="progress-tags">
               <span
@@ -1125,6 +1106,14 @@ const focusBlock = computed(() => {
                 {{ tag.label }}
               </span>
             </div>
+
+            <button
+              type="button"
+              class="secondary stress-link-button"
+              @click="router.push({ name: 'seances' })"
+            >
+              Voir toutes tes seances
+            </button>
           </section>
 
           <section class="card progress-card">
@@ -1435,18 +1424,27 @@ const focusBlock = computed(() => {
         </div>
       </div>
 
-    <section class="card progress-card">
-      <p class="progress-kicker section-title">Focus</p>
-      <h2 class="progress-title">Ton focus pour les prochains jours</h2>
-      <p class="progress-subtitle">
-        On choisit ensemble un seul geste simple a tester.
-      </p>
+    <section class="card progress-card focus-card">
+      <div class="focus-header">
+        <div class="focus-header-text">
+          <p class="progress-kicker section-title">Focus</p>
+          <h2 class="progress-title">Ton focus pour les prochains jours</h2>
+        </div>
+        <div
+          v-if="focusBlock.type !== 'none'"
+          class="focus-pill"
+        >
+          <span class="focus-pill-label">
+            {{ focusTypeLabel }}
+          </span>
+        </div>
+      </div>
 
-      <div class="progress-summary">
-        <p class="progress-text">
+      <div class="focus-body">
+        <p class="focus-main">
           {{ focusBlock.reason }}
         </p>
-        <p class="progress-text progress-text--muted">
+        <p class="focus-secondary">
           {{ focusBlock.commitment }}
         </p>
       </div>
@@ -1454,7 +1452,7 @@ const focusBlock = computed(() => {
       <button
         v-if="focusBlock.ctaLabel && focusBlock.ctaRouteName"
         type="button"
-        class="primary stress-link-button stress-link-button--highlight"
+        class="primary stress-link-button focus-cta"
         @click="router.push({ name: focusBlock.ctaRouteName })"
       >
         {{ focusBlock.ctaLabel }}
@@ -1556,7 +1554,7 @@ const focusBlock = computed(() => {
 .progress-hero-score-orbit {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
@@ -1598,6 +1596,35 @@ const focusBlock = computed(() => {
   opacity: 0.85;
 }
 
+.hero-mini-stats {
+  margin-top: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.hero-mini-stat {
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.8rem;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.hero-mini-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.hero-mini-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .progress-hero-messages {
   position: relative;
   z-index: 1;
@@ -1610,6 +1637,7 @@ const focusBlock = computed(() => {
   margin-top: 0.45rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
 }
 
@@ -1920,6 +1948,105 @@ const focusBlock = computed(() => {
   margin-bottom: 1rem;
 }
 
+.movement-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.35rem 0 0.85rem;
+}
+
+.movement-stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 5.2rem;
+  border-radius: 0.85rem;
+  padding: 0.55rem 0.6rem 0.6rem;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 55%),
+    rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.9);
+}
+
+.movement-stat-label {
+  margin: 0 0 0.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.movement-stat-value {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.movement-stat-unit {
+  margin-left: 0.15rem;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.movement-stat-hint {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
+.data-badges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0.4rem 0 0.85rem;
+}
+
+.data-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.9rem;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.9);
+}
+
+.data-badge-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+}
+
+.data-badge-dot--with {
+  background: #22c55e;
+}
+
+.data-badge-dot--without {
+  background: #f97316;
+}
+
+.data-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.data-badge-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+.data-badge-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .progress-summary-key {
   display: flex;
   flex-direction: column;
@@ -2112,7 +2239,58 @@ const focusBlock = computed(() => {
 }
 
 .stress-text--muted {
-  opacity: 0.75;
+  opacity: 0.8;
+}
+
+.focus-card {
+  margin-top: 0.75rem;
+}
+
+.focus-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.focus-header-text {
+  flex: 1;
+}
+
+.focus-pill {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+.focus-pill-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.focus-body {
+  margin-top: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.focus-main {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.focus-secondary {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.focus-cta {
+  margin-top: 0.75rem;
 }
 
 .stress-grid {

@@ -1193,58 +1193,89 @@ const focusTypeLabel = computed(() => {
               demarres tes journees (humeur, energie, priorites).
             </p>
 
-            <div v-else class="progress-summary">
-              <p
-                v-if="morningSleepLabel"
-                class="progress-text progress-text--muted"
-              >
-                Sommeil moyen (coucher-lever) :
-                <strong>{{ morningSleepLabel }}</strong>
-              </p>
-              <p
-                v-if="averageBedTimeLabel"
-                class="progress-text progress-text--muted"
-              >
-                Heure moyenne de coucher :
-                <strong>{{ averageBedTimeLabel }}</strong>
-              </p>
-              <p
-                v-if="averageWakeTimeLabel"
-                class="progress-text progress-text--muted"
-              >
-                Heure moyenne de reveil :
-                <strong>{{ averageWakeTimeLabel }}</strong>
-              </p>
-              <p
-                v-if="averageSleepDurationLabel"
-                class="progress-text progress-text--muted"
-              >
-                Soit environ
-                <strong>{{ averageSleepDurationLabel }}</strong>
-                par nuit.
-              </p>
-              <p v-if="morningMoodLabel" class="progress-text progress-text--muted">
-                Humeur moyenne au reveil : <strong>{{ morningMoodLabel }}</strong>
-              </p>
-              <p v-if="morningEnergyLabel" class="progress-text progress-text--muted">
-                Energie moyenne le matin : <strong>{{ morningEnergyLabel }}</strong>
-              </p>
+            <div v-else>
+              <div class="morning-stats-grid">
+                <div class="morning-stat-card">
+                  <p class="morning-stat-label">Sommeil</p>
+                  <p class="morning-stat-value">
+                    <span v-if="averageSleepDurationLabel">
+                      {{ averageSleepDurationLabel }}
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="morning-stat-hint">
+                    <template v-if="averageBedTimeLabel && averageWakeTimeLabel">
+                      Coucher {{ averageBedTimeLabel }} · Reveil {{ averageWakeTimeLabel }}
+                    </template>
+                    <template v-else-if="morningSleepLabel">
+                      {{ morningSleepLabel }}
+                    </template>
+                    <template v-else>
+                      Duree moyenne par nuit
+                    </template>
+                  </p>
+                </div>
 
-              <p v-if="middayMoodLabel" class="progress-text progress-text--muted">
-                Humeur moyenne en milieu de journee : <strong>{{ middayMoodLabel }}</strong>
-              </p>
-              <p v-if="eveningMoodLabel" class="progress-text progress-text--muted">
-                Humeur moyenne en fin de journee : <strong>{{ eveningMoodLabel }}</strong>
-              </p>
+                <div class="morning-stat-card">
+                  <p class="morning-stat-label">Humeur matin</p>
+                  <p class="morning-stat-value">
+                    <span v-if="morningMoodLabel">
+                      {{ morningMoodLabel }}
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="morning-stat-hint">Au reveil</p>
+                </div>
 
-              <p
-                v-if="threeMomentsAverage !== null"
-                class="progress-text progress-text--muted"
+                <div class="morning-stat-card">
+                  <p class="morning-stat-label">Energie matin</p>
+                  <p class="morning-stat-value">
+                    <span v-if="morningEnergyLabel">
+                      {{ morningEnergyLabel }}
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="morning-stat-hint">Ressenti le matin</p>
+                </div>
+
+                <div class="morning-stat-card">
+                  <p class="morning-stat-label">Midi</p>
+                  <p class="morning-stat-value">
+                    <span v-if="middayMoodLabel">
+                      {{ middayMoodLabel }}
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="morning-stat-hint">Humeur milieu de journee</p>
+                </div>
+
+                <div class="morning-stat-card">
+                  <p class="morning-stat-label">Soir</p>
+                  <p class="morning-stat-value">
+                    <span v-if="eveningMoodLabel">
+                      {{ eveningMoodLabel }}
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="morning-stat-hint">Humeur fin de journee</p>
+                </div>
+
+                <div class="morning-stat-card">
+                  <p class="morning-stat-label">3 moments</p>
+                  <p class="morning-stat-value">
+                    <span v-if="threeMomentsAverage !== null">
+                      {{ threeMomentsAverage }}/5
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="morning-stat-hint">Moyenne matin / midi / soir</p>
+                </div>
+              </div>
+
+              <div
+                v-if="morningPriorityLabels.length"
+                class="progress-tags morning-priorities"
               >
-                Humeur moyenne des 3 moments : <strong>{{ threeMomentsAverage }}/5</strong>
-              </p>
-
-              <div v-if="morningPriorityLabels.length" class="progress-tags">
                 <span
                   v-for="item in morningPriorityLabels"
                   :key="item.key"
@@ -1295,13 +1326,6 @@ const focusTypeLabel = computed(() => {
                     {{ stressCountLabel }}
                   </p>
                 </div>
-
-                <div class="stress-card stress-card--mood">
-                  <p class="stress-card-label">Tendance</p>
-                  <p class="stress-card-mood">
-                    {{ stressMoodLabel }}
-                  </p>
-                </div>
               </div>
 
               <p class="stress-text stress-text--muted">
@@ -1321,9 +1345,9 @@ const focusTypeLabel = computed(() => {
               v-if="moodHistorySeries.length"
               class="mood-history-section"
             >
-              <h3 class="mood-history-title">Historique de ton humeur</h3>
+              <h3 class="mood-history-title">Meteo de la semaine</h3>
               <p class="mood-history-text">
-                Un coup d'oeil sur tes derniers check-ins (midi / soir) sur 7 jours.
+                Une petite meteo de ton humeur (midi / soir) sur les 7 derniers jours.
               </p>
 
               <div class="mood-history-grid">
@@ -1333,14 +1357,20 @@ const focusTypeLabel = computed(() => {
                   class="mood-history-item"
                 >
                   <span class="mood-history-label">{{ day.label }}</span>
-                  <div
-                    class="mood-history-dot"
-                    :class="{
-                      'is-low': day.value !== null && day.value <= 2,
-                      'is-medium': day.value !== null && day.value > 2 && day.value < 3.5,
-                      'is-high': day.value !== null && day.value >= 3.5,
-                    }"
-                  ></div>
+                  <span class="mood-history-icon">
+                    <template v-if="day.value === null">
+                      —
+                    </template>
+                    <template v-else-if="day.value <= 2">
+                      ☀
+                    </template>
+                    <template v-else-if="day.value < 3.5">
+                      ⛅
+                    </template>
+                    <template v-else>
+                      🌧
+                    </template>
+                  </span>
                   <span class="mood-history-value">
                     {{ day.value !== null ? day.value.toFixed(1) + '/5' : '—' }}
                   </span>
@@ -1359,20 +1389,29 @@ const focusTypeLabel = computed(() => {
                   On regarde comment la longueur de tes nuits se reflète dans ton stress du jour.
                 </p>
               </div>
-              <p
-                v-if="sleepStressCorrelation.longAvg !== null"
-                class="stress-text stress-text--muted"
-              >
-                Apres des nuits de 7h ou plus, ton stress moyen est autour de
-                <strong>{{ sleepStressCorrelation.longAvg }}/5</strong>.
-              </p>
-              <p
-                v-if="sleepStressCorrelation.shortAvg !== null"
-                class="stress-text stress-text--muted"
-              >
-                Apres des nuits plus courtes, il monte plutot vers
-                <strong>{{ sleepStressCorrelation.shortAvg }}/5</strong>.
-              </p>
+              <div class="sleep-stats-grid">
+                <div class="sleep-stat-card">
+                  <p class="sleep-stat-label">Nuits  7 h</p>
+                  <p class="sleep-stat-value">
+                    <span v-if="sleepStressCorrelation.longAvg !== null">
+                      {{ sleepStressCorrelation.longAvg }}/5
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="sleep-stat-hint">Stress apres des nuits de 7h ou plus</p>
+                </div>
+
+                <div class="sleep-stat-card sleep-stat-card--short">
+                  <p class="sleep-stat-label">Nuits plus courtes</p>
+                  <p class="sleep-stat-value">
+                    <span v-if="sleepStressCorrelation.shortAvg !== null">
+                      {{ sleepStressCorrelation.shortAvg }}/5
+                    </span>
+                    <span v-else>—</span>
+                  </p>
+                  <p class="sleep-stat-hint">Stress apres nuits < 7 h</p>
+                </div>
+              </div>
             </section>
 
             <section v-if="stressCategoriesSummary.length" class="stress-categories-section">
@@ -1398,7 +1437,6 @@ const focusTypeLabel = computed(() => {
             </section>
 
             <section
-              v-if="weekdayStressSummary.length"
               class="stress-categories-section"
             >
               <h3 class="stress-categories-title">Jours qui reviennent</h3>
@@ -2242,6 +2280,53 @@ const focusTypeLabel = computed(() => {
   opacity: 0.8;
 }
 
+.morning-stats-grid {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.morning-stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 4.8rem;
+  border-radius: 0.85rem;
+  padding: 0.5rem 0.55rem 0.55rem;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 55%),
+    rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.9);
+}
+
+.morning-stat-label {
+  margin: 0 0 0.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.morning-stat-value {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.morning-stat-hint {
+  margin: 0.18rem 0 0;
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
+.morning-priorities {
+  margin-top: 0.9rem;
+}
+
 .focus-card {
   margin-top: 0.75rem;
 }
@@ -2295,8 +2380,8 @@ const focusTypeLabel = computed(() => {
 
 .stress-grid {
   margin-top: 0.6rem;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem;
 }
 
@@ -2344,12 +2429,15 @@ const focusTypeLabel = computed(() => {
 }
 
 .stress-card--mood {
-  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), #020617);
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 55%),
+    #020617;
 }
 
 .stress-card-mood {
   margin: 0.1rem 0 0;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .stress-link-button {
@@ -2385,6 +2473,10 @@ const focusTypeLabel = computed(() => {
 
 .stress-categories-section {
   margin-top: 1.25rem;
+  padding: 0.75rem 0.8rem 0.85rem;
+  border-radius: 0.9rem;
+  background: rgba(11, 15, 25, 0.98);
+  border: 1px solid rgba(31, 41, 55, 0.9);
 }
 
 .stress-categories-title {
@@ -2408,6 +2500,53 @@ const focusTypeLabel = computed(() => {
   gap: 0.5rem;
 }
 
+.sleep-stats-grid {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.sleep-stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 4.6rem;
+  border-radius: 0.85rem;
+  padding: 0.5rem 0.55rem 0.55rem;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.9);
+}
+
+.sleep-stat-card--short {
+  background:
+    radial-gradient(circle at top left, rgba(248, 113, 113, 0.22), transparent 55%),
+    rgba(15, 23, 42, 0.96);
+}
+
+.sleep-stat-label {
+  margin: 0 0 0.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.sleep-stat-value {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.sleep-stat-hint {
+  margin: 0.18rem 0 0;
+  font-size: 0.72rem;
+  opacity: 0.78;
+}
+
 .stress-category-row {
   padding: 0.7rem 0.8rem;
   border-radius: 0.75rem;
@@ -2429,6 +2568,12 @@ const focusTypeLabel = computed(() => {
 
 .mood-history-section {
   margin-top: 1.25rem;
+  padding: 0.75rem 0.8rem 0.85rem;
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.2), transparent 55%),
+    rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(31, 41, 55, 0.9);
 }
 
 .mood-history-title {
@@ -2463,6 +2608,10 @@ const focusTypeLabel = computed(() => {
 .mood-history-label {
   font-size: 0.7rem;
   opacity: 0.8;
+}
+
+.mood-history-icon {
+  font-size: 1.1rem;
 }
 
 .mood-history-dot {

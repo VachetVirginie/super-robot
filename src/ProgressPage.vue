@@ -108,22 +108,22 @@ const stressCountLabel = computed(() => {
   return `${count} check-ins cette semaine.`
 })
 
-const stressMoodLabel = computed(() => {
-  const avg = props.weeklyAverageStress
-  const count = props.weeklyCheckinsCount
+// const stressMoodLabel = computed(() => {
+//   const avg = props.weeklyAverageStress
+//   const count = props.weeklyCheckinsCount
 
-  if (!count || avg == null) {
-    return 'Plus tu fais de check-ins, plus on comprend comment tu vis tes semaines.'
-  }
+//   if (!count || avg == null) {
+//     return 'Plus tu fais de check-ins, plus on comprend comment tu vis tes semaines.'
+//   }
 
-  if (avg <= 2) {
-    return 'Globalement, ton stress est plutot bas cette semaine.'
-  }
-  if (avg <= 3.5) {
-    return 'Semaine chargee mais plutot sous controle.'
-  }
-  return 'Semaine un peu intense. Pense a prendre quelques pauses pour toi.'
-})
+//   if (avg <= 2) {
+//     return 'Globalement, ton stress est plutot bas cette semaine.'
+//   }
+//   if (avg <= 3.5) {
+//     return 'Semaine chargee mais plutot sous controle.'
+//   }
+//   return 'Semaine un peu intense. Pense a prendre quelques pauses pour toi.'
+// })
 
 const stressCoachLevel = computed(() => {
   const avg = props.weeklyAverageStress
@@ -1443,18 +1443,19 @@ const focusTypeLabel = computed(() => {
               <p class="stress-categories-text">
                 Sur le mois en cours, certains jours de la semaine reviennent plus charges.
               </p>
-              <div class="stress-categories-list">
+              <div class="weekday-stress-grid">
                 <div
                   v-for="item in weekdayStressSummary.slice(0, 3)"
                   :key="item.weekday"
-                  class="stress-category-row"
+                  class="weekday-stress-card"
                 >
-                  <div class="stress-category-main">
-                    <span class="stress-category-label">{{ item.label }}</span>
-                    <span class="stress-category-count">
-                      {{ item.avg.toFixed(1) }}/5 de stress moyen ({{ item.count }} check-in(s))
-                    </span>
-                  </div>
+                  <p class="weekday-stress-label">{{ item.label }}</p>
+                  <p class="weekday-stress-value">
+                    {{ item.avg.toFixed(1) }}/5
+                  </p>
+                  <p class="weekday-stress-hint">
+                    {{ item.count }} check-in(s)
+                  </p>
                 </div>
               </div>
             </section>

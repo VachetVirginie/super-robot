@@ -81,15 +81,17 @@ export function useCheckins(session: Ref<Session | null>) {
 
     try {
       const now = new Date()
-      const start = new Date(now)
-      start.setDate(start.getDate() - 6)
-      start.setHours(0, 0, 0, 0)
+      const day = now.getDay()
+      const diff = (day === 0 ? -6 : 1) - day
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() + diff)
+      startOfWeek.setHours(0, 0, 0, 0)
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
         .select('id, created_at, day, stress_level, note, moment')
         .eq('user_id', user.id)
-        .gte('created_at', start.toISOString())
+        .gte('created_at', startOfWeek.toISOString())
         .lte('created_at', now.toISOString())
         .order('created_at', { ascending: true })
 

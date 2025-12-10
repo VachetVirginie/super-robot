@@ -128,6 +128,7 @@ const {
   weeklyMorningPriorities,
   weeklyAverageSleepBedTime,
   weeklyAverageSleepWakeTime,
+  weeklyAverageSleepDurationMinutes,
   recentMorningStates,
   getMonthMorningDates,
 } = useMorningState(session)
@@ -1365,6 +1366,7 @@ onBeforeUnmount(() => {
         :weekly-morning-priorities="weeklyMorningPriorities"
         :weekly-sleep-bed-time="weeklyAverageSleepBedTime"
         :weekly-sleep-wake-time="weeklyAverageSleepWakeTime"
+        :weekly-sleep-duration-minutes="weeklyAverageSleepDurationMinutes"
         :weekly-average-stress-midday="weeklyAverageStressMidday"
         :weekly-average-stress-evening="weeklyAverageStressEvening"
         :recent-morning-states="recentMorningStates"

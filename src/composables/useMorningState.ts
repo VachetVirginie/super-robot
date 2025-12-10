@@ -83,15 +83,17 @@ export function useMorningState(session: Ref<Session | null>) {
 
     try {
       const now = new Date()
-      const start = new Date(now)
-      start.setDate(start.getDate() - 6)
-      start.setHours(0, 0, 0, 0)
+      const day = now.getDay()
+      const diff = (day === 0 ? -6 : 1) - day
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() + diff)
+      startOfWeek.setHours(0, 0, 0, 0)
 
       const { data, error } = await supabase
         .from('morning_states')
         .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
         .eq('user_id', user.id)
-        .gte('created_at', start.toISOString())
+        .gte('created_at', startOfWeek.toISOString())
         .lte('created_at', now.toISOString())
         .order('created_at', { ascending: true })
 
@@ -297,6 +299,62 @@ export function useMorningState(session: Ref<Session | null>) {
     return `${h}:${m}`
   })
 
+  const weeklyAverageSleepDurationMinutes = computed(() => {
+    const rows = recentMorningStates.value
+
+    const toMinutes = (value: string | null) => {
+      if (typeof value !== 'string' || value.length < 4) return null as number | null
+      const [hourStr, minuteStr] = value.slice(0, 5).split(':')
+      const hour = Number(hourStr)
+      const minute = Number(minuteStr)
+      if (Number.isNaN(hour) || Number.isNaN(minute)) {
+        return null as number | null
+      }
+      return hour * 60 + minute
+    }
+
+    let total = 0
+    let count = 0
+
+    for (const row of rows) {
+      const bed = toMinutes(row.sleep_bed_time)
+      const wake = toMinutes(row.sleep_wake_time)
+      if (bed == null || wake == null) continue
+
+      let duration = wake - bed
+      if (duration <= 0) {
+        duration = 24 * 60 - bed + wake
+      }
+
+      total += duration
+      count += 1
+    }
+
+    if (
+      !count &&
+      weeklyAverageSleepBedTime.value &&
+      weeklyAverageSleepWakeTime.value
+    ) {
+      const bed = toMinutes(weeklyAverageSleepBedTime.value)
+      const wake = toMinutes(weeklyAverageSleepWakeTime.value)
+      if (bed != null && wake != null) {
+        let duration = wake - bed
+        if (duration <= 0) {
+          duration = 24 * 60 - bed + wake
+        }
+        total = duration
+        count = 1
+      }
+    }
+
+    if (count < 2) {
+      return null as number | null
+    }
+
+    const avgMinutes = Math.round(total / count)
+    return avgMinutes
+  })
+
   const weeklyAverageSleepWakeTime = computed(() => {
     const times = recentMorningStates.value
       .map((row) => row.sleep_wake_time)
@@ -391,6 +449,7 @@ export function useMorningState(session: Ref<Session | null>) {
     weeklyMorningPriorities,
     weeklyAverageSleepBedTime,
     weeklyAverageSleepWakeTime,
+    weeklyAverageSleepDurationMinutes,
     recentMorningStates,
     getMonthMorningDates,
   }

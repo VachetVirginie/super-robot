@@ -173,6 +173,7 @@ const morningSummary = computed(() => {
   const mood = typeof row.mood_level === 'number' ? row.mood_level : null
   const energy = typeof row.energy_level === 'number' ? row.energy_level : null
   const priorities = row.priorities ?? []
+  const tags = (row as MorningStateRow & { mood_tags?: string[] | null }).mood_tags ?? []
 
   const sleepBed = row.sleep_bed_time
   const sleepWake = row.sleep_wake_time
@@ -214,6 +215,9 @@ const morningSummary = computed(() => {
   }
   if (firstPriorityLabel) {
     parts.push(`priorite : ${firstPriorityLabel}`)
+  }
+  if (tags.length) {
+    parts.push(`mots : ${tags.join(', ')}`)
   }
 
   if (!parts.length) {
@@ -274,14 +278,14 @@ async function loadDayDetails() {
 
     const checkinsPromise = supabase
       .from('wellbeing_checkins')
-      .select('id, created_at, stress_level, note, question, moment')
+      .select('id, created_at, stress_level, note, question, moment, mood_tags')
       .eq('user_id', user.id)
       .eq('day', iso)
       .order('created_at', { ascending: true })
 
     const morningPromise = supabase
       .from('morning_states')
-      .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
+      .select('id, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time, mood_tags')
       .eq('user_id', user.id)
       .gte('created_at', start)
       .lte('created_at', end)
@@ -428,6 +432,13 @@ watch(
         <p v-if="middayCheckin.question" class="day-text day-text--muted">
           Question : {{ middayCheckin.question }}
         </p>
+        <p
+          v-if="(middayCheckin as CheckinRow & { mood_tags?: string[] | null }).mood_tags?.length"
+          class="day-text day-text--muted"
+        >
+          Mots utilises :
+          {{ ((middayCheckin as CheckinRow & { mood_tags?: string[] | null }).mood_tags || []).join(', ') }}
+        </p>
       </div>
 
       <div class="day-block" v-if="eveningCheckin">
@@ -438,6 +449,13 @@ watch(
         </p>
         <p v-if="eveningCheckin.question" class="day-text day-text--muted">
           Question : {{ eveningCheckin.question }}
+        </p>
+        <p
+          v-if="(eveningCheckin as CheckinRow & { mood_tags?: string[] | null }).mood_tags?.length"
+          class="day-text day-text--muted"
+        >
+          Mots utilises :
+          {{ ((eveningCheckin as CheckinRow & { mood_tags?: string[] | null }).mood_tags || []).join(', ') }}
         </p>
       </div>
     </section>

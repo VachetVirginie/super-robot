@@ -90,6 +90,7 @@ const {
   weeklyStressByDay,
   weeklyAverageStressMidday,
   weeklyAverageStressEvening,
+  weeklyCheckinMoodTags,
   getMonthStressByDay,
 } = useCheckins(session)
 
@@ -126,6 +127,7 @@ const {
   weeklyAverageMorningMood,
   weeklyAverageMorningEnergy,
   weeklyMorningPriorities,
+  weeklyMorningMoodTags,
   weeklyAverageSleepBedTime,
   weeklyAverageSleepWakeTime,
   weeklyAverageSleepDurationMinutes,
@@ -146,6 +148,7 @@ const {
 
 const pendingMiddayMoodLevel = ref<number | null>(null)
 const pendingMiddayPath = ref<'move' | 'breathe' | null>(null)
+const pendingMiddayMoodTags = ref<string[]>([])
 
 const todayCheckinSummary = computed(() => {
   const c = todayCheckin.value
@@ -899,16 +902,16 @@ const todaysMotivation = computed(() => {
   return motivationMessages[index] ?? null
 })
 
-async function onEveningConfirm(payload: { level: number; note?: string; question?: string }) {
+async function onEveningConfirm(payload: { level: number; note?: string; question?: string; moodTags?: string[] }) {
   const stressLevel = 6 - payload.level
-  await submitCheckin(stressLevel, payload.note, payload.question)
+  await submitCheckin(stressLevel, payload.note, payload.question, payload.moodTags)
 
   if (!checkinError.value) {
     isEveningDialogOpen.value = false
   }
 }
 
-function onMiddayChooseMove(payload: { moodLevel: number | null }) {
+function onMiddayChooseMove(payload: { moodLevel: number | null; moodTags: string[] }) {
   if (!isAuthenticated) {
     isMiddayDialogOpen.value = false
     return
@@ -917,6 +920,7 @@ function onMiddayChooseMove(payload: { moodLevel: number | null }) {
   if (typeof payload.moodLevel === 'number') {
     pendingMiddayMoodLevel.value = payload.moodLevel
     pendingMiddayPath.value = 'move'
+    pendingMiddayMoodTags.value = payload.moodTags ?? []
   }
 
   selectedDuration.value = 5
@@ -925,10 +929,11 @@ function onMiddayChooseMove(payload: { moodLevel: number | null }) {
   isAddSessionDialogOpen.value = true
 }
 
-function onMiddayChooseBreathe(payload: { moodLevel: number | null }) {
+function onMiddayChooseBreathe(payload: { moodLevel: number | null; moodTags: string[] }) {
   if (typeof payload.moodLevel === 'number' && isAuthenticated) {
     pendingMiddayMoodLevel.value = payload.moodLevel
     pendingMiddayPath.value = 'breathe'
+    pendingMiddayMoodTags.value = payload.moodTags ?? []
   }
 
   isMiddayDialogOpen.value = false
@@ -950,10 +955,11 @@ async function recordPendingMiddayCheckin() {
       : 'Etat de milieu de journee apres pause zen'
 
   try {
-    await recordCheckin(stressLevel, undefined, question, 'midday')
+    await recordCheckin(stressLevel, undefined, question, 'midday', pendingMiddayMoodTags.value)
   } finally {
     pendingMiddayMoodLevel.value = null
     pendingMiddayPath.value = null
+    pendingMiddayMoodTags.value = []
   }
 }
 
@@ -1212,9 +1218,9 @@ async function onSaveDisplayNameFromProfile() {
   }
 }
 
-async function submitCheckin(stressLevel: number, note?: string, question?: string) {
+async function submitCheckin(stressLevel: number, note?: string, question?: string, moodTags?: string[]) {
   const previousError = checkinError.value
-  await recordCheckin(stressLevel, note, question)
+  await recordCheckin(stressLevel, note, question, 'evening', moodTags)
 
   if (!checkinError.value) {
     showSnackbar('Check-in bien-etre enregistre', 'success')
@@ -1234,6 +1240,7 @@ async function onMorningConfirm(payload: {
   priorities: string[]
   sleepBedTime: string | null
   sleepWakeTime: string | null
+  moodTags: string[]
 }) {
   const previousError = dailyPlanError.value
   await saveDailyPlan({ slot: payload.slot, intention: payload.intention })
@@ -1245,6 +1252,7 @@ async function onMorningConfirm(payload: {
     priorities: payload.priorities,
     sleepBedTime: payload.sleepBedTime,
     sleepWakeTime: payload.sleepWakeTime,
+    moodTags: payload.moodTags,
   })
 
   if (!dailyPlanError.value) {
@@ -1370,6 +1378,8 @@ onBeforeUnmount(() => {
         :weekly-average-stress-midday="weeklyAverageStressMidday"
         :weekly-average-stress-evening="weeklyAverageStressEvening"
         :recent-morning-states="recentMorningStates"
+        :weekly-morning-mood-tags="weeklyMorningMoodTags"
+        :weekly-checkin-mood-tags="weeklyCheckinMoodTags"
         :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
       <component

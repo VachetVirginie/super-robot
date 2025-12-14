@@ -12,6 +12,7 @@ interface MorningStateRow {
   priorities: string[] | null
   sleep_bed_time: string | null
   sleep_wake_time: string | null
+  mood_tags?: string[] | null
 }
 
 export function useMorningState(session: Ref<Session | null>) {
@@ -42,7 +43,7 @@ export function useMorningState(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('morning_states')
-        .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
+        .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time, mood_tags')
         .eq('user_id', user.id)
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString())
@@ -91,7 +92,7 @@ export function useMorningState(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('morning_states')
-        .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time')
+        .select('id, day_date, created_at, mood_level, energy_level, priorities, sleep_bed_time, sleep_wake_time, mood_tags')
         .eq('user_id', user.id)
         .gte('created_at', startOfWeek.toISOString())
         .lte('created_at', now.toISOString())
@@ -126,6 +127,7 @@ export function useMorningState(session: Ref<Session | null>) {
     priorities: string[]
     sleepBedTime: string | null
     sleepWakeTime: string | null
+    moodTags: string[]
   }) {
     const user = session.value?.user
     if (!user) {
@@ -144,6 +146,7 @@ export function useMorningState(session: Ref<Session | null>) {
         priorities?: string[] | null
         sleep_bed_time?: string | null
         sleep_wake_time?: string | null
+        mood_tags?: string[] | null
       } = {
         user_id: user.id,
       }
@@ -181,6 +184,12 @@ export function useMorningState(session: Ref<Session | null>) {
         payload.sleep_wake_time = options.sleepWakeTime
       } else {
         payload.sleep_wake_time = null
+      }
+
+      if (options.moodTags && options.moodTags.length) {
+        payload.mood_tags = options.moodTags
+      } else {
+        payload.mood_tags = null
       }
 
       const { error } = await supabase
@@ -260,6 +269,34 @@ export function useMorningState(session: Ref<Session | null>) {
     }
 
     return entries.sort((a, b) => b.count - a.count).slice(0, 3)
+  })
+
+  const weeklyMorningMoodTags = computed(() => {
+    const counts = new Map<string, { label: string; count: number }>()
+
+    for (const row of recentMorningStates.value) {
+      const list = row.mood_tags ?? []
+      for (const rawTag of list) {
+        const label = rawTag.trim()
+        if (!label) continue
+        const key = label.toLowerCase()
+        const existing = counts.get(key)
+        if (existing) {
+          existing.count += 1
+        } else {
+          counts.set(key, { label, count: 1 })
+        }
+      }
+    }
+
+    const entries: { tag: string; count: number }[] = []
+    for (const value of counts.values()) {
+      if (value.count > 0) {
+        entries.push({ tag: value.label, count: value.count })
+      }
+    }
+
+    return entries.sort((a, b) => b.count - a.count).slice(0, 5)
   })
 
   const weeklyAverageSleepBedTime = computed(() => {
@@ -447,6 +484,7 @@ export function useMorningState(session: Ref<Session | null>) {
     weeklyAverageMorningMood,
     weeklyAverageMorningEnergy,
     weeklyMorningPriorities,
+    weeklyMorningMoodTags,
     weeklyAverageSleepBedTime,
     weeklyAverageSleepWakeTime,
     weeklyAverageSleepDurationMinutes,

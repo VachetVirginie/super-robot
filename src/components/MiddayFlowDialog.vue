@@ -8,8 +8,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'choose-move', payload: { moodLevel: number | null }): void
-  (e: 'choose-breathe', payload: { moodLevel: number | null }): void
+  (e: 'choose-move', payload: { moodLevel: number | null; moodTags: string[] }): void
+  (e: 'choose-breathe', payload: { moodLevel: number | null; moodTags: string[] }): void
 }>()
 
 const friendlyName = computed(() => {
@@ -40,6 +40,21 @@ const selectedMood = computed(() => {
   return moodOptions.find((opt) => opt.value === moodLevel.value) ?? null
 })
 
+const middayMoodTagSuggestions = [
+  'malade',
+  'epuise(e)',
+  'tres stresse(e)',
+  'fatigue(e)',
+  'tendue',
+  'anxieuse',
+  'apaisee',
+  'submergee',
+]
+
+const middayMoodTags = ref<string[]>([])
+const isAddingMiddayMoodTag = ref(false)
+const middayMoodTagInput = ref('')
+
 function moodIconUrl(key: string) {
   return `/icons/mood/${key}.svg`
 }
@@ -53,6 +68,49 @@ function vibrateLight() {
 function selectMood(value: number) {
   moodLevel.value = value
   vibrateLight()
+}
+
+function toggleMiddayMoodTag(tag: string) {
+  const value = tag.trim()
+  if (!value) {
+    return
+  }
+
+  const normalized = value.toLowerCase()
+  const current = middayMoodTags.value
+  const index = current.findIndex((item) => item.toLowerCase() === normalized)
+
+  if (index !== -1) {
+    middayMoodTags.value = [
+      ...current.slice(0, index),
+      ...current.slice(index + 1),
+    ]
+    return
+  }
+
+  if (current.length >= 3) {
+    return
+  }
+
+  middayMoodTags.value = [...current, value]
+  vibrateLight()
+}
+
+function startAddMiddayMoodTag() {
+  isAddingMiddayMoodTag.value = true
+  middayMoodTagInput.value = ''
+}
+
+function confirmAddMiddayMoodTag() {
+  const value = middayMoodTagInput.value.trim()
+  if (!value) {
+    isAddingMiddayMoodTag.value = false
+    return
+  }
+
+  toggleMiddayMoodTag(value)
+  isAddingMiddayMoodTag.value = false
+  middayMoodTagInput.value = ''
 }
 
 function goToPreviousStep() {
@@ -71,11 +129,11 @@ function goToNextStep() {
 }
 
 function onChooseMove() {
-  emit('choose-move', { moodLevel: moodLevel.value ?? null })
+  emit('choose-move', { moodLevel: moodLevel.value ?? null, moodTags: middayMoodTags.value })
 }
 
 function onChooseBreathe() {
-  emit('choose-breathe', { moodLevel: moodLevel.value ?? null })
+  emit('choose-breathe', { moodLevel: moodLevel.value ?? null, moodTags: middayMoodTags.value })
 }
 </script>
 
@@ -135,6 +193,51 @@ function onChooseBreathe() {
             >
               {{ moodLevel }} / 5 - {{ selectedMood.label }}
             </p>
+            <div class="midday-mood-tags-block">
+              <p class="midday-mood-tags-title">
+                Tu peux preciser avec quelques mots (max 3) :
+              </p>
+              <div class="midday-mood-tags-row">
+                <button
+                  v-for="tag in middayMoodTagSuggestions"
+                  :key="tag"
+                  type="button"
+                  class="midday-mood-tag-chip"
+                  :class="{ 'is-selected': middayMoodTags.includes(tag) }"
+                  @click="toggleMiddayMoodTag(tag)"
+                >
+                  {{ tag }}
+                </button>
+                <button
+                  v-if="!isAddingMiddayMoodTag && middayMoodTags.length < 3"
+                  type="button"
+                  class="midday-mood-tag-chip midday-mood-tag-chip--add"
+                  @click="startAddMiddayMoodTag"
+                >
+                  + Ajouter
+                </button>
+              </div>
+              <div
+                v-if="isAddingMiddayMoodTag"
+                class="midday-mood-tags-input-row"
+              >
+                <input
+                  v-model="middayMoodTagInput"
+                  type="text"
+                  class="midday-mood-tag-input"
+                  maxlength="24"
+                  placeholder="Un mot qui decrit ton etat"
+                  @keyup.enter.prevent="confirmAddMiddayMoodTag"
+                />
+                <button
+                  type="button"
+                  class="midday-mood-tag-confirm"
+                  @click="confirmAddMiddayMoodTag"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -362,6 +465,71 @@ function onChooseBreathe() {
   margin-top: 0.75rem;
   font-size: 0.8rem;
   opacity: 0.85;
+}
+
+.midday-mood-tags-block {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.midday-mood-tags-title {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.midday-mood-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.midday-mood-tag-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.midday-mood-tag-chip.is-selected {
+  border-color: #22c55e;
+  background: #16a34a;
+  color: #022c22;
+}
+
+.midday-mood-tag-chip--add {
+  border-style: dashed;
+  opacity: 0.9;
+}
+
+.midday-mood-tags-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.midday-mood-tag-input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.midday-mood-tag-confirm {
+  border-radius: 999px;
+  border: none;
+  background: #22c55e;
+  color: #022c22;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .midday-actions {

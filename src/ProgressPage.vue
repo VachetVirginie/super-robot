@@ -36,6 +36,8 @@ const props = defineProps<{
     sleep_bed_time: string | null
     sleep_wake_time: string | null
   }[]
+  weeklyMorningMoodTags: { tag: string; count: number }[]
+  weeklyCheckinMoodTags: { tag: string; count: number }[]
   onOpenWeeklySessions: () => void
 }>()
 
@@ -285,6 +287,8 @@ const morningPriorityLabels = computed(() => {
   }))
 })
 
+const morningMoodTagLabels = computed(() => props.weeklyMorningMoodTags ?? [])
+
 const middayMoodLabel = computed(() => {
   const avgStress = props.weeklyAverageStressMidday
   if (typeof avgStress !== 'number') {
@@ -396,6 +400,8 @@ const kindTags = computed(() => {
     }
   })
 })
+
+const weeklyCheckinMoodTagLabels = computed(() => props.weeklyCheckinMoodTags ?? [])
 
 // const progressCoachSuggestion = computed(() => {
 //   const level = progressCoachLevel.value
@@ -1284,6 +1290,18 @@ const focusTypeLabel = computed(() => {
                   {{ item.label }} ({{ item.count }})
                 </span>
               </div>
+              <div
+                v-if="morningMoodTagLabels.length"
+                class="progress-tags morning-priorities"
+              >
+                <span
+                  v-for="item in morningMoodTagLabels"
+                  :key="item.tag"
+                  class="tag tag--mint"
+                >
+                  {{ item.tag }} ({{ item.count }})
+                </span>
+              </div>
             </div>
           </section>
 
@@ -1331,6 +1349,19 @@ const focusTypeLabel = computed(() => {
               <p class="stress-text stress-text--muted">
                 {{ stressCoachMessage }}
               </p>
+
+              <div
+                v-if="weeklyCheckinMoodTagLabels.length"
+                class="progress-tags"
+              >
+                <span
+                  v-for="item in weeklyCheckinMoodTagLabels"
+                  :key="item.tag"
+                  class="tag tag--blue"
+                >
+                  {{ item.tag }} ({{ item.count }})
+                </span>
+              </div>
 
               <button
                 type="button"

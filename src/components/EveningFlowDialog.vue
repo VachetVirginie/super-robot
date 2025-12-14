@@ -12,6 +12,7 @@ const emit = defineEmits<{
     level: number
     note?: string
     question?: string
+    moodTags: string[]
   }): void
 }>()
 
@@ -77,6 +78,21 @@ const selectedMood = computed(() => {
   return moodOptions.find((opt) => opt.value === selectedStress.value) ?? null
 })
 
+const eveningMoodTagSuggestions = [
+  'epuise(e)',
+  'tres stresse(e)',
+  'fatigue(e)',
+  'tendue',
+  'anxieuse',
+  'apaisee',
+  'soulagée',
+  'vide',
+]
+
+const eveningMoodTags = ref<string[]>([])
+const isAddingEveningMoodTag = ref(false)
+const eveningMoodTagInput = ref('')
+
 function moodIconUrl(key: string) {
   return `/icons/mood/${key}.svg`
 }
@@ -90,6 +106,49 @@ function vibrateLight() {
 function selectStress(value: number) {
   selectedStress.value = value
   vibrateLight()
+}
+
+function toggleEveningMoodTag(tag: string) {
+  const value = tag.trim()
+  if (!value) {
+    return
+  }
+
+  const normalized = value.toLowerCase()
+  const current = eveningMoodTags.value
+  const index = current.findIndex((item) => item.toLowerCase() === normalized)
+
+  if (index !== -1) {
+    eveningMoodTags.value = [
+      ...current.slice(0, index),
+      ...current.slice(index + 1),
+    ]
+    return
+  }
+
+  if (current.length >= 3) {
+    return
+  }
+
+  eveningMoodTags.value = [...current, value]
+  vibrateLight()
+}
+
+function startAddEveningMoodTag() {
+  isAddingEveningMoodTag.value = true
+  eveningMoodTagInput.value = ''
+}
+
+function confirmAddEveningMoodTag() {
+  const value = eveningMoodTagInput.value.trim()
+  if (!value) {
+    isAddingEveningMoodTag.value = false
+    return
+  }
+
+  toggleEveningMoodTag(value)
+  isAddingEveningMoodTag.value = false
+  eveningMoodTagInput.value = ''
 }
 
 function goToPreviousStep() {
@@ -119,6 +178,7 @@ function onConfirm() {
     level: selectedStress.value,
     note: eveningNote.value || undefined,
     question: currentEveningQuestion.value,
+    moodTags: eveningMoodTags.value,
   })
 }
 </script>
@@ -184,6 +244,51 @@ function onConfirm() {
             >
               {{ selectedStress }} / 5 - {{ selectedMood.label }}
             </p>
+            <div class="evening-mood-tags-block">
+              <p class="evening-mood-tags-title">
+                Tu peux ajouter quelques mots sur ton etat (max 3) :
+              </p>
+              <div class="evening-mood-tags-row">
+                <button
+                  v-for="tag in eveningMoodTagSuggestions"
+                  :key="tag"
+                  type="button"
+                  class="evening-mood-tag-chip"
+                  :class="{ 'is-selected': eveningMoodTags.includes(tag) }"
+                  @click="toggleEveningMoodTag(tag)"
+                >
+                  {{ tag }}
+                </button>
+                <button
+                  v-if="!isAddingEveningMoodTag && eveningMoodTags.length < 3"
+                  type="button"
+                  class="evening-mood-tag-chip evening-mood-tag-chip--add"
+                  @click="startAddEveningMoodTag"
+                >
+                  + Ajouter
+                </button>
+              </div>
+              <div
+                v-if="isAddingEveningMoodTag"
+                class="evening-mood-tags-input-row"
+              >
+                <input
+                  v-model="eveningMoodTagInput"
+                  type="text"
+                  class="evening-mood-tag-input"
+                  maxlength="24"
+                  placeholder="Un mot qui decrit ta soiree"
+                  @keyup.enter.prevent="confirmAddEveningMoodTag"
+                />
+                <button
+                  type="button"
+                  class="evening-mood-tag-confirm"
+                  @click="confirmAddEveningMoodTag"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -476,6 +581,71 @@ function onConfirm() {
   margin-top: 0.75rem;
   font-size: 0.8rem;
   opacity: 0.85;
+}
+
+.evening-mood-tags-block {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.evening-mood-tags-title {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.evening-mood-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.evening-mood-tag-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.evening-mood-tag-chip.is-selected {
+  border-color: #22c55e;
+  background: #16a34a;
+  color: #022c22;
+}
+
+.evening-mood-tag-chip--add {
+  border-style: dashed;
+  opacity: 0.9;
+}
+
+.evening-mood-tags-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.evening-mood-tag-input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.evening-mood-tag-confirm {
+  border-radius: 999px;
+  border: none;
+  background: #22c55e;
+  color: #022c22;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 </style>

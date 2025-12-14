@@ -11,6 +11,7 @@ interface CheckinRow {
   note: string | null
   question: string | null
   moment: 'midday' | 'evening'
+  mood_tags?: string[] | null
 }
 
 export function useCheckins(session: Ref<Session | null>) {
@@ -41,7 +42,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, stress_level, note, question, moment')
+        .select('id, created_at, stress_level, note, question, moment, mood_tags')
         .eq('user_id', user.id)
         .eq('moment', 'evening')
         .gte('created_at', start.toISOString())
@@ -89,7 +90,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, day, stress_level, note, moment')
+        .select('id, created_at, day, stress_level, note, moment, mood_tags')
         .eq('user_id', user.id)
         .gte('created_at', startOfWeek.toISOString())
         .lte('created_at', now.toISOString())
@@ -123,6 +124,7 @@ export function useCheckins(session: Ref<Session | null>) {
     note?: string,
     question?: string,
     moment: 'midday' | 'evening' = 'evening',
+    moodTags?: string[],
   ) {
     const user = session.value?.user
     if (!user) {
@@ -145,6 +147,7 @@ export function useCheckins(session: Ref<Session | null>) {
         note: note ?? null,
         question: question ?? null,
         moment,
+        mood_tags: moodTags && moodTags.length ? moodTags : null,
       })
 
       if (error) {
@@ -170,6 +173,7 @@ export function useCheckins(session: Ref<Session | null>) {
                 stress_level: stressLevel,
                 note: note ?? null,
                 question: question ?? null,
+                mood_tags: moodTags && moodTags.length ? moodTags : null,
               })
               .eq('id', existing.id)
 
@@ -331,6 +335,34 @@ export function useCheckins(session: Ref<Session | null>) {
     return result
   })
 
+  const weeklyCheckinMoodTags = computed(() => {
+    const counts = new Map<string, { label: string; count: number }>()
+
+    for (const row of recentCheckins.value) {
+      const list = row.mood_tags ?? []
+      for (const rawTag of list) {
+        const label = rawTag.trim()
+        if (!label) continue
+        const key = label.toLowerCase()
+        const existing = counts.get(key)
+        if (existing) {
+          existing.count += 1
+        } else {
+          counts.set(key, { label, count: 1 })
+        }
+      }
+    }
+
+    const entries: { tag: string; count: number }[] = []
+    for (const value of counts.values()) {
+      if (value.count > 0) {
+        entries.push({ tag: value.label, count: value.count })
+      }
+    }
+
+    return entries.sort((a, b) => b.count - a.count).slice(0, 5)
+  })
+
   const weeklyAverageStressMidday = computed(() => {
     const levels = recentCheckins.value
       .filter((c) => c.moment === 'midday')
@@ -373,6 +405,7 @@ export function useCheckins(session: Ref<Session | null>) {
     weeklyStressByDay,
     weeklyAverageStressMidday,
     weeklyAverageStressEvening,
+    weeklyCheckinMoodTags,
     getMonthStressByDay,
   }
 }

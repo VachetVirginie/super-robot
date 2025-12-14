@@ -22,6 +22,7 @@ const emit = defineEmits<{
     priorities: string[]
     sleepBedTime: string | null
     sleepWakeTime: string | null
+    moodTags: string[]
   }): void
 }>()
 
@@ -183,6 +184,64 @@ const energyPercent = computed(() => {
   return (clamped / 4) * 100
 })
 
+const morningMoodTagSuggestions = [
+  'malade',
+  'epuise(e)',
+  'tres stresse(e)',
+  'fatigue(e)',
+  'tendue',
+  'anxieuse',
+  'apaisee',
+  'confiant(e)',
+]
+
+const morningMoodTags = ref<string[]>([])
+const isAddingMorningMoodTag = ref(false)
+const morningMoodTagInput = ref('')
+
+function toggleMorningMoodTag(tag: string) {
+  const value = tag.trim()
+  if (!value) {
+    return
+  }
+
+  const normalized = value.toLowerCase()
+  const current = morningMoodTags.value
+  const index = current.findIndex((item) => item.toLowerCase() === normalized)
+
+  if (index !== -1) {
+    morningMoodTags.value = [
+      ...current.slice(0, index),
+      ...current.slice(index + 1),
+    ]
+    return
+  }
+
+  if (current.length >= 3) {
+    return
+  }
+
+  morningMoodTags.value = [...current, value]
+  vibrateLight()
+}
+
+function startAddMorningMoodTag() {
+  isAddingMorningMoodTag.value = true
+  morningMoodTagInput.value = ''
+}
+
+function confirmAddMorningMoodTag() {
+  const value = morningMoodTagInput.value.trim()
+  if (!value) {
+    isAddingMorningMoodTag.value = false
+    return
+  }
+
+  toggleMorningMoodTag(value)
+  isAddingMorningMoodTag.value = false
+  morningMoodTagInput.value = ''
+}
+
 function selectEnergy(value: number) {
   energyLevel.value = value
   vibrateLight()
@@ -282,6 +341,7 @@ function onConfirm() {
     priorities: selectedPriorities.value,
     sleepBedTime: sleepBedTime.value,
     sleepWakeTime: sleepWakeTime.value,
+    moodTags: morningMoodTags.value,
   })
 }
 </script>
@@ -446,6 +506,51 @@ function onConfirm() {
             >
               {{ moodLevel }} / 5 - {{ selectedMood.label }}
             </p>
+            <div class="morning-mood-tags-block">
+              <p class="morning-mood-tags-title">
+                Tu peux preciser avec quelques mots (max 3) :
+              </p>
+              <div class="morning-mood-tags-row">
+                <button
+                  v-for="tag in morningMoodTagSuggestions"
+                  :key="tag"
+                  type="button"
+                  class="morning-mood-tag-chip"
+                  :class="{ 'is-selected': morningMoodTags.includes(tag) }"
+                  @click="toggleMorningMoodTag(tag)"
+                >
+                  {{ tag }}
+                </button>
+                <button
+                  v-if="!isAddingMorningMoodTag && morningMoodTags.length < 3"
+                  type="button"
+                  class="morning-mood-tag-chip morning-mood-tag-chip--add"
+                  @click="startAddMorningMoodTag"
+                >
+                  + Ajouter
+                </button>
+              </div>
+              <div
+                v-if="isAddingMorningMoodTag"
+                class="morning-mood-tags-input-row"
+              >
+                <input
+                  v-model="morningMoodTagInput"
+                  type="text"
+                  class="morning-mood-tag-input"
+                  maxlength="24"
+                  placeholder="Un mot qui decrit ton matin"
+                  @keyup.enter.prevent="confirmAddMorningMoodTag"
+                />
+                <button
+                  type="button"
+                  class="morning-mood-tag-confirm"
+                  @click="confirmAddMorningMoodTag"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -993,6 +1098,71 @@ function onConfirm() {
   margin-top: 0.75rem;
   font-size: 0.8rem;
   opacity: 0.85;
+}
+
+.morning-mood-tags-block {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.morning-mood-tags-title {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.morning-mood-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.morning-mood-tag-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.morning-mood-tag-chip.is-selected {
+  border-color: #22c55e;
+  background: #16a34a;
+  color: #022c22;
+}
+
+.morning-mood-tag-chip--add {
+  border-style: dashed;
+  opacity: 0.9;
+}
+
+.morning-mood-tags-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.morning-mood-tag-input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.morning-mood-tag-confirm {
+  border-radius: 999px;
+  border: none;
+  background: #22c55e;
+  color: #022c22;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .morning-energy-row {

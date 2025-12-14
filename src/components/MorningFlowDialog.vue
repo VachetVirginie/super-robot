@@ -10,6 +10,7 @@ const props = defineProps<{
   initialIntention: DailyIntention | null
   isLoading: boolean
   isSaving: boolean
+  initialMorningMoodTags?: { tag: string; count: number }[]
 }>()
 
 const emit = defineEmits<{
@@ -184,7 +185,7 @@ const energyPercent = computed(() => {
   return (clamped / 4) * 100
 })
 
-const morningMoodTagSuggestions = [
+const baseMorningMoodTagSuggestions = [
   'malade',
   'epuise(e)',
   'tres stresse(e)',
@@ -198,6 +199,41 @@ const morningMoodTagSuggestions = [
 const morningMoodTags = ref<string[]>([])
 const isAddingMorningMoodTag = ref(false)
 const morningMoodTagInput = ref('')
+
+const morningMoodTagSuggestions = computed(() => {
+  const base = baseMorningMoodTagSuggestions
+  const dynamicSource = props.initialMorningMoodTags ?? []
+
+  const merged: string[] = []
+  const seen = new Set<string>()
+
+  for (const tag of base) {
+    const raw = tag.trim()
+    if (!raw) continue
+    const norm = raw.toLowerCase()
+    if (seen.has(norm)) continue
+    seen.add(norm)
+    merged.push(raw)
+  }
+
+  for (const item of dynamicSource) {
+    const raw = (item?.tag ?? '').trim()
+    if (!raw) continue
+    const norm = raw.toLowerCase()
+    if (seen.has(norm)) continue
+    seen.add(norm)
+    merged.push(raw)
+  }
+
+  return merged
+})
+
+const customMorningMoodTags = computed(() => {
+  const suggestions = morningMoodTagSuggestions.value.map((tag) => tag.toLowerCase())
+  return morningMoodTags.value.filter(
+    (tag) => !suggestions.includes(tag.toLowerCase()),
+  )
+})
 
 function toggleMorningMoodTag(tag: string) {
   const value = tag.trim()
@@ -323,6 +359,13 @@ function skipStep() {
 }
 
 function goToNextStep() {
+  if (
+    currentStep.value === 3 &&
+    (isAddingMorningMoodTag.value || morningMoodTagInput.value.trim())
+  ) {
+    confirmAddMorningMoodTag()
+  }
+
   if (!isLastStep.value) {
     currentStep.value += 1
     return
@@ -528,6 +571,20 @@ function onConfirm() {
                   @click="startAddMorningMoodTag"
                 >
                   + Ajouter
+                </button>
+              </div>
+              <div
+                v-if="customMorningMoodTags.length"
+                class="morning-mood-tags-row morning-mood-tags-row--custom"
+              >
+                <button
+                  v-for="tag in customMorningMoodTags"
+                  :key="tag"
+                  type="button"
+                  class="morning-mood-tag-chip is-selected"
+                  @click="toggleMorningMoodTag(tag)"
+                >
+                  {{ tag }}
                 </button>
               </div>
               <div
@@ -1117,6 +1174,10 @@ function onConfirm() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.morning-mood-tags-row--custom {
+  margin-top: 0.1rem;
 }
 
 .morning-mood-tag-chip {

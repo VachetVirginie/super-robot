@@ -38,6 +38,7 @@ const props = defineProps<{
   }[]
   weeklyMorningMoodTags: { tag: string; count: number }[]
   weeklyCheckinMoodTags: { tag: string; count: number }[]
+  weeklyEveningStressByWeather: Record<string, { avg: number; count: number }>
   onOpenWeeklySessions: () => void
 }>()
 
@@ -402,6 +403,65 @@ const kindTags = computed(() => {
 })
 
 const weeklyCheckinMoodTagLabels = computed(() => props.weeklyCheckinMoodTags ?? [])
+
+const eveningWeatherSummary = computed(() => {
+  const source = props.weeklyEveningStressByWeather ?? {}
+
+  const labels: Record<string, { label: string; emoji: string }> = {
+    sunny: { label: 'Soleil', emoji: '☀' },
+    cloudy: { label: 'Couvert', emoji: '⛅' },
+    rainy: { label: 'Pluvieux', emoji: '🌧' },
+    shower: { label: 'Pluie', emoji: '🌦' },
+    snow: { label: 'Neige', emoji: '❄' },
+  }
+
+  const items: { key: string; label: string; emoji: string; mood: number; count: number }[] = []
+
+  for (const [code, info] of Object.entries(source)) {
+    const def = labels[code] ?? { label: code, emoji: '⛅' }
+    const mood = 6 - info.avg
+    const moodRounded = Math.round(mood * 10) / 10
+    items.push({
+      key: code,
+      label: def.label,
+      emoji: def.emoji,
+      mood: moodRounded,
+      count: info.count,
+    })
+  }
+
+  return items.sort((a, b) => b.count - a.count)
+})
+
+const eveningWeatherInsight = computed(() => {
+  const items = eveningWeatherSummary.value
+
+  if (items.length === 0) {
+    return "Des que tu notes la meteo quelques soirs, on pourra voir si certaines meteo sont plus apaisantes pour toi."
+  }
+
+  if (items.length === 1) {
+    const only = items[0]!
+    return `Pour l'instant, on a surtout des soirees en meteo "${only.label}" (${only.mood.toFixed(1)}/5).`
+  }
+
+  const sortedByMood = [...items].sort((a, b) => b.mood - a.mood)
+  if (sortedByMood.length === 0) {
+    return 'Pour linstant, ton ressenti du soir varie peu selon la meteo.'
+  }
+
+  const best = sortedByMood[0]!
+  const worst = sortedByMood[sortedByMood.length - 1]!
+  const diff = best.mood - worst.mood
+
+  if (diff <= 0.1) {
+    return 'Pour linstant, ton ressenti du soir varie peu selon la meteo.'
+  }
+  if (diff <= 0.3) {
+    return `Les soirs ${best.label.toLowerCase()} ont un ressenti un peu meilleur (${best.mood.toFixed(1)}/5) que les soirs ${worst.label.toLowerCase()} (${worst.mood.toFixed(1)}/5).`
+  }
+  return `Les soirs ${best.label.toLowerCase()} semblent nettement plus apaisants (${best.mood.toFixed(1)}/5) que les soirs ${worst.label.toLowerCase()} (${worst.mood.toFixed(1)}/5).`
+})
 
 // const progressCoachSuggestion = computed(() => {
 //   const level = progressCoachLevel.value
@@ -1370,6 +1430,35 @@ const focusTypeLabel = computed(() => {
               >
                 Explorer ce qui declenche ton stress
               </button>
+            </section>
+
+            <section
+              v-if="eveningWeatherSummary.length"
+              class="stress-section weather-section"
+            >
+              <h3 class="stress-title">Meteo et soirees</h3>
+              <p class="stress-text stress-text--muted">
+                {{ eveningWeatherInsight }}
+              </p>
+
+              <div class="weather-grid">
+                <div
+                  v-for="item in eveningWeatherSummary.slice(0, 3)"
+                  :key="item.key"
+                  class="weather-card"
+                >
+                  <p class="weather-card-label">
+                    <span class="weather-card-emoji">{{ item.emoji }}</span>
+                    {{ item.label }}
+                  </p>
+                  <p class="weather-card-value">
+                    {{ item.mood.toFixed(1) }}/5
+                  </p>
+                  <p class="weather-card-hint">
+                    {{ item.count }} soir(s)
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section
@@ -2504,7 +2593,7 @@ const focusTypeLabel = computed(() => {
 }
 
 .stress-categories-section {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   padding: 0.75rem 0.8rem 0.85rem;
   border-radius: 0.9rem;
   background: rgba(11, 15, 25, 0.98);

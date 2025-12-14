@@ -91,6 +91,7 @@ const {
   weeklyAverageStressMidday,
   weeklyAverageStressEvening,
   weeklyCheckinMoodTags,
+  weeklyEveningStressByWeather,
   getMonthStressByDay,
 } = useCheckins(session)
 
@@ -902,9 +903,23 @@ const todaysMotivation = computed(() => {
   return motivationMessages[index] ?? null
 })
 
-async function onEveningConfirm(payload: { level: number; note?: string; question?: string; moodTags?: string[] }) {
+async function onEveningConfirm(payload: {
+  level: number
+  note?: string
+  question?: string
+  moodTags?: string[]
+  weatherCondition?: string | null
+  weatherTemperature?: string | null
+}) {
   const stressLevel = 6 - payload.level
-  await submitCheckin(stressLevel, payload.note, payload.question, payload.moodTags)
+  await submitCheckin(
+    stressLevel,
+    payload.note,
+    payload.question,
+    payload.moodTags,
+    payload.weatherCondition,
+    payload.weatherTemperature,
+  )
 
   if (!checkinError.value) {
     isEveningDialogOpen.value = false
@@ -1218,9 +1233,16 @@ async function onSaveDisplayNameFromProfile() {
   }
 }
 
-async function submitCheckin(stressLevel: number, note?: string, question?: string, moodTags?: string[]) {
+async function submitCheckin(
+  stressLevel: number,
+  note?: string,
+  question?: string,
+  moodTags?: string[],
+  weatherCondition?: string | null,
+  weatherTemperature?: string | null,
+) {
   const previousError = checkinError.value
-  await recordCheckin(stressLevel, note, question, 'evening', moodTags)
+  await recordCheckin(stressLevel, note, question, 'evening', moodTags, weatherCondition, weatherTemperature)
 
   if (!checkinError.value) {
     showSnackbar('Check-in bien-etre enregistre', 'success')
@@ -1380,6 +1402,7 @@ onBeforeUnmount(() => {
         :recent-morning-states="recentMorningStates"
         :weekly-morning-mood-tags="weeklyMorningMoodTags"
         :weekly-checkin-mood-tags="weeklyCheckinMoodTags"
+        :weekly-evening-stress-by-weather="weeklyEveningStressByWeather"
         :on-open-weekly-sessions="openWeeklySessionsDialog"
       />
       <component
@@ -1526,6 +1549,7 @@ onBeforeUnmount(() => {
       :initial-intention="todayIntention"
       :is-loading="isDailyPlanLoading"
       :is-saving="isDailyPlanSaving"
+      :initial-morning-mood-tags="weeklyMorningMoodTags"
       @close="isMorningDialogOpen = false"
       @confirm="onMorningConfirm"
     />
@@ -1534,6 +1558,7 @@ onBeforeUnmount(() => {
       v-if="isMiddayDialogOpen"
       :display-name="displayName"
       :has-breathing-option="!!todaysExercise"
+      :initial-mood-tags="weeklyCheckinMoodTags"
       @close="isMiddayDialogOpen = false"
       @choose-move="onMiddayChooseMove"
       @choose-breathe="onMiddayChooseBreathe"
@@ -1543,6 +1568,7 @@ onBeforeUnmount(() => {
       v-if="isEveningDialogOpen"
       :display-name="displayName"
       :is-saving="isCheckinSaving"
+      :initial-mood-tags="weeklyCheckinMoodTags"
       @close="isEveningDialogOpen = false"
       @confirm="onEveningConfirm"
     />

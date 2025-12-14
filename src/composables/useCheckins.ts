@@ -12,6 +12,8 @@ interface CheckinRow {
   question: string | null
   moment: 'midday' | 'evening'
   mood_tags?: string[] | null
+  weather_condition?: string | null
+  weather_temperature?: string | null
 }
 
 export function useCheckins(session: Ref<Session | null>) {
@@ -42,7 +44,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, stress_level, note, question, moment, mood_tags')
+        .select('id, created_at, stress_level, note, question, moment, mood_tags, weather_condition, weather_temperature')
         .eq('user_id', user.id)
         .eq('moment', 'evening')
         .gte('created_at', start.toISOString())
@@ -90,7 +92,7 @@ export function useCheckins(session: Ref<Session | null>) {
 
       const { data, error } = await supabase
         .from('wellbeing_checkins')
-        .select('id, created_at, day, stress_level, note, moment, mood_tags')
+        .select('id, created_at, day, stress_level, note, moment, mood_tags, weather_condition, weather_temperature')
         .eq('user_id', user.id)
         .gte('created_at', startOfWeek.toISOString())
         .lte('created_at', now.toISOString())
@@ -125,6 +127,8 @@ export function useCheckins(session: Ref<Session | null>) {
     question?: string,
     moment: 'midday' | 'evening' = 'evening',
     moodTags?: string[],
+    weatherCondition?: string | null,
+    weatherTemperature?: string | null,
   ) {
     const user = session.value?.user
     if (!user) {
@@ -148,6 +152,8 @@ export function useCheckins(session: Ref<Session | null>) {
         question: question ?? null,
         moment,
         mood_tags: moodTags && moodTags.length ? moodTags : null,
+        weather_condition: weatherCondition ?? null,
+        weather_temperature: weatherTemperature ?? null,
       })
 
       if (error) {
@@ -174,6 +180,8 @@ export function useCheckins(session: Ref<Session | null>) {
                 note: note ?? null,
                 question: question ?? null,
                 mood_tags: moodTags && moodTags.length ? moodTags : null,
+                weather_condition: weatherCondition ?? null,
+                weather_temperature: weatherTemperature ?? null,
               })
               .eq('id', existing.id)
 
@@ -363,6 +371,36 @@ export function useCheckins(session: Ref<Session | null>) {
     return entries.sort((a, b) => b.count - a.count).slice(0, 5)
   })
 
+  const weeklyEveningStressByWeather = computed(() => {
+    const buckets = new Map<string, number[]>()
+
+    for (const row of recentCheckins.value) {
+      if (row.moment !== 'evening') continue
+      const condition = (row as CheckinRow & { weather_condition?: string | null }).weather_condition
+      if (!condition) continue
+      if (typeof row.stress_level !== 'number') continue
+
+      const key = condition.toLowerCase()
+      const list = buckets.get(key) ?? []
+      list.push(row.stress_level)
+      buckets.set(key, list)
+    }
+
+    const result: Record<string, { avg: number; count: number }> = {}
+
+    for (const [code, values] of buckets.entries()) {
+      if (!values.length) continue
+      const sum = values.reduce((acc, value) => acc + value, 0)
+      const avg = sum / values.length
+      result[code] = {
+        avg: Math.round(avg * 10) / 10,
+        count: values.length,
+      }
+    }
+
+    return result
+  })
+
   const weeklyAverageStressMidday = computed(() => {
     const levels = recentCheckins.value
       .filter((c) => c.moment === 'midday')
@@ -406,6 +444,7 @@ export function useCheckins(session: Ref<Session | null>) {
     weeklyAverageStressMidday,
     weeklyAverageStressEvening,
     weeklyCheckinMoodTags,
+    weeklyEveningStressByWeather,
     getMonthStressByDay,
   }
 }

@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 const props = defineProps<{
   displayName: string
   hasBreathingOption: boolean
+  initialMoodTags?: { tag: string; count: number }[]
 }>()
 
 const emit = defineEmits<{
@@ -40,7 +41,7 @@ const selectedMood = computed(() => {
   return moodOptions.find((opt) => opt.value === moodLevel.value) ?? null
 })
 
-const middayMoodTagSuggestions = [
+const baseMiddayMoodTagSuggestions = [
   'malade',
   'epuise(e)',
   'tres stresse(e)',
@@ -54,6 +55,41 @@ const middayMoodTagSuggestions = [
 const middayMoodTags = ref<string[]>([])
 const isAddingMiddayMoodTag = ref(false)
 const middayMoodTagInput = ref('')
+
+const middayMoodTagSuggestions = computed(() => {
+  const base = baseMiddayMoodTagSuggestions
+  const dynamicSource = props.initialMoodTags ?? []
+
+  const merged: string[] = []
+  const seen = new Set<string>()
+
+  for (const tag of base) {
+    const raw = tag.trim()
+    if (!raw) continue
+    const norm = raw.toLowerCase()
+    if (seen.has(norm)) continue
+    seen.add(norm)
+    merged.push(raw)
+  }
+
+  for (const item of dynamicSource) {
+    const raw = (item?.tag ?? '').trim()
+    if (!raw) continue
+    const norm = raw.toLowerCase()
+    if (seen.has(norm)) continue
+    seen.add(norm)
+    merged.push(raw)
+  }
+
+  return merged
+})
+
+const customMiddayMoodTags = computed(() => {
+  const suggestions = middayMoodTagSuggestions.value.map((tag) => tag.toLowerCase())
+  return middayMoodTags.value.filter(
+    (tag) => !suggestions.includes(tag.toLowerCase()),
+  )
+})
 
 function moodIconUrl(key: string) {
   return `/icons/mood/${key}.svg`
@@ -122,6 +158,13 @@ function goToPreviousStep() {
 }
 
 function goToNextStep() {
+  if (
+    currentStep.value === 1 &&
+    (isAddingMiddayMoodTag.value || middayMoodTagInput.value.trim())
+  ) {
+    confirmAddMiddayMoodTag()
+  }
+
   if (!moodLevel.value) {
     return
   }
@@ -215,6 +258,20 @@ function onChooseBreathe() {
                   @click="startAddMiddayMoodTag"
                 >
                   + Ajouter
+                </button>
+              </div>
+              <div
+                v-if="customMiddayMoodTags.length"
+                class="midday-mood-tags-row midday-mood-tags-row--custom"
+              >
+                <button
+                  v-for="tag in customMiddayMoodTags"
+                  :key="tag"
+                  type="button"
+                  class="midday-mood-tag-chip is-selected"
+                  @click="toggleMiddayMoodTag(tag)"
+                >
+                  {{ tag }}
                 </button>
               </div>
               <div
@@ -484,6 +541,10 @@ function onChooseBreathe() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.midday-mood-tags-row--custom {
+  margin-top: 0.1rem;
 }
 
 .midday-mood-tag-chip {

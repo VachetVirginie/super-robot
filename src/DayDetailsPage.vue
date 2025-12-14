@@ -100,6 +100,30 @@ function formatTime(value: string) {
   })
 }
 
+function weatherConditionLabel(code: string | null | undefined): string | null {
+  if (!code) return null
+  const map: Record<string, string> = {
+    sunny: 'Soleil',
+    cloudy: 'Couvert',
+    rainy: 'Pluvieux',
+    shower: 'Pluie',
+    snow: 'Neige',
+  }
+  const key = code.toLowerCase()
+  return map[key] ?? code
+}
+
+function weatherTemperatureLabel(code: string | null | undefined): string | null {
+  if (!code) return null
+  const map: Record<string, string> = {
+    cold: 'Froid',
+    mild: 'Tempere',
+    warm: 'Chaud',
+  }
+  const key = code.toLowerCase()
+  return map[key] ?? code
+}
+
 const middayCheckin = computed(() =>
   dayCheckins.value.find((item) => item.moment === 'midday') ?? null,
 )
@@ -278,7 +302,7 @@ async function loadDayDetails() {
 
     const checkinsPromise = supabase
       .from('wellbeing_checkins')
-      .select('id, created_at, stress_level, note, question, moment, mood_tags')
+      .select('id, created_at, stress_level, note, question, moment, mood_tags, weather_condition, weather_temperature')
       .eq('user_id', user.id)
       .eq('day', iso)
       .order('created_at', { ascending: true })
@@ -456,6 +480,19 @@ watch(
         >
           Mots utilises :
           {{ ((eveningCheckin as CheckinRow & { mood_tags?: string[] | null }).mood_tags || []).join(', ') }}
+        </p>
+        <p
+          v-if="(eveningCheckin as CheckinRow & { weather_condition?: string | null }).weather_condition"
+          class="day-text day-text--muted"
+        >
+          Meteo :
+          {{ weatherConditionLabel((eveningCheckin as CheckinRow & { weather_condition?: string | null }).weather_condition || null) }}
+          <span
+            v-if="(eveningCheckin as CheckinRow & { weather_temperature?: string | null }).weather_temperature"
+          >
+            ·
+            {{ weatherTemperatureLabel((eveningCheckin as CheckinRow & { weather_temperature?: string | null }).weather_temperature || null) }}
+          </span>
         </p>
       </div>
     </section>

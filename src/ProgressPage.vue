@@ -1465,9 +1465,9 @@ const focusTypeLabel = computed(() => {
               v-if="moodHistorySeries.length"
               class="mood-history-section"
             >
-              <h3 class="mood-history-title">Meteo de la semaine</h3>
+              <h3 class="mood-history-title">Humeur de la semaine</h3>
               <p class="mood-history-text">
-                Une petite meteo de ton humeur (midi / soir) sur les 7 derniers jours.
+                Un petit coup d'oeil sur ton ressenti (midi / soir) sur les 7 derniers jours.
               </p>
 
               <div class="mood-history-grid">
@@ -1482,13 +1482,13 @@ const focusTypeLabel = computed(() => {
                       —
                     </template>
                     <template v-else-if="day.value <= 2">
-                      ☀
+                      😌
                     </template>
                     <template v-else-if="day.value < 3.5">
-                      ⛅
+                      😐
                     </template>
                     <template v-else>
-                      🌧
+                      😣
                     </template>
                   </span>
                   <span class="mood-history-value">

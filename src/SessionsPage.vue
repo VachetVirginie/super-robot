@@ -29,11 +29,6 @@ const emit = defineEmits<{
 
 const router = useRouter()
 
-const safePercent = computed(() => {
-  if (!Number.isFinite(props.weeklyProgressPercent)) return 0
-  return Math.max(0, Math.min(100, Math.round(props.weeklyProgressPercent)))
-})
-
 const sessionsLabel = computed(() => {
   const count = props.weeklySessions ?? 0
   if (count === 0) {
@@ -43,13 +38,6 @@ const sessionsLabel = computed(() => {
     return "1 seance faite cette semaine. C'est deja un bon debut."
   }
   return `Tu as fait ${count} seances cette semaine. Bravo, tu crees de l'espace pour toi.`
-})
-
-const goalLabel = computed(() => {
-  if (props.perWeekGoal == null) {
-    return "Tu n'as pas encore defini d'objectif hebdomadaire. Tu peux en choisir un tres simple (1 ou 2 seances)."
-  }
-  return `Ton objectif actuel : ${props.perWeekGoal} seance(s) par semaine.`
 })
 
 const minutesLabel = computed(() => {
@@ -68,8 +56,14 @@ const activeDaysLabel = computed(() => {
   if (days === 1) {
     return "Tu as deja 1 jour actif cette semaine. L'idee est surtout de garder au moins un jour \"jamais zero\" meme quand la semaine est chargee."
   }
-  return `Tu as bouge ${days} jour(s) cette semaine. Tu construis ton \"jamais zero\" en douceur.`
+  return `Tu as bouge ${days} jour(s) cette semaine. Tu construis ton "jamais zero" en douceur.`
 })
+
+const weeklyActiveDaysCount = computed(() => props.weeklyActiveDays ?? 0)
+
+const weeklySessionsCount = computed(() => props.weeklySessions ?? 0)
+
+const weeklyMinutesCount = computed(() => props.weeklyMinutes ?? 0)
 
 const kindSummary = computed(() => {
   const entries = Object.entries(props.weeklyByKind || {})
@@ -129,29 +123,44 @@ const hasDetailedSessions = computed(
           Un coup d'oeil sur tes seances de la semaine.
         </p>
 
-      <div class="sessions-summary">
-        <p class="sessions-text">
-          {{ sessionsLabel }}
-        </p>
-        <p class="sessions-text sessions-text--muted">
-          {{ goalLabel }}
-        </p>
-        <p class="sessions-text sessions-text--muted">
-          {{ minutesLabel }}
-        </p>
-        <p class="sessions-text sessions-text--muted">
-          {{ activeDaysLabel }}
-        </p>
-      </div>
+        <div class="sessions-stats-grid">
+          <div class="sessions-stat-card">
+            <p class="sessions-stat-label">Jours avec mouvement</p>
+            <p class="sessions-stat-value">
+              {{ weeklyActiveDaysCount }}
+              <span class="sessions-stat-unit">/ 7 j</span>
+            </p>
+            <p class="sessions-stat-hint">Cette semaine</p>
+          </div>
 
-      <div class="sessions-progress">
-        <div class="sessions-bar-track">
-          <div class="sessions-bar-fill" :style="{ width: safePercent + '%' }"></div>
+          <div class="sessions-stat-card">
+            <p class="sessions-stat-label">Seances cette semaine</p>
+            <p class="sessions-stat-value">
+              {{ weeklySessionsCount }}
+            </p>
+            <p class="sessions-stat-hint">
+              {{ sessionsLabel }}
+            </p>
+          </div>
+
+          <div class="sessions-stat-card">
+            <p class="sessions-stat-label">Temps de mouvement</p>
+            <p class="sessions-stat-value">
+              {{ weeklyMinutesCount }}
+              <span class="sessions-stat-unit">min</span>
+            </p>
+            <p class="sessions-stat-hint">Sport maison en cumule</p>
+          </div>
         </div>
-        <span class="sessions-bar-label">
-          Tu es a {{ safePercent }}% de ton objectif de la semaine.
-        </span>
-      </div>
+
+        <div class="sessions-summary">
+          <p class="sessions-text sessions-text--muted">
+            {{ activeDaysLabel }}
+          </p>
+          <p class="sessions-text sessions-text--muted">
+            {{ minutesLabel }}
+          </p>
+        </div>
       </section>
 
       <section class="card sessions-card sessions-card--secondary">
@@ -234,6 +243,56 @@ const hasDetailedSessions = computed(
   flex-direction: column;
   gap: 0.25rem;
   margin-bottom: 1rem;
+}
+
+.sessions-stats-grid {
+  margin-top: 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+}
+
+.sessions-stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 4.8rem;
+  border-radius: 0.85rem;
+  padding: 0.5rem 0.55rem 0.55rem;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 55%),
+    rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.95);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.9);
+}
+
+.sessions-stat-label {
+  margin: 0 0 0.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.sessions-stat-value {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.sessions-stat-unit {
+  margin-left: 0.15rem;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.sessions-stat-hint {
+  margin: 0.18rem 0 0;
+  font-size: 0.72rem;
+  opacity: 0.78;
 }
 
 .sessions-text {
